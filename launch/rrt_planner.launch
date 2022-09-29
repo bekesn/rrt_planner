@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="rrt_planner" type="rrt_planner_node" name="rrt_planner1" output="screen" >
+    </node>
+</launch>
