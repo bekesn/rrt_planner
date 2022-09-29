@@ -105,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-   #INCLUDE_DIRS include
+   INCLUDE_DIRS include
    CATKIN_DEPENDS frt_custom_msgs roscpp rospy std_msgs roslib
 )
 
@@ -121,9 +121,11 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/rrt_planner.cpp
-# )
+add_library(MapHandler src/MapHandler.cpp)
+target_link_libraries(MapHandler ${catkin_LIBRARIES})
+
+add_library(VehicleModel src/VehicleModel.cpp)
+target_link_libraries(VehicleModel ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -134,7 +136,10 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rrt_planner_node src/RRTPlanner.cpp)
-target_link_libraries(rrt_planner_node ${catkin_LIBRARIES})
+target_link_libraries(rrt_planner_node 
+  MapHandler
+  VehicleModel
+  ${catkin_LIBRARIES})
 
 
 ## Rename C++ executable without prefix
