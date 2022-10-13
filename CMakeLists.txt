@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  visualization_msgs
   roslib
 )
 
@@ -106,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-   CATKIN_DEPENDS frt_custom_msgs roscpp rospy std_msgs roslib
+   CATKIN_DEPENDS frt_custom_msgs roscpp rospy std_msgs visualization_msgs roslib
 )
 
 ###########
@@ -127,6 +128,12 @@ target_link_libraries(MapHandler ${catkin_LIBRARIES})
 add_library(VehicleModel src/VehicleModel.cpp)
 target_link_libraries(VehicleModel ${catkin_LIBRARIES})
 
+add_library(SearchTree src/SearchTree.cpp)
+target_link_libraries(SearchTree ${catkin_LIBRARIES})
+
+add_library(SearchTreeNode src/SearchTreeNode.cpp)
+target_link_libraries(SearchTreeNode ${catkin_LIBRARIES})
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -137,6 +144,8 @@ target_link_libraries(VehicleModel ${catkin_LIBRARIES})
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rrt_planner_node src/RRTPlanner.cpp)
 target_link_libraries(rrt_planner_node 
+  SearchTreeNode
+  SearchTree
   MapHandler
   VehicleModel
   ${catkin_LIBRARIES})

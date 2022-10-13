@@ -2,7 +2,7 @@
 #define MAPHANDLER_H
 
 #include "ros/ros.h"
-#include "frt_custom_msgs/Map.h"
+#include "visualization_msgs/MarkerArray.h"
 
 class MapHandler
 {
@@ -18,7 +18,7 @@ public:
     void collisionCheck();
 
     // Update map
-    void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+    void mapCallback(const visualization_msgs::MarkerArray::ConstPtr &msg);
 
 };
 

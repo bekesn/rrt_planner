@@ -10,7 +10,7 @@ MapHandler::~MapHandler()
     
 }
 
-void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+void MapHandler::mapCallback(const visualization_msgs::MarkerArray::ConstPtr &msg)
 {
-    ROS_INFO_STREAM(msg);
+    //ROS_ERROR("msg");
 }
