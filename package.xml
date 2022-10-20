@@ -55,6 +55,7 @@
   <build_depend>visualization_msgs</build_depend>
   <build_depend>roslib</build_depend>
   <build_depend>frt_custom_msgs</build_depend>
+  <build_depend>cmake_modules</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
@@ -67,6 +68,7 @@
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>roslib</exec_depend>
   <exec_depend>frt_custom_msgs</exec_depend>
+  <exec_depend>cmake_modules</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

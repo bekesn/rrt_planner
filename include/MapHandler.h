@@ -12,7 +12,7 @@ private:
 
 public:
     MapHandler();
-    ~MapHandler();
+    //~MapHandler();
     
     // Check for collision 
     void collisionCheck();

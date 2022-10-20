@@ -3,36 +3,29 @@
 
 SearchTree::SearchTree()
 {
-    tree = new std::vector<SearchTreeNode>(0);
+    tree = new std::vector<SearchTreeNode*>(0);
 }
 
 SearchTree::SearchTree(VehicleModel* vehicleModel, std::vector<double> startState)
 {
     vehicle = vehicleModel;
-    tree = new std::vector<SearchTreeNode>(0);
-    tree->push_back(SearchTreeNode(NULL, startState));
+    tree = new std::vector<SearchTreeNode*>(0);
+    tree->push_back(new SearchTreeNode(NULL, startState));
 }
 
-SearchTree::~SearchTree()
-{
-
-}
-
-void SearchTree::addChild(SearchTreeNode* parentNode, std::vector<double> startState)
+void SearchTree::addChild(SearchTreeNode* parentNode, std::vector<double> state)
 {
     if (tree->size() < maxNumOfNodes)
     {
-        tree->push_back(SearchTreeNode(parentNode, startState));
-        try{
-            parentNode->addChild(&tree->back());
+        if (parentNode != NULL)
+        {
+            tree->push_back(new SearchTreeNode(parentNode, state));
+            parentNode->addChild(tree->back());
         }
-        catch (std::bad_alloc & exception) 
-        {   
-            ROS_INFO_STREAM("coord:   " << (parentNode->getState()[0] )<< "   " << (parentNode->getState()[1]));
-            ROS_INFO_STREAM("children:   " << (parentNode->getChildren()->size() )<< "");   
-            
-            std::cerr << "bad_alloc detected: " << exception.what(); 
-        } 
+        else
+        {
+            ROS_ERROR("[RRT_PLANNER]: parentNode is NULL in SearchTree::addChild()");
+        }
     }
 }
 
@@ -43,53 +36,48 @@ void SearchTree::remove(SearchTreeNode* node)
 
 SearchTreeNode* SearchTree::getNearest(std::vector<double> toState)
 {
-    ROS_INFO_STREAM("new:  " << toState[0] << "  " << toState[1]);
-    std::vector<SearchTreeNode>::iterator it;
+    //ROS_INFO_STREAM("new:  " << toState[0] << "  " << toState[1]);
+    std::vector<SearchTreeNode*>::iterator it;
     double minDist;
     double dist;
     SearchTreeNode* closest;
 
     // Initialize closest node and distance
-    minDist = vehicle->getDistEuclidean(tree->front().getState(), toState);
-    closest = &tree->front();
+    minDist = vehicle->distance(tree->front()->getState(), toState);
+    closest = tree->front();
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        dist = vehicle->getDistEuclidean((*it).getState(), toState);
+        dist = vehicle->distance((*it)->getState(), toState);
         if (dist < minDist)
         {
             minDist = dist;
-            closest = &(*it);
+            closest = (*it);
         }
     }
 
-    ROS_INFO_STREAM("closest:   " << closest->getState()[0] << "   " << closest->getState()[1]);
+    //ROS_INFO_STREAM("closest:   " << closest->getState()[0] << "   " << closest->getState()[1]);
 
     return closest;
 }
 
 std::vector<SearchTreeNode*> SearchTree::getNearby(std::vector<double> toState, double maxDist)
 {
-    std::vector<SearchTreeNode>::iterator it;
+    std::vector<SearchTreeNode*>::iterator it;
     std::vector<SearchTreeNode*> closeNodes;
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if ((vehicle->getDistEuclidean((*it).getState(), toState)) < maxDist)
+        if ((vehicle->distance((*it)->getState(), toState)) < maxDist)
         {
-            closeNodes.push_back(&(*it));
+            closeNodes.push_back((*it));
         }
     }
 
     return closeNodes;
 
-}
-
-void SearchTree::setDistanceMetric(double (VehicleModel::*distanceMetric)(std::vector<double>, std::vector<double>))
-{
-    distanceFunction = distanceMetric;
 }
 
 void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
@@ -112,11 +100,11 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 
     geometry_msgs::Point coord;
     
-    std::vector<SearchTreeNode>::iterator it;
+    std::vector<SearchTreeNode*>::iterator it;
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        coord.x = (*it).getState()[0];
-        coord.y = (*it).getState()[1];
+        coord.x = (*it)->getState()[0];
+        coord.y = (*it)->getState()[1];
         treeNodes.points.push_back(coord);
     }
 
@@ -137,17 +125,17 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
         graph_edge.color.b = 0.0f;
         graph_edge.color.a = 1.0f;
 
-    std::vector<SearchTreeNode>::iterator treeIterator;
+    std::vector<SearchTreeNode*>::iterator treeIterator;
     std::vector<SearchTreeNode*>::iterator childIterator;
     std::vector<SearchTreeNode*> *children;
 
     for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
     {
-        children = (*treeIterator).getChildren();
+        children = (*treeIterator)->getChildren();
         for (childIterator = children->begin(); childIterator != children->end(); childIterator++)
         {
-            coord.x = (*treeIterator).getState()[0];
-            coord.y = (*treeIterator).getState()[1];
+            coord.x = (*treeIterator)->getState()[0];
+            coord.y = (*treeIterator)->getState()[1];
             graph_edge.points.push_back(coord);
             coord.x = (*childIterator)->getState()[0];
             coord.y = (*childIterator)->getState()[1];
@@ -157,9 +145,8 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 
 
     markerArray->markers.emplace_back(graph_edge);
-    ROS_INFO_STREAM("-------------");
-    for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
+    /*for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
     {
-        ROS_INFO_STREAM("" << (*treeIterator).getState()[0] << "  " << (*treeIterator).getState()[1] << "    " << (*treeIterator).getChildren()->size());
-    }
+        ROS_INFO_STREAM("" << (*treeIterator)->getState()[0] << "  " << (*treeIterator)->getState()[1] << "    " << (*treeIterator)->getChildren()->size());
+    }*/
 }

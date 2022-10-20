@@ -9,9 +9,9 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
 
-    sTree = SearchTree(&vehicleModel, {0.1, 0.0});
-    //sTree.setDistanceMetric(&VehicleModel::getDistEuclidean);
+    vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean);
 
+    sTree = SearchTree(&vehicleModel, {0.0, 10.0});
 
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
@@ -26,17 +26,10 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     ros::spin();
 }
 
-RRTPlanner::~RRTPlanner()
-{
-    delete &mapHandler;
-    delete &vehicleModel;
-}
-
 
 void RRTPlanner::extend()
 {
     
-
 }
 
 void RRTPlanner::visualize(const ros::WallTimerEvent &event)
@@ -47,6 +40,7 @@ void RRTPlanner::visualize(const ros::WallTimerEvent &event)
     sTree.addChild(nearest, {x, y});
     sTree.drawTree(&markerArray);
     markerPublisher.publish(markerArray);
+    ROS_INFO_STREAM("-------------");
 }
 
 int main(int argc, char** argv)

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <ros/ros.h>
+#include <iterator>
 
 class SearchTreeNode
 {
@@ -14,10 +15,12 @@ private:
 public:
 
     // Constructor
+    SearchTreeNode();
+    SearchTreeNode(const SearchTreeNode &original);
     SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace);
 
     // Destructor
-    ~SearchTreeNode();
+    //~SearchTreeNode();
 
     // Add child node
     void addChild(SearchTreeNode* childNode);

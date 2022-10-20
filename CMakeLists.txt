@@ -14,7 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   visualization_msgs
   roslib
+  cmake_modules
 )
+find_package(Eigen REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -108,6 +110,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
    INCLUDE_DIRS include
    CATKIN_DEPENDS frt_custom_msgs roscpp rospy std_msgs visualization_msgs roslib
+   DEPENDS Eigen
 )
 
 ###########
@@ -119,6 +122,7 @@ catkin_package(
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -128,11 +132,13 @@ target_link_libraries(MapHandler ${catkin_LIBRARIES})
 add_library(VehicleModel src/VehicleModel.cpp)
 target_link_libraries(VehicleModel ${catkin_LIBRARIES})
 
-add_library(SearchTree src/SearchTree.cpp)
-target_link_libraries(SearchTree ${catkin_LIBRARIES})
-
 add_library(SearchTreeNode src/SearchTreeNode.cpp)
 target_link_libraries(SearchTreeNode ${catkin_LIBRARIES})
+
+add_library(SearchTree src/SearchTree.cpp)
+target_link_libraries(SearchTree ${catkin_LIBRARIES})
+target_link_libraries(SearchTree SearchTreeNode)
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

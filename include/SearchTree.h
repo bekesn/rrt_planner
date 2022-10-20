@@ -12,8 +12,7 @@
 class SearchTree
 {
 private:
-    std::vector<SearchTreeNode> *tree;
-    double (VehicleModel::*distanceFunction)(std::vector<double>, std::vector<double>);
+    std::vector<SearchTreeNode*> *tree;
     VehicleModel* vehicle;
     int maxNumOfNodes = 40;
 
@@ -24,7 +23,7 @@ public:
     SearchTree(VehicleModel* vehicleModel, std::vector<double> startState);
 
     //Destructor
-    ~SearchTree();
+    //~SearchTree();
 
     //Add child node
     void addChild(SearchTreeNode* parentNode, std::vector<double> state);
@@ -37,9 +36,6 @@ public:
 
     //Get nearby nodes
     std::vector<SearchTreeNode*> getNearby(std::vector<double> state, double maxDist);
-
-    //Set distance metric
-    void setDistanceMetric(double (VehicleModel::*distanceMetric)(std::vector<double>, std::vector<double>));
 
     // Draw tree as lines
     void drawTree(visualization_msgs::MarkerArray* markerArray);

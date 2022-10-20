@@ -26,7 +26,7 @@ class RRTPlanner
 
 public:
     RRTPlanner(int argc, char** argv);
-    ~RRTPlanner();
+    //~RRTPlanner();
     
     // Extend searchtree by a new node
     void extend();
