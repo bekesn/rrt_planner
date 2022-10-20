@@ -9,18 +9,18 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
 
-    vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean);
+    vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean, &VehicleModel::simulateHolonomic);
 
-    sTree = SearchTree(&vehicleModel, {0.0, 10.0});
+    sTree = SearchTree(&vehicleModel, {10.0, 0.0});
 
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
-    mapSubscriber = nh.subscribe("/map2", 1, &MapHandler::mapCallback, &mapHandler);
+    mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
     poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &vehicleModel);
     markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_viz", 10);
 
 
-    timer = nh.createWallTimer(ros::WallDuration(1), &RRTPlanner::visualize, this);
+    timer = nh.createWallTimer(ros::WallDuration(0.2), &RRTPlanner::visualize, this);
 
     
     ros::spin();
@@ -29,15 +29,34 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
 void RRTPlanner::extend()
 {
-    
+    bool offCourse;
+    std::vector<double> randState;
+    std::vector<double> newState;
+    std::vector<std::vector<double>>* path;
+
+    // Get random state
+    randState = mapHandler.getRandomState();
+
+    // Get nearest node
+    SearchTreeNode* nearest = sTree.getNearest(randState);
+
+    // Simulate movement towards new state
+    path = vehicleModel.simulateToTarget(nearest->getState(), randState);
+
+    // Check for offCourse
+    offCourse = mapHandler.isOffCourse(path);
+
+    // Add node
+    if (!offCourse && (path->size() > 0))
+    {
+        newState = path->back();
+        sTree.addChild(nearest, newState);
+    }
 }
 
 void RRTPlanner::visualize(const ros::WallTimerEvent &event)
 {
-    double x = rand()%1000 / 100.0 - 5;
-    double y = rand()%1000 / 100.0 - 5;
-    SearchTreeNode* nearest = sTree.getNearest({x, y});
-    sTree.addChild(nearest, {x, y});
+    extend();
     sTree.drawTree(&markerArray);
     markerPublisher.publish(markerArray);
     ROS_INFO_STREAM("-------------");

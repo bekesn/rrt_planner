@@ -2,23 +2,34 @@
 #define MAPHANDLER_H
 
 #include "ros/ros.h"
-#include "visualization_msgs/MarkerArray.h"
+#include "SearchTree.h"
+#include "frt_custom_msgs/Map.h"
+#include "frt_custom_msgs/Landmark.h"
 
 class MapHandler
 {
 private:
     
-    //vector<Landmark*> map;
+    std::vector<frt_custom_msgs::Landmark*> map;
+
+    // Parameters
+    double goalBias;
 
 public:
     MapHandler();
     //~MapHandler();
     
-    // Check for collision 
-    void collisionCheck();
+    // Check for offcourse
+    bool isOffCourse(std::vector<std::vector<double>>* path);
+
+    // Get random state
+    std::vector<double> getRandomState();
+
+    // Calculate goal state
+    std::vector<double> calculateGoalState();
 
     // Update map
-    void mapCallback(const visualization_msgs::MarkerArray::ConstPtr &msg);
+    void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
 
 };
 

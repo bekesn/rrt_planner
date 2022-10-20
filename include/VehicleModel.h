@@ -6,15 +6,25 @@
 #include <Eigen/Dense>
 #include <math.h>
 
+#define STATESPACE_DIM  3
+
 class VehicleModel
 {
     geometry_msgs::PoseStamped currentPose;
-    double (VehicleModel::*distanceFunction)(std::vector<double> start, std::vector<double> goal);
 
+    // Function pointers
+    double (VehicleModel::*distanceFunction)(std::vector<double> start, std::vector<double> goal);
+    std::vector<std::vector<double>>* (VehicleModel::*simulation)(std::vector<double> startState, std::vector<double> goalState);
+
+    // Parameters
+    float simulationTimeStep;
+    float maxSpeed;
+    double resolution;
 
 public:
     VehicleModel();
-    VehicleModel(double (VehicleModel::*distFun)(std::vector<double> start, std::vector<double> goal));
+    VehicleModel(double (VehicleModel::*distFun)(std::vector<double> start, std::vector<double> goal),
+                            std::vector<std::vector<double>>* (VehicleModel::*simFun)(std::vector<double> startState, std::vector<double> goalState));
     //~VehicleModel();
 
     // Update vehicle pose
@@ -24,13 +34,18 @@ public:
     geometry_msgs::PoseStamped getCurrentPose();
 
     // Simulate advancing towards target
-    Eigen::Vector3d simulateToTarget(std::vector<double> start, std::vector<double> goal);
-
-    // Euclidean distance
-    double getDistEuclidean(std::vector<double> start, std::vector<double> goal);
+    std::vector<std::vector<double>>* simulateToTarget(std::vector<double> start, std::vector<double> goal);
 
     // Distance function
     double distance(std::vector<double> start, std::vector<double> goal);
+
+    // SIMULATION FUNCTIONS
+    // Holonomic model
+    std::vector<std::vector<double>>* simulateHolonomic(std::vector<double> start, std::vector<double> goal);
+
+    // DISTANCE FUNCTIONS
+    // Euclidean distance
+    double getDistEuclidean(std::vector<double> start, std::vector<double> goal);
 };
 
 

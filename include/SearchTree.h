@@ -14,7 +14,7 @@ class SearchTree
 private:
     std::vector<SearchTreeNode*> *tree;
     VehicleModel* vehicle;
-    int maxNumOfNodes = 40;
+    int maxNumOfNodes = 120;
 
 public:
 
