@@ -3,7 +3,7 @@
 
 SearchTree::SearchTree()
 {
-    tree = new std::vector<SearchTreeNode*>(0);
+    tree = new std::vector<SearchTreeNode*>;
 }
 
 SearchTree::SearchTree(VehicleModel* vehicleModel, std::vector<double> startState)
@@ -149,4 +149,16 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
     {
         ROS_INFO_STREAM("" << (*treeIterator)->getState()[0] << "  " << (*treeIterator)->getState()[1] << "    " << (*treeIterator)->getChildren()->size());
     }*/
+}
+
+void SearchTree::reset(std::vector<double> startState)
+{
+    /*std::vector<SearchTreeNode*>::iterator it;
+    for(it = tree->begin(); it != tree->end(); it++)
+    {
+        delete *it;
+    }*/
+    delete tree;
+    tree = new std::vector<SearchTreeNode*>;
+    tree->push_back(new SearchTreeNode(NULL, startState));
 }

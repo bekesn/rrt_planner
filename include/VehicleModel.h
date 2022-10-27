@@ -19,9 +19,11 @@ class VehicleModel
     // Parameters
     float simulationTimeStep;
     float maxSpeed;
-    double resolution;
+    float resolution;
 
 public:
+    float track;
+    
     VehicleModel();
     VehicleModel(double (VehicleModel::*distFun)(std::vector<double> start, std::vector<double> goal),
                             std::vector<std::vector<double>>* (VehicleModel::*simFun)(std::vector<double> startState, std::vector<double> goalState));

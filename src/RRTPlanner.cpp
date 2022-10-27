@@ -9,9 +9,10 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
 
+    // Init objects
     vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean, &VehicleModel::simulateHolonomic);
-
-    sTree = SearchTree(&vehicleModel, {10.0, 0.0});
+    mapHandler = MapHandler(&vehicleModel);
+    sTree = SearchTree(&vehicleModel, {10.0, 0.0, 0.0});
 
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
@@ -20,7 +21,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_viz", 10);
 
 
-    timer = nh.createWallTimer(ros::WallDuration(0.2), &RRTPlanner::visualize, this);
+    timer = nh.createWallTimer(ros::WallDuration(0.5), &RRTPlanner::timerCallback, this);
 
     
     ros::spin();
@@ -54,12 +55,41 @@ void RRTPlanner::extend()
     }
 }
 
-void RRTPlanner::visualize(const ros::WallTimerEvent &event)
+void RRTPlanner::planOpenTrackRRT()
 {
-    extend();
+    sTree.reset({10.0, 0.0, 0.0});
+
+    // TODO
+    for(int i = 0; i < 300; i++)
+    {
+        extend();
+    }
+    visualize();
+    ROS_INFO_STREAM("-------------");
+}
+
+void RRTPlanner::planClosedTrackRRT()
+{
+    sTree.reset({10.0, 0.0, 0.0});
+
+    // TODO
+    for(int i = 0; i < 300; i++)
+    {
+        extend();
+    }
+    visualize();
+    ROS_INFO_STREAM("-------------");
+}
+
+void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
+{
+    planOpenTrackRRT();
+}
+
+void RRTPlanner::visualize()
+{
     sTree.drawTree(&markerArray);
     markerPublisher.publish(markerArray);
-    ROS_INFO_STREAM("-------------");
 }
 
 int main(int argc, char** argv)

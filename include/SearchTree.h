@@ -14,7 +14,7 @@ class SearchTree
 private:
     std::vector<SearchTreeNode*> *tree;
     VehicleModel* vehicle;
-    int maxNumOfNodes = 120;
+    int maxNumOfNodes = 200;
 
 public:
 
@@ -39,6 +39,9 @@ public:
 
     // Draw tree as lines
     void drawTree(visualization_msgs::MarkerArray* markerArray);
+
+    // Delete tree and create new
+    void reset(std::vector<double> startState);
 
 };
 

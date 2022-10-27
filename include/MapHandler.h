@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 #include "SearchTree.h"
+#include "VehicleModel.h"
 #include "frt_custom_msgs/Map.h"
 #include "frt_custom_msgs/Landmark.h"
 
@@ -11,16 +12,22 @@ class MapHandler
 private:
     
     std::vector<frt_custom_msgs::Landmark*> map;
+    VehicleModel* vehicleModel;
 
     // Parameters
     double goalBias;
+    double collisionRange;
 
 public:
     MapHandler();
+    MapHandler(VehicleModel* vehicleModel);
     //~MapHandler();
     
     // Check for offcourse
     bool isOffCourse(std::vector<std::vector<double>>* path);
+
+    // Check for collision with lines
+    bool isOnTrackEdge(std::vector<double>* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones);
 
     // Get random state
     std::vector<double> getRandomState();

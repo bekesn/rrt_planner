@@ -15,7 +15,8 @@ VehicleModel::VehicleModel(double (VehicleModel::*distFun)(std::vector<double> s
     //TODO
     simulationTimeStep = 0.1;
     maxSpeed = 10;
-    resolution = 0.2;
+    resolution = 0.05;
+    track = 1.22;
 
 }
 

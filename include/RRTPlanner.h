@@ -31,8 +31,17 @@ public:
     // Extend searchtree by a new node
     void extend();
 
+    // RRT on partially discovered map
+    void planOpenTrackRRT();
+
+    // RRT on fully discovered map
+    void planClosedTrackRRT();
+
+    // Timer callback
+    void timerCallback(const ros::WallTimerEvent &event);
+
     // Visualize markers
-    void visualize(const ros::WallTimerEvent &event);
+    void visualize();
 
 };
 
