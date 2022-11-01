@@ -111,19 +111,19 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
     markerArray->markers.emplace_back(treeNodes);
 
     // Draw lines
-    visualization_msgs::Marker graph_edge;
-        graph_edge.header.frame_id = "map";
-        graph_edge.header.stamp = ros::Time::now();
-        graph_edge.ns = "rrt_graph_edge";
-        graph_edge.action = visualization_msgs::Marker::ADD;
-        graph_edge.pose.orientation.w = 1.0;
-        graph_edge.id = 0;
-        graph_edge.type = visualization_msgs::Marker::LINE_LIST;
-        graph_edge.scale.x = 0.3f;
-        graph_edge.color.r = 1.0f;
-        graph_edge.color.g = 0.65f;
-        graph_edge.color.b = 0.0f;
-        graph_edge.color.a = 1.0f;
+    visualization_msgs::Marker graphEdge;
+        graphEdge.header.frame_id = "map";
+        graphEdge.header.stamp = ros::Time::now();
+        graphEdge.ns = "rrt_graph_edge";
+        graphEdge.action = visualization_msgs::Marker::ADD;
+        graphEdge.pose.orientation.w = 1.0;
+        graphEdge.id = 1;
+        graphEdge.type = visualization_msgs::Marker::LINE_LIST;
+        graphEdge.scale.x = 0.3f;
+        graphEdge.color.r = 1.0f;
+        graphEdge.color.g = 0.65f;
+        graphEdge.color.b = 0.0f;
+        graphEdge.color.a = 1.0f;
 
     std::vector<SearchTreeNode*>::iterator treeIterator;
     std::vector<SearchTreeNode*>::iterator childIterator;
@@ -136,15 +136,15 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
         {
             coord.x = (*treeIterator)->getState()[0];
             coord.y = (*treeIterator)->getState()[1];
-            graph_edge.points.push_back(coord);
+            graphEdge.points.push_back(coord);
             coord.x = (*childIterator)->getState()[0];
             coord.y = (*childIterator)->getState()[1];
-            graph_edge.points.push_back(coord);
+            graphEdge.points.push_back(coord);
         }
     }
 
 
-    markerArray->markers.emplace_back(graph_edge);
+    markerArray->markers.emplace_back(graphEdge);
     /*for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
     {
         ROS_INFO_STREAM("" << (*treeIterator)->getState()[0] << "  " << (*treeIterator)->getState()[1] << "    " << (*treeIterator)->getChildren()->size());
@@ -153,12 +153,20 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 
 void SearchTree::reset(std::vector<double> startState)
 {
-    /*std::vector<SearchTreeNode*>::iterator it;
+    std::vector<SearchTreeNode*>::iterator it;
     for(it = tree->begin(); it != tree->end(); it++)
     {
         delete *it;
-    }*/
+    }
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
     tree->push_back(new SearchTreeNode(NULL, startState));
+}
+
+std::vector<std::vector<double>>* SearchTree::traceBackToRoot(std::vector<double> goalState)
+{
+    SearchTreeNode* closestNode = getNearest(goalState);
+    std::vector<std::vector<double>>* path = new std::vector<std::vector<double>>;
+    closestNode->traceBackToRoot(path);
+    return path;
 }

@@ -6,6 +6,9 @@
 
 RRTPlanner::RRTPlanner(int argc, char** argv)
 {
+    // Init
+    pathFound = false;
+
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
 
@@ -28,12 +31,12 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 }
 
 
-void RRTPlanner::extend()
+bool RRTPlanner::extend()
 {
     bool offCourse;
     std::vector<double> randState;
     std::vector<double> newState;
-    std::vector<std::vector<double>>* path;
+    std::vector<std::vector<double>>* trajectory;
 
     // Get random state
     randState = mapHandler.getRandomState();
@@ -42,27 +45,44 @@ void RRTPlanner::extend()
     SearchTreeNode* nearest = sTree.getNearest(randState);
 
     // Simulate movement towards new state
-    path = vehicleModel.simulateToTarget(nearest->getState(), randState);
+    trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState);
 
     // Check for offCourse
-    offCourse = mapHandler.isOffCourse(path);
+    offCourse = mapHandler.isOffCourse(trajectory);
 
     // Add node
-    if (!offCourse && (path->size() > 0))
+    if (!offCourse && (trajectory->size() > 0))
     {
-        newState = path->back();
+        newState = trajectory->back();
         sTree.addChild(nearest, newState);
+        if (vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()) < 0.5)
+        {
+            return true;
+        }
     }
+    return false;
 }
 
 void RRTPlanner::planOpenTrackRRT()
 {
     sTree.reset({10.0, 0.0, 0.0});
+    pathFound = false;
 
     // TODO
     for(int i = 0; i < 300; i++)
     {
-        extend();
+        bool closeToGoal = extend();
+        if (closeToGoal)
+        {
+            pathFound = true;
+            break;
+        }
+        if (pathFound)
+        {
+            bestPath->clear();
+            bestPath = sTree.traceBackToRoot(mapHandler.calculateGoalState());
+        }
+
     }
     visualize();
     ROS_INFO_STREAM("-------------");
@@ -89,7 +109,41 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 void RRTPlanner::visualize()
 {
     sTree.drawTree(&markerArray);
+    if (pathFound)
+    {
+
+    }
     markerPublisher.publish(markerArray);
+}
+
+void RRTPlanner::visualizeBestPath(visualization_msgs::MarkerArray* mArray)
+{
+    visualization_msgs::Marker bestPathLine;
+        bestPathLine.header.frame_id = "map";
+        bestPathLine.header.stamp = ros::Time::now();
+        bestPathLine.ns = "rrt_best_path";
+        bestPathLine.action = visualization_msgs::Marker::ADD;
+        bestPathLine.pose.orientation.w = 1.0;
+        bestPathLine.id = 2;
+        bestPathLine.type = visualization_msgs::Marker::LINE_STRIP;
+        bestPathLine.scale.x = 0.3f;
+        bestPathLine.color.r = 0.0f;
+        bestPathLine.color.g = 0.5f;
+        bestPathLine.color.b = 1.0f;
+        bestPathLine.color.a = 1.0f;
+
+    std::vector<std::vector<double>>::iterator it;
+    geometry_msgs::Point coord;
+
+    for (it = bestPath->begin(); it != bestPath->end(); it++)
+    {
+        
+        coord.x = (*it)[0];
+        coord.y = (*it)[1];
+        bestPathLine.points.push_back(coord); 
+    }
+
+    mArray->markers.emplace_back(bestPathLine);
 }
 
 int main(int argc, char** argv)

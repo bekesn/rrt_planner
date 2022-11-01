@@ -15,8 +15,9 @@ private:
     VehicleModel* vehicleModel;
 
     // Parameters
-    double goalBias;
-    double collisionRange;
+    float goalBias;
+    float collisionRange;
+    float spawnRange;
 
 public:
     MapHandler();

@@ -5,6 +5,7 @@ MapHandler::MapHandler()
     goalBias = 0.2;
     vehicleModel = NULL;
     collisionRange = 6;
+    spawnRange = 3;
 }
 
 MapHandler::MapHandler(VehicleModel* vm)
@@ -12,17 +13,22 @@ MapHandler::MapHandler(VehicleModel* vm)
     goalBias = 0.2;
     vehicleModel = vm;
     collisionRange = 6;
+    spawnRange = 3;
 }
 
 
 bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
 {
+    // Filter empty trajectory
+    if (trajectory->size() == 0) return false;
+
     ROS_INFO_STREAM("cones: " << map.size());
     bool isOC;
     std::vector<frt_custom_msgs::Landmark*>* closeBlueLandmarks = new std::vector<frt_custom_msgs::Landmark*>();
     std::vector<frt_custom_msgs::Landmark*>* closeYellowLandmarks = new std::vector<frt_custom_msgs::Landmark*>();
     std::vector<std::vector<double>>::iterator it;
 
+    // Collect nearby cones with the same color
     for (auto & cone : map)
     {
         double dist = vehicleModel->getDistEuclidean(trajectory->front(), {cone->x, cone->y, 0});
@@ -43,8 +49,6 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
 
         
     }
-    //TODO
-    ROS_INFO_STREAM("close: " << closeBlueLandmarks->size() << " blue, " << closeYellowLandmarks->size() << " yellow");
 
     isOC = false;
     for (it = trajectory->begin(); it != trajectory->end(); it++)
@@ -89,13 +93,28 @@ bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<fr
 
 std::vector<double> MapHandler::getRandomState()
 {
-    std::vector<double> randState = calculateGoalState();
+    std::vector<double> randState(3);
 
     if (((rand()%1000)/1000.0) > goalBias)
     {
-        //TODO adaptive boundaries
-        randState[0] = rand()%10000 / 100.0 - 50;
-        randState[1] = rand()%10000 / 100.0 - 50;
+        int numOfCones = map.size();
+        if (numOfCones == 0)
+        {
+            randState = calculateGoalState();
+        }
+        else
+        {
+            // Choose a cone randomly and place a state near it
+            int coneID = rand() % numOfCones;
+            randState[0] = map[coneID]->x + (rand()%((int) (200*spawnRange))) / 100.0 - spawnRange;
+            randState[1] = map[coneID]->y + (rand()%((int) (200*spawnRange))) / 100.0 - spawnRange;
+            randState[2] = (rand() % ((int) (1000*M_PI))) / 1000.0;
+
+        }
+    }
+    else
+    {
+        randState = calculateGoalState();
     }
 
     return randState;

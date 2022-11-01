@@ -24,12 +24,15 @@ class RRTPlanner
 
     visualization_msgs::MarkerArray markerArray;
 
+    bool pathFound;
+    std::vector<std::vector<double>>* bestPath;
+
 public:
     RRTPlanner(int argc, char** argv);
     //~RRTPlanner();
     
     // Extend searchtree by a new node
-    void extend();
+    bool extend();
 
     // RRT on partially discovered map
     void planOpenTrackRRT();
@@ -42,6 +45,9 @@ public:
 
     // Visualize markers
     void visualize();
+
+    // Visualize best path
+    void visualizeBestPath(visualization_msgs::MarkerArray* mArray);
 
 };
 

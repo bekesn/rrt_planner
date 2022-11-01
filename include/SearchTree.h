@@ -43,6 +43,9 @@ public:
     // Delete tree and create new
     void reset(std::vector<double> startState);
 
+    // Traceback to root
+    std::vector<std::vector<double>>* traceBackToRoot(std::vector<double> goalState);
+
 };
 
 
