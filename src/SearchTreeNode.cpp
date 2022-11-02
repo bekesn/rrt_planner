@@ -25,9 +25,7 @@ SearchTreeNode::SearchTreeNode(SearchTreeNode* parent, std::vector<double> state
 
 void SearchTreeNode::addChild(SearchTreeNode* childNode)
 {
-    ROS_INFO_STREAM("capacity: "<<childNodes->capacity() << "size: " << childNodes->size());
     childNodes->push_back(childNode);
-    ROS_INFO_STREAM("capacity: "<<childNodes->capacity() << "size: " << childNodes->size());
 }
 
 void SearchTreeNode::removeChild(SearchTreeNode* childNode)

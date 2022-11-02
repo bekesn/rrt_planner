@@ -166,6 +166,7 @@ void SearchTree::reset(std::vector<double> startState)
 std::vector<std::vector<double>>* SearchTree::traceBackToRoot(std::vector<double> goalState)
 {
     SearchTreeNode* closestNode = getNearest(goalState);
+    ROS_INFO_STREAM("closest: " << closestNode->getState()[0]);
     std::vector<std::vector<double>>* path = new std::vector<std::vector<double>>;
     closestNode->traceBackToRoot(path);
     return path;

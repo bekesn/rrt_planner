@@ -22,7 +22,7 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
 
-    ROS_INFO_STREAM("cones: " << map.size());
+    //ROS_INFO_STREAM("cones: " << map.size());
     bool isOC;
     std::vector<frt_custom_msgs::Landmark*>* closeBlueLandmarks = new std::vector<frt_custom_msgs::Landmark*>();
     std::vector<frt_custom_msgs::Landmark*>* closeYellowLandmarks = new std::vector<frt_custom_msgs::Landmark*>();

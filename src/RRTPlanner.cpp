@@ -8,6 +8,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 {
     // Init
     pathFound = false;
+    bestPath = new std::vector<std::vector<double>>;
 
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
@@ -55,6 +56,7 @@ bool RRTPlanner::extend()
     {
         newState = trajectory->back();
         sTree.addChild(nearest, newState);
+        ROS_INFO_STREAM("dist: " << vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()));
         if (vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()) < 0.5)
         {
             return true;
@@ -77,13 +79,15 @@ void RRTPlanner::planOpenTrackRRT()
             pathFound = true;
             break;
         }
-        if (pathFound)
-        {
-            bestPath->clear();
-            bestPath = sTree.traceBackToRoot(mapHandler.calculateGoalState());
-        }
 
     }
+
+    if (pathFound)
+    {
+        bestPath->clear();
+        bestPath = sTree.traceBackToRoot(mapHandler.calculateGoalState());
+    }
+    
     visualize();
     ROS_INFO_STREAM("-------------");
 }
@@ -111,7 +115,7 @@ void RRTPlanner::visualize()
     sTree.drawTree(&markerArray);
     if (pathFound)
     {
-
+        visualizeBestPath(&markerArray);
     }
     markerPublisher.publish(markerArray);
 }
