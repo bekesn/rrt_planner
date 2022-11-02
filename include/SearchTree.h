@@ -26,7 +26,7 @@ public:
     //~SearchTree();
 
     //Add child node
-    void addChild(SearchTreeNode* parentNode, std::vector<double> state);
+    SearchTreeNode* addChild(SearchTreeNode* parentNode, std::vector<double> state, double nodeCost);
 
     //Remove node
     void remove(SearchTreeNode* node);
@@ -35,7 +35,7 @@ public:
     SearchTreeNode* getNearest(std::vector<double> state);
 
     //Get nearby nodes
-    std::vector<SearchTreeNode*> getNearby(std::vector<double> state, double maxDist);
+    std::vector<SearchTreeNode*>* getNearby(std::vector<double> state, double maxDist);
 
     // Draw tree as lines
     void drawTree(visualization_msgs::MarkerArray* markerArray);
@@ -45,6 +45,11 @@ public:
 
     // Traceback to root
     std::vector<std::vector<double>>* traceBackToRoot(std::vector<double> goalState);
+
+    // Get absolute cost to node
+    float getAbsCost(SearchTreeNode* node);
+
+    bool maxNumOfNodesReached();
 
 };
 

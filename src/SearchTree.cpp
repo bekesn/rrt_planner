@@ -10,22 +10,21 @@ SearchTree::SearchTree(VehicleModel* vehicleModel, std::vector<double> startStat
 {
     vehicle = vehicleModel;
     tree = new std::vector<SearchTreeNode*>(0);
-    tree->push_back(new SearchTreeNode(NULL, startState));
+    tree->push_back(new SearchTreeNode(NULL, startState, 0));
 }
 
-void SearchTree::addChild(SearchTreeNode* parentNode, std::vector<double> state)
+SearchTreeNode* SearchTree::addChild(SearchTreeNode* parentNode, std::vector<double> state, double nodeCost)
 {
-    if (tree->size() < maxNumOfNodes)
+    if (!maxNumOfNodesReached())
     {
-        if (parentNode != NULL)
-        {
-            tree->push_back(new SearchTreeNode(parentNode, state));
-            parentNode->addChild(tree->back());
-        }
-        else
-        {
-            ROS_ERROR("[RRT_PLANNER]: parentNode is NULL in SearchTree::addChild()");
-        }
+        tree->push_back(new SearchTreeNode(parentNode, state, nodeCost));
+        parentNode->addChild(tree->back());
+        return tree->back();
+    }
+    else
+    {
+        ROS_WARN("[RRT_PLANNER]: MAX NUMBER OF NODES REACHED");
+        return NULL;
     }
 }
 
@@ -62,17 +61,17 @@ SearchTreeNode* SearchTree::getNearest(std::vector<double> toState)
     return closest;
 }
 
-std::vector<SearchTreeNode*> SearchTree::getNearby(std::vector<double> toState, double maxDist)
+std::vector<SearchTreeNode*>* SearchTree::getNearby(std::vector<double> toState, double maxDist)
 {
     std::vector<SearchTreeNode*>::iterator it;
-    std::vector<SearchTreeNode*> closeNodes;
+    std::vector<SearchTreeNode*>* closeNodes = new std::vector<SearchTreeNode*>;
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
         if ((vehicle->distance((*it)->getState(), toState)) < maxDist)
         {
-            closeNodes.push_back((*it));
+            closeNodes->push_back((*it));
         }
     }
 
@@ -160,7 +159,7 @@ void SearchTree::reset(std::vector<double> startState)
     }
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
-    tree->push_back(new SearchTreeNode(NULL, startState));
+    tree->push_back(new SearchTreeNode(NULL, startState, 0));
 }
 
 std::vector<std::vector<double>>* SearchTree::traceBackToRoot(std::vector<double> goalState)
@@ -170,4 +169,16 @@ std::vector<std::vector<double>>* SearchTree::traceBackToRoot(std::vector<double
     std::vector<std::vector<double>>* path = new std::vector<std::vector<double>>;
     closestNode->traceBackToRoot(path);
     return path;
+}
+
+float SearchTree::getAbsCost(SearchTreeNode* node)
+{
+    float absCost = 0;
+    node->addToAbsoluteCost(&absCost);
+    return absCost;
+}
+
+bool SearchTree::maxNumOfNodesReached()
+{
+    return (tree->size() == maxNumOfNodes);
 }

@@ -11,13 +11,14 @@ private:
     SearchTreeNode* parentNode;
     std::vector<SearchTreeNode *> *childNodes;
     std::vector<double> state;
+    float cost;
 
 public:
 
     // Constructor
     SearchTreeNode();
     SearchTreeNode(const SearchTreeNode &original);
-    SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace);
+    SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace, double nodeCost);
 
     // Destructor
     //~SearchTreeNode();
@@ -36,6 +37,11 @@ public:
 
     // Get state
     std::vector<double> getState();
+
+    // Cost
+    float getSegmentCost(void);
+    void changeSegmentCost(float newCostValue);
+    void addToAbsoluteCost(float* absCost);
 
     // Trace back to parent and add state
     void traceBackToRoot(std::vector<std::vector<double>>* stateVector);

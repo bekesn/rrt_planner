@@ -34,6 +34,8 @@ public:
     // Extend searchtree by a new node
     bool extend();
 
+    bool rewire(SearchTreeNode* newNode);
+
     // RRT on partially discovered map
     void planOpenTrackRRT();
 

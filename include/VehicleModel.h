@@ -41,6 +41,9 @@ public:
     // Distance function
     double distance(std::vector<double> start, std::vector<double> goal);
 
+    // Get the maximal distance in a timestep
+    double getMaximalDistance();
+
     // SIMULATION FUNCTIONS
     // Holonomic model
     std::vector<std::vector<double>>* simulateHolonomic(std::vector<double> start, std::vector<double> goal);
@@ -48,6 +51,9 @@ public:
     // DISTANCE FUNCTIONS
     // Euclidean distance
     double getDistEuclidean(std::vector<double> start, std::vector<double> goal);
+
+    //COST FUNCTIONS
+    double getDistanceCost(std::vector<std::vector<double>>* trajectory);
 };
 
 

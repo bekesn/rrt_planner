@@ -41,6 +41,11 @@ double VehicleModel::distance(std::vector<double> start, std::vector<double> goa
     return (*this.*distanceFunction)(start, goal);
 }
 
+double VehicleModel::getMaximalDistance()
+{
+    return maxSpeed*simulationTimeStep;
+}
+
 
 std::vector<std::vector<double>>* VehicleModel::simulateHolonomic(std::vector<double> start, std::vector<double> goal)
 {
@@ -69,4 +74,21 @@ double VehicleModel::getDistEuclidean(std::vector<double> start, std::vector<dou
     double tmp1 = start[0]- goal[0];
     double tmp2 = start[1] - goal[1];
     return(sqrt(tmp1*tmp1 + tmp2*tmp2));
+}
+
+double VehicleModel::getDistanceCost(std::vector<std::vector<double>>* trajectory)
+{
+    std::vector<double> prevState = (*trajectory)[0];
+    std::vector<double> currState;
+    int size = trajectory->size();
+    double length = 0;
+    for (int i = 1; i < size; i++)
+    {
+        currState = (*trajectory)[i];
+        double dx = currState[0] - prevState[0];
+        double dy= currState[1] - prevState[1];
+        length += sqrt(dx * dx + dy * dy);
+        prevState = currState;
+    }
+    return length;
 }

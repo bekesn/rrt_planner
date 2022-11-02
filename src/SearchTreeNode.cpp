@@ -13,13 +13,15 @@ SearchTreeNode::SearchTreeNode(const SearchTreeNode &original)
     childNodes = new std::vector<SearchTreeNode*>;
     copy(original.childNodes->begin(), original.childNodes->end(), back_inserter(*childNodes));
     state = original.state;
+    cost = original.cost;
 }
 
-SearchTreeNode::SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace)
+SearchTreeNode::SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace, double nodeCost)
 {
     parentNode = parent;
     state = stateSpace;
     childNodes = new std::vector<SearchTreeNode*>(0);
+    cost = nodeCost;
 }
 
 
@@ -46,6 +48,22 @@ std::vector<SearchTreeNode*> *SearchTreeNode::getChildren()
 std::vector<double> SearchTreeNode::getState()
 {
     return state;
+}
+
+float SearchTreeNode::getSegmentCost(void)
+{
+    return cost;
+}
+
+void SearchTreeNode::changeSegmentCost(float newCostValue)
+{
+    cost = newCostValue;
+}
+
+void SearchTreeNode::addToAbsoluteCost(float* absCost)
+{
+    *absCost += cost;
+    if (parentNode != NULL) parentNode->addToAbsoluteCost(absCost);
 }
 
 void SearchTreeNode::traceBackToRoot(std::vector<std::vector<double>>* stateVector)

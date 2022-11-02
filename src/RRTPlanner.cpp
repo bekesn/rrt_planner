@@ -54,24 +54,60 @@ bool RRTPlanner::extend()
     // Add node
     if (!offCourse && (trajectory->size() > 0))
     {
+        SearchTreeNode* newNode;
         newState = trajectory->back();
-        sTree.addChild(nearest, newState);
-        ROS_INFO_STREAM("dist: " << vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()));
-        if (vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()) < 0.5)
+        newNode = sTree.addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
+
+        if (!newNode)
         {
-            return true;
+            rewire(newNode);
+
+            if (vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()) < 0.5)
+            {
+                return true;
+            }
         }
+        
+    }
+    return false;
+}
+
+bool RRTPlanner::rewire(SearchTreeNode* newNode)
+{
+    std::vector<std::vector<double>>* trajectory;
+    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode->getState(), vehicleModel.getMaximalDistance());
+    std::vector<SearchTreeNode*>::iterator it;
+    float newNodeCost = sTree.getAbsCost(newNode);
+
+    for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
+    {
+        
+        trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState());
+        if (trajectory->size() > 1)
+        {
+            // Check if new path leads close to new state
+            if (vehicleModel.getDistEuclidean(trajectory->back(), (*it)->getState()) < 0.01)
+            {
+                //Compare costs
+                if (newNodeCost + vehicleModel.getDistanceCost(trajectory) < sTree.getAbsCost(*it))
+                {
+                    // Rewire if it reduces cost
+
+                }
+            }
+        }
+        //delete trajectory;
     }
     return false;
 }
 
 void RRTPlanner::planOpenTrackRRT()
 {
-    sTree.reset({10.0, 0.0, 0.0});
+    sTree.reset({0.0, 0.0, 0.0});
     pathFound = false;
 
     // TODO
-    for(int i = 0; i < 300; i++)
+    while(!sTree.maxNumOfNodesReached())
     {
         bool closeToGoal = extend();
         if (closeToGoal)
@@ -87,7 +123,7 @@ void RRTPlanner::planOpenTrackRRT()
         bestPath->clear();
         bestPath = sTree.traceBackToRoot(mapHandler.calculateGoalState());
     }
-    
+
     visualize();
     ROS_INFO_STREAM("-------------");
 }
