@@ -29,8 +29,9 @@ public:
     // Remove child node
     void removeChild(SearchTreeNode* childNode);
 
-    // GetParentNode
+    // Get and change parent
     SearchTreeNode* getParent();
+    void changeParent(SearchTreeNode* newParent);
 
     // Get children
     std::vector<SearchTreeNode*> *getChildren();

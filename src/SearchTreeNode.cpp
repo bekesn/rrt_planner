@@ -32,12 +32,17 @@ void SearchTreeNode::addChild(SearchTreeNode* childNode)
 
 void SearchTreeNode::removeChild(SearchTreeNode* childNode)
 {
-    //std::remove(childVector.begin(), childVector.end(), childNodeID);
+    childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
 }
 
 SearchTreeNode* SearchTreeNode::getParent()
 {
     return parentNode;
+}
+
+void SearchTreeNode::changeParent(SearchTreeNode* newParent)
+{
+    parentNode = newParent;
 }
 
 std::vector<SearchTreeNode*> *SearchTreeNode::getChildren()

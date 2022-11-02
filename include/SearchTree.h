@@ -14,7 +14,7 @@ class SearchTree
 private:
     std::vector<SearchTreeNode*> *tree;
     VehicleModel* vehicle;
-    int maxNumOfNodes = 200;
+    int maxNumOfNodes = 1000;
 
 public:
 
@@ -35,7 +35,7 @@ public:
     SearchTreeNode* getNearest(std::vector<double> state);
 
     //Get nearby nodes
-    std::vector<SearchTreeNode*>* getNearby(std::vector<double> state, double maxDist);
+    std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node, double maxDist);
 
     // Draw tree as lines
     void drawTree(visualization_msgs::MarkerArray* markerArray);
@@ -49,7 +49,11 @@ public:
     // Get absolute cost to node
     float getAbsCost(SearchTreeNode* node);
 
+    // Check wether number of nodes reached the maximum
     bool maxNumOfNodesReached();
+
+    // Rewiring node from former parent to newParent node
+    void rewire(SearchTreeNode* node, SearchTreeNode* newParent);
 
 };
 

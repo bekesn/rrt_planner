@@ -61,7 +61,7 @@ SearchTreeNode* SearchTree::getNearest(std::vector<double> toState)
     return closest;
 }
 
-std::vector<SearchTreeNode*>* SearchTree::getNearby(std::vector<double> toState, double maxDist)
+std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node, double maxDist)
 {
     std::vector<SearchTreeNode*>::iterator it;
     std::vector<SearchTreeNode*>* closeNodes = new std::vector<SearchTreeNode*>;
@@ -69,7 +69,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(std::vector<double> toState,
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if ((vehicle->distance((*it)->getState(), toState)) < maxDist)
+        if (((vehicle->distance((*it)->getState(), node->getState())) < maxDist) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }
@@ -165,7 +165,6 @@ void SearchTree::reset(std::vector<double> startState)
 std::vector<std::vector<double>>* SearchTree::traceBackToRoot(std::vector<double> goalState)
 {
     SearchTreeNode* closestNode = getNearest(goalState);
-    ROS_INFO_STREAM("closest: " << closestNode->getState()[0]);
     std::vector<std::vector<double>>* path = new std::vector<std::vector<double>>;
     closestNode->traceBackToRoot(path);
     return path;
@@ -181,4 +180,10 @@ float SearchTree::getAbsCost(SearchTreeNode* node)
 bool SearchTree::maxNumOfNodesReached()
 {
     return (tree->size() == maxNumOfNodes);
+}
+
+void SearchTree::rewire(SearchTreeNode* node, SearchTreeNode* newParent)
+{
+    node->getParent()->removeChild(node);
+    node->changeParent(newParent);
 }

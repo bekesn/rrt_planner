@@ -57,8 +57,9 @@ bool RRTPlanner::extend()
         SearchTreeNode* newNode;
         newState = trajectory->back();
         newNode = sTree.addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
+        ROS_INFO_STREAM("" << vehicleModel.getDistanceCost(trajectory));
 
-        if (!newNode)
+        if (newNode)
         {
             rewire(newNode);
 
@@ -75,7 +76,7 @@ bool RRTPlanner::extend()
 bool RRTPlanner::rewire(SearchTreeNode* newNode)
 {
     std::vector<std::vector<double>>* trajectory;
-    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode->getState(), vehicleModel.getMaximalDistance());
+    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode, vehicleModel.getMaximalDistance());
     std::vector<SearchTreeNode*>::iterator it;
     float newNodeCost = sTree.getAbsCost(newNode);
 
@@ -83,20 +84,23 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
     {
         
         trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState());
-        if (trajectory->size() > 1)
+        if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state
             if (vehicleModel.getDistEuclidean(trajectory->back(), (*it)->getState()) < 0.01)
             {
+                float segmentCost = vehicleModel.getDistanceCost(trajectory);
                 //Compare costs
-                if (newNodeCost + vehicleModel.getDistanceCost(trajectory) < sTree.getAbsCost(*it))
+                if (newNodeCost + segmentCost < sTree.getAbsCost(*it))
                 {
+                    //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
                     // Rewire if it reduces cost
-
+                    sTree.rewire(*it,newNode);
+                    (*it)->changeSegmentCost(segmentCost);
+                    //ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.calculateGoalState())));
                 }
             }
         }
-        //delete trajectory;
     }
     return false;
 }
@@ -125,6 +129,7 @@ void RRTPlanner::planOpenTrackRRT()
     }
 
     visualize();
+    ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.calculateGoalState())));
     ROS_INFO_STREAM("-------------");
 }
 
