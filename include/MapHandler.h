@@ -13,6 +13,7 @@ private:
     
     std::vector<frt_custom_msgs::Landmark*> map;
     VehicleModel* vehicleModel;
+    std::vector<double> goalState;
 
     // Parameters
     float goalBias;
@@ -33,11 +34,18 @@ public:
     // Get random state
     std::vector<double> getRandomState();
 
-    // Calculate goal state
-    std::vector<double> calculateGoalState();
+    // Calculate and get goal state
+    void calculateGoalState();
+    std::vector<double> getGoalState();
 
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+
+    // Visualize significant points
+    void visualizePoints(visualization_msgs::MarkerArray* mArray);
+
+    // Get closest cone by color
+    frt_custom_msgs::Landmark* getClosestLandmark(frt_custom_msgs::Landmark* landmark, frt_custom_msgs::Landmark::_color_type color);
 
 };
 

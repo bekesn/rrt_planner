@@ -57,13 +57,13 @@ bool RRTPlanner::extend()
         SearchTreeNode* newNode;
         newState = trajectory->back();
         newNode = sTree.addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
-        ROS_INFO_STREAM("" << vehicleModel.getDistanceCost(trajectory));
+        //ROS_INFO_STREAM("" << vehicleModel.getDistanceCost(trajectory));
 
         if (newNode)
         {
             rewire(newNode);
 
-            if (vehicleModel.getDistEuclidean(newState, mapHandler.calculateGoalState()) < 0.5)
+            if (vehicleModel.getDistEuclidean(newState, mapHandler.getGoalState()) < 0.5)
             {
                 return true;
             }
@@ -91,7 +91,7 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
             {
                 float segmentCost = vehicleModel.getDistanceCost(trajectory);
                 //Compare costs
-                if (newNodeCost + segmentCost < sTree.getAbsCost(*it))
+                if ((newNodeCost + segmentCost) < sTree.getAbsCost(*it))
                 {
                     //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
                     // Rewire if it reduces cost
@@ -109,9 +109,10 @@ void RRTPlanner::planOpenTrackRRT()
 {
     sTree.reset({0.0, 0.0, 0.0});
     pathFound = false;
+    int iteration = 0;
 
     // TODO
-    while(!sTree.maxNumOfNodesReached())
+    while((!sTree.maxNumOfNodesReached()) || (iteration == 1500))
     {
         bool closeToGoal = extend();
         if (closeToGoal)
@@ -119,17 +120,16 @@ void RRTPlanner::planOpenTrackRRT()
             pathFound = true;
             break;
         }
-
     }
 
     if (pathFound)
     {
         bestPath->clear();
-        bestPath = sTree.traceBackToRoot(mapHandler.calculateGoalState());
+        bestPath = sTree.traceBackToRoot(mapHandler.getGoalState());
     }
 
     visualize();
-    ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.calculateGoalState())));
+    ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
     ROS_INFO_STREAM("-------------");
 }
 
@@ -154,15 +154,17 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 void RRTPlanner::visualize()
 {
     sTree.drawTree(&markerArray);
-    if (pathFound)
-    {
-        visualizeBestPath(&markerArray);
-    }
+    visualizeBestPath(&markerArray);
+    mapHandler.visualizePoints(&markerArray);
     markerPublisher.publish(markerArray);
 }
 
 void RRTPlanner::visualizeBestPath(visualization_msgs::MarkerArray* mArray)
 {
+    // Return if path has been not found yet
+    if (!pathFound) return;
+
+
     visualization_msgs::Marker bestPathLine;
         bestPathLine.header.frame_id = "map";
         bestPathLine.header.stamp = ros::Time::now();

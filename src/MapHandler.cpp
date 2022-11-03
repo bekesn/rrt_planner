@@ -100,7 +100,7 @@ std::vector<double> MapHandler::getRandomState()
         int numOfCones = map.size();
         if (numOfCones == 0)
         {
-            randState = calculateGoalState();
+            randState = getGoalState();
         }
         else
         {
@@ -108,21 +108,71 @@ std::vector<double> MapHandler::getRandomState()
             int coneID = rand() % numOfCones;
             randState[0] = map[coneID]->x + (rand()%((int) (200*spawnRange))) / 100.0 - spawnRange;
             randState[1] = map[coneID]->y + (rand()%((int) (200*spawnRange))) / 100.0 - spawnRange;
-            randState[2] = (rand() % ((int) (1000*M_PI))) / 1000.0;
+            randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
         }
     }
     else
     {
-        randState = calculateGoalState();
+        randState = getGoalState();
     }
 
     return randState;
 }
 
-std::vector<double> MapHandler::calculateGoalState()
+void MapHandler::calculateGoalState()
 {
-    return std::vector<double> {75.0, 0, 0};
+    std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
+    float maxDist = 0;
+    std::vector<double> currentState = {vehicleModel->getCurrentPose().pose.position.x, vehicleModel->getCurrentPose().pose.position.x};
+
+
+
+    // Create close blue-yellow pairs
+    for (auto & landmark : map)
+    {
+        std::vector<frt_custom_msgs::Landmark*>* pair = new std::vector<frt_custom_msgs::Landmark*>;
+        switch(landmark->color)
+        {
+            case frt_custom_msgs::Landmark::BLUE:
+                pair->push_back(landmark);
+                pair->push_back(getClosestLandmark(landmark, frt_custom_msgs::Landmark::YELLOW));
+                break;
+            case frt_custom_msgs::Landmark::YELLOW:
+                pair->push_back(landmark);
+                pair->push_back(getClosestLandmark(landmark, frt_custom_msgs::Landmark::BLUE));
+                break;
+            default:
+                break;
+        }
+
+        if((pair->size() > 0) && (vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {(*pair)[0]->x, (*pair)[0]->y}) < 8))
+        {
+            closestLandmarks.push_back(pair);
+        }
+    }
+
+    // Choose most distant pair
+
+    for (auto & pair : closestLandmarks)
+    {
+        float dist = vehicleModel->getDistEuclidean(currentState, {(*pair)[0]->x, (*pair)[0]->y});
+        dist += vehicleModel->getDistEuclidean(currentState, {(*pair)[1]->x, (*pair)[1]->y});
+        dist = dist/2.0;
+
+        if (dist > maxDist)
+        {
+            maxDist = dist;
+            goalState = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
+        }
+    }
+
+}
+
+
+std::vector<double> MapHandler::getGoalState()
+{
+    return goalState;
 }
 
 void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
@@ -147,4 +197,54 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
         newLandmark->color = landmark.color;
         this->map.push_back(newLandmark);
     }
+
+    calculateGoalState();
+}
+
+void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray)
+{
+    visualization_msgs::Marker goal;
+        goal.header.frame_id = "map";
+        goal.header.stamp = ros::Time::now();
+        goal.ns = "rrt_goal";
+        goal.action = visualization_msgs::Marker::ADD;
+        goal.pose.orientation.w = 1.0;
+        goal.id = 3;
+        goal.type = visualization_msgs::Marker::CUBE_LIST;
+        goal.scale.x = 0.4f;
+        goal.scale.y = 0.4f;
+        goal.scale.z = 0.4f;
+        goal.color.r = 1.0f;
+        goal.color.g = 0.0f;
+        goal.color.b = 0.0f;
+        goal.color.a = 1.0f;
+
+    geometry_msgs::Point coord;
+    coord.x = goalState[0];
+    coord.y = goalState[1];
+    goal.points.push_back(coord);
+
+    mArray->markers.emplace_back(goal);
+}
+
+
+frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landmark* selectedLandmark, frt_custom_msgs::Landmark::_color_type color)
+{
+    float minDist = 100.0;
+    float dist;
+    frt_custom_msgs::Landmark* closestLandmark;
+
+    for(auto & landmark : map)
+    {
+        if ((landmark != selectedLandmark) && (landmark->color == color))
+        {
+            dist = vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {selectedLandmark->x, selectedLandmark->y});
+            if (dist < minDist)
+            {
+                closestLandmark = landmark;
+                minDist = dist;
+            }
+        }
+    }
+    return closestLandmark;
 }
