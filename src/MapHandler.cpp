@@ -91,11 +91,21 @@ bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<fr
     return isOnTrackEdge;
 }
 
-std::vector<double> MapHandler::getRandomState()
+std::vector<double> MapHandler::getRandomState(std::vector<std::vector<double>>* path)
 {
     std::vector<double> randState(3);
 
-    if (((rand()%1000)/1000.0) > goalBias)
+
+    if ((path->size() > 0) && (((rand() % 1000) / 1000.0) > 0.5))
+    {
+        int nodeID = rand() % path->size();
+        double range = vehicleModel->getMaximalDistance();
+
+        randState[0] = (*path)[nodeID][0] + (rand()%((int) (200*range))) / 100.0 - range;
+        randState[1] = (*path)[nodeID][1] + (rand()%((int) (200*range))) / 100.0 - range;
+        randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0 - M_PI;
+    }
+    else if (((rand()%1000)/1000.0) > goalBias) 
     {
         int numOfCones = map.size();
         if (numOfCones == 0)

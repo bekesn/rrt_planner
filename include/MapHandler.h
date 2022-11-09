@@ -32,7 +32,7 @@ public:
     bool isOnTrackEdge(std::vector<double>* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones);
 
     // Get random state
-    std::vector<double> getRandomState();
+    std::vector<double> getRandomState(std::vector<std::vector<double>>* path);
 
     // Calculate and get goal state
     void calculateGoalState();

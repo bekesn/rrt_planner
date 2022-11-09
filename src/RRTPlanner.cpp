@@ -40,7 +40,7 @@ bool RRTPlanner::extend()
     std::vector<std::vector<double>>* trajectory;
 
     // Get random state
-    randState = mapHandler.getRandomState();
+    randState = mapHandler.getRandomState(bestPath);
 
     // Get nearest node
     SearchTreeNode* nearest = sTree.getNearest(randState);
@@ -57,7 +57,6 @@ bool RRTPlanner::extend()
         SearchTreeNode* newNode;
         newState = trajectory->back();
         newNode = sTree.addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
-        //ROS_INFO_STREAM("" << vehicleModel.getDistanceCost(trajectory));
 
         if (newNode)
         {
