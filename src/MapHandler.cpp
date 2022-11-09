@@ -145,6 +145,9 @@ void MapHandler::calculateGoalState()
             default:
                 break;
         }
+        if(pair->size() > 0)
+        {
+        }
 
         if((pair->size() > 0) && (vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {(*pair)[1]->x, (*pair)[1]->y}) < 8))
         {
@@ -160,10 +163,14 @@ void MapHandler::calculateGoalState()
         dist += vehicleModel->getDistEuclidean(currentState, {(*pair)[1]->x, (*pair)[1]->y});
         dist = dist/2.0;
 
+        std::vector<double> state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
+        double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
+        ROS_INFO_STREAM("x1: " << (*pair)[0]->x << " y1: " << (*pair)[0]->y << " | x1: " << (*pair)[1]->x << " y1: " << (*pair)[1]->y << " dist: " << dist <<
+        " angle:" << std::min(angleDiff, M_PI * 2.0 - angleDiff));
         if (dist > maxDist)
         {
-            std::vector<double> state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
-            if (std::remainder(abs(atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]), M_2_PI) < 1)
+            
+            if (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1)
             {
                 maxDist = dist;
                 goalState = state;
