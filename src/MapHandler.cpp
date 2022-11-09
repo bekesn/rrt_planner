@@ -124,8 +124,8 @@ void MapHandler::calculateGoalState()
 {
     std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
     float maxDist = 0;
-    std::vector<double> currentState = {vehicleModel->getCurrentPose().pose.position.x, vehicleModel->getCurrentPose().pose.position.x};
-
+    std::vector<double> currentState = {vehicleModel->getCurrentPose().x, vehicleModel->getCurrentPose().y, vehicleModel->getCurrentPose().theta};
+    
 
 
     // Create close blue-yellow pairs
@@ -146,7 +146,7 @@ void MapHandler::calculateGoalState()
                 break;
         }
 
-        if((pair->size() > 0) && (vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {(*pair)[0]->x, (*pair)[0]->y}) < 8))
+        if((pair->size() > 0) && (vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {(*pair)[1]->x, (*pair)[1]->y}) < 8))
         {
             closestLandmarks.push_back(pair);
         }
@@ -162,8 +162,13 @@ void MapHandler::calculateGoalState()
 
         if (dist > maxDist)
         {
-            maxDist = dist;
-            goalState = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
+            std::vector<double> state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
+            if (std::remainder(abs(atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]), M_2_PI) < 1)
+            {
+                maxDist = dist;
+                goalState = state;
+            }
+            
         }
     }
 

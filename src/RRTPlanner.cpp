@@ -107,7 +107,8 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
 
 void RRTPlanner::planOpenTrackRRT()
 {
-    sTree.reset({0.0, 0.0, 0.0});
+    geometry_msgs::Pose2D pose = vehicleModel.getCurrentPose();
+    sTree.reset({pose.x, pose.y, 0.0});
     pathFound = false;
     int iteration = 0;
 
@@ -153,6 +154,7 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 
 void RRTPlanner::visualize()
 {
+    markerArray.markers.clear();
     sTree.drawTree(&markerArray);
     visualizeBestPath(&markerArray);
     mapHandler.visualizePoints(&markerArray);

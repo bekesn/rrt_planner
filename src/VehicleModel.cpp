@@ -23,12 +23,21 @@ VehicleModel::VehicleModel(double (VehicleModel::*distFun)(std::vector<double> s
 
 void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    this->currentPose = *msg;
+    tf::Quaternion q(msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+
+    currentPose.x = msg->pose.position.x;
+    currentPose.y = msg->pose.position.y;
+    currentPose.theta = yaw;
+
 }
 
-geometry_msgs::PoseStamped VehicleModel::getCurrentPose()
+geometry_msgs::Pose2D VehicleModel::getCurrentPose()
 {
-    return this->currentPose;
+    return currentPose;
 }
 
 std::vector<std::vector<double>>* VehicleModel::simulateToTarget(std::vector<double> startState, std::vector<double> goalState)

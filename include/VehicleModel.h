@@ -3,6 +3,8 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose2D.h>
+#include <tf/tf.h>
 #include <Eigen/Dense>
 #include <math.h>
 
@@ -10,7 +12,7 @@
 
 class VehicleModel
 {
-    geometry_msgs::PoseStamped currentPose;
+    geometry_msgs::Pose2D currentPose;
 
     // Function pointers
     double (VehicleModel::*distanceFunction)(std::vector<double> start, std::vector<double> goal);
@@ -33,7 +35,7 @@ public:
     void poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
     // Get vehicle pose
-    geometry_msgs::PoseStamped getCurrentPose();
+    geometry_msgs::Pose2D getCurrentPose();
 
     // Simulate advancing towards target
     std::vector<std::vector<double>>* simulateToTarget(std::vector<double> start, std::vector<double> goal);

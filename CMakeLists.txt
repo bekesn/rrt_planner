@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   visualization_msgs
   roslib
+  tf
   cmake_modules
 )
 find_package(Eigen REQUIRED)
@@ -109,7 +110,7 @@ find_package(Eigen REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-   CATKIN_DEPENDS frt_custom_msgs roscpp rospy std_msgs visualization_msgs roslib
+   CATKIN_DEPENDS frt_custom_msgs roscpp rospy std_msgs visualization_msgs tf roslib
    DEPENDS Eigen
 )
 
