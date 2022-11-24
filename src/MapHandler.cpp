@@ -6,6 +6,7 @@ MapHandler::MapHandler()
     vehicleModel = NULL;
     collisionRange = 6;
     spawnRange = 3;
+    goalHorizon = 25;
 }
 
 MapHandler::MapHandler(VehicleModel* vm)
@@ -14,6 +15,7 @@ MapHandler::MapHandler(VehicleModel* vm)
     vehicleModel = vm;
     collisionRange = 6;
     spawnRange = 3;
+    goalHorizon = 25;
 }
 
 
@@ -194,20 +196,14 @@ void MapHandler::calculateGoalState()
         double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
         /*ROS_INFO_STREAM("x1: " << (*pair)[0]->x << " y1: " << (*pair)[0]->y << " | x1: " << (*pair)[1]->x << " y1: " << (*pair)[1]->y << " dist: " << dist <<
         " angle:" << std::min(angleDiff, M_PI * 2.0 - angleDiff));*/
-        if (dist > maxDist)
+        if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < goalHorizon))
         {
-            
-            if (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1)
-            {
-                maxDist = dist;
-                goalState = state;
-            }
-            
+            maxDist = dist;
+            goalState = state;            
         }
     }
 
 }
-
 
 std::vector<double> MapHandler::getGoalState()
 {

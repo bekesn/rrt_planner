@@ -19,6 +19,7 @@ private:
     float goalBias;
     float collisionRange;
     float spawnRange;
+    float goalHorizon;
 
 public:
     MapHandler();
