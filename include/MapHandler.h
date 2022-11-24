@@ -20,6 +20,7 @@ private:
     float collisionRange;
     float spawnRange;
     float goalHorizon;
+    bool mapReceived;
 
 public:
     MapHandler();
@@ -47,6 +48,9 @@ public:
 
     // Get closest cone by color
     frt_custom_msgs::Landmark* getClosestLandmark(frt_custom_msgs::Landmark* landmark, frt_custom_msgs::Landmark::_color_type color);
+
+    // Return if map arrived
+    bool hasMap();
 
 };
 

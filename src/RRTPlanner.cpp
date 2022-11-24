@@ -25,7 +25,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_viz", 10);
 
 
-    timer = nh.createWallTimer(ros::WallDuration(0.5), &RRTPlanner::timerCallback, this);
+    timer = nh.createWallTimer(ros::WallDuration(0.1), &RRTPlanner::timerCallback, this);
 
     
     ros::spin();
@@ -110,6 +110,8 @@ void RRTPlanner::planOpenTrackRRT()
     sTree.reset({pose.x, pose.y, 0.0});
     pathFound = false;
     int iteration = 0;
+
+    if (!mapHandler.hasMap()) return;
 
     // TODO
     while((!sTree.maxNumOfNodesReached()) && (iteration <= 1500))

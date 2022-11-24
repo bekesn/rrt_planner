@@ -6,7 +6,8 @@ MapHandler::MapHandler()
     vehicleModel = NULL;
     collisionRange = 6;
     spawnRange = 3;
-    goalHorizon = 25;
+    goalHorizon = 20;
+    mapReceived = false;
 }
 
 MapHandler::MapHandler(VehicleModel* vm)
@@ -15,9 +16,9 @@ MapHandler::MapHandler(VehicleModel* vm)
     vehicleModel = vm;
     collisionRange = 6;
     spawnRange = 3;
-    goalHorizon = 25;
+    goalHorizon = 20;
+    mapReceived = false;
 }
-
 
 bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
 {
@@ -79,7 +80,6 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
 
     return isOC;
 }
-
 
 bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones)
 {
@@ -233,6 +233,7 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
         this->map.push_back(newLandmark);
     }
 
+    mapReceived = true;
     calculateGoalState();
 }
 
@@ -261,7 +262,6 @@ void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray)
 
     mArray->markers.emplace_back(goal);
 }
-
 
 frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landmark* selectedLandmark, frt_custom_msgs::Landmark::_color_type color)
 {
@@ -294,4 +294,9 @@ frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landm
         }
     }
     return closestLandmark;
+}
+
+bool MapHandler::hasMap()
+{
+    return mapReceived;
 }
