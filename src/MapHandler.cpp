@@ -43,6 +43,18 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
                     closeYellowLandmarks->push_back(cone);
                     break;
                 default:
+                    frt_custom_msgs::Landmark::_color_type col = getClosestLandmark(cone, frt_custom_msgs::Landmark::UNKNOWN)->color;
+                    switch (col)
+                    {
+                        case frt_custom_msgs::Landmark::BLUE:
+                            closeBlueLandmarks->push_back(cone);
+                            break;
+                        case frt_custom_msgs::Landmark::YELLOW:
+                            closeYellowLandmarks->push_back(cone);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
             }
         }
@@ -260,10 +272,22 @@ frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landm
     float minDist = 100.0;
     float dist;
     frt_custom_msgs::Landmark* closestLandmark;
+    bool colorOK;
 
     for(auto & landmark : map)
     {
-        if ((landmark != selectedLandmark) && (landmark->color == color))
+        // Check if color is corresponding
+        // If UNKNOWN, BLUE or YELLOW is accepted
+        if (color != frt_custom_msgs::Landmark::UNKNOWN)
+        {
+            colorOK = landmark->color == color;
+        }
+        else
+        {
+            colorOK = (landmark->color == frt_custom_msgs::Landmark::BLUE) || (landmark->color == frt_custom_msgs::Landmark::YELLOW);
+        }
+
+        if ((landmark != selectedLandmark) && colorOK)
         {
             dist = vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {selectedLandmark->x, selectedLandmark->y});
             if (dist < minDist)
