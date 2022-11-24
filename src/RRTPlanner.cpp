@@ -92,11 +92,11 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
                 //Compare costs
                 if ((newNodeCost + segmentCost) < sTree.getAbsCost(*it))
                 {
-                    //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
-                    // Rewire if it reduces cost
+                    ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
+                    //Rewire if it reduces cost
                     sTree.rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
-                    //ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.calculateGoalState())));
+                    ROS_INFO_STREAM("best dist after:" << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
                 }
             }
         }
@@ -114,7 +114,7 @@ void RRTPlanner::planOpenTrackRRT()
     if (!mapHandler.hasMap()) return;
 
     // TODO
-    while((!sTree.maxNumOfNodesReached()) && (iteration <= 1500))
+    while((!sTree.maxNumOfNodesReached()) && (iteration <= 2500))
     {
         bool closeToGoal = extend();
         if (closeToGoal)

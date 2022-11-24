@@ -39,14 +39,16 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
         {
             switch (cone->color)
             {
+                frt_custom_msgs::Landmark::_color_type col;
+                
                 case frt_custom_msgs::Landmark::BLUE:
                     closeBlueLandmarks->push_back(cone);
                     break;
                 case frt_custom_msgs::Landmark::YELLOW:
                     closeYellowLandmarks->push_back(cone);
                     break;
-                default:
-                    frt_custom_msgs::Landmark::_color_type col = getClosestLandmark(cone, frt_custom_msgs::Landmark::UNKNOWN)->color;
+                case frt_custom_msgs::Landmark::ORANGE_SMALL:
+                    col = getClosestLandmark(cone, frt_custom_msgs::Landmark::UNKNOWN)->color;
                     switch (col)
                     {
                         case frt_custom_msgs::Landmark::BLUE:
@@ -58,6 +60,8 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
                         default:
                             break;
                     }
+                    break;
+                default:
                     break;
             }
         }
@@ -118,7 +122,7 @@ std::vector<double> MapHandler::getRandomState(std::vector<std::vector<double>>*
     if ((path->size() > 0) && (((rand() % 1000) / 1000.0) > 0.5))
     {
         int nodeID = rand() % path->size();
-        double range = vehicleModel->getMaximalDistance();
+        double range = vehicleModel->getMaximalDistance()/10;
 
         randState[0] = (*path)[nodeID][0] + (rand()%((int) (200*range))) / 100.0 - range;
         randState[1] = (*path)[nodeID][1] + (rand()%((int) (200*range))) / 100.0 - range;
