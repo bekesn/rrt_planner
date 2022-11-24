@@ -21,7 +21,7 @@ public:
     SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace, double nodeCost);
 
     // Destructor
-    //~SearchTreeNode();
+    ~SearchTreeNode();
 
     // Add child node
     void addChild(SearchTreeNode* childNode);

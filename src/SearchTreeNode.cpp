@@ -24,6 +24,16 @@ SearchTreeNode::SearchTreeNode(SearchTreeNode* parent, std::vector<double> state
     cost = nodeCost;
 }
 
+SearchTreeNode::~SearchTreeNode()
+{
+    std::vector<SearchTreeNode*>::iterator it;
+    for (it = childNodes->begin(); it != childNodes->end(); it++)
+    {
+        delete(*it);
+    }
+    delete(childNodes);
+}
+
 
 void SearchTreeNode::addChild(SearchTreeNode* childNode)
 {

@@ -13,6 +13,11 @@ SearchTree::SearchTree(VehicleModel* vehicleModel, std::vector<double> startStat
     tree->push_back(new SearchTreeNode(NULL, startState, 0));
 }
 
+SearchTree::~SearchTree()
+{
+    delete(tree->front());
+}
+
 SearchTreeNode* SearchTree::addChild(SearchTreeNode* parentNode, std::vector<double> state, double nodeCost)
 {
     if (!maxNumOfNodesReached())
@@ -152,11 +157,6 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 
 void SearchTree::reset(std::vector<double> startState)
 {
-    std::vector<SearchTreeNode*>::iterator it;
-    for(it = tree->begin(); it != tree->end(); it++)
-    {
-        delete *it;
-    }
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
     tree->push_back(new SearchTreeNode(NULL, startState, 0));

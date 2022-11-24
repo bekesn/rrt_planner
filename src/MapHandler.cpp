@@ -69,7 +69,7 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
 
 bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones)
 {
-    double dx, dy, dist;
+    double dx, dy, dx2, dy2, dist, projected, coneDist;
     int size = cones->size();
     float maxDist = vehicleModel->track / 2;
     bool isOnTrackEdge = false;
@@ -80,8 +80,13 @@ bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<fr
         {
             dx = (*cones)[i]->x - (*cones)[j]->x;
             dy = (*cones)[i]->y - (*cones)[j]->y;
-            dist = abs(dx*((*cones)[j]->y - (*vehicleState)[1]) - ((*cones)[j]->x - (*vehicleState)[0])*dy) / sqrt(dx*dx + dy*dy);
-            if(dist < maxDist)
+            dx2 = (*cones)[j]->x - (*vehicleState)[0];
+            dy2 = (*cones)[j]->y - (*vehicleState)[1];
+            coneDist = sqrt(dx*dx + dy*dy);
+            dist = abs(dx * dy2 - dx2 * dy) / coneDist;
+            projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;
+            //ROS_INFO_STREAM("dist: " << dist << "   coneDist: " << coneDist << "   proj: " << projected << "   d: " << sqrt(dx2*dx2 + dy2*dy2));
+            if((dist < maxDist) && (projected >= 0) && (projected <= coneDist))
             {
                 isOnTrackEdge = true;
                 break;
@@ -175,8 +180,8 @@ void MapHandler::calculateGoalState()
 
         std::vector<double> state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
         double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
-        ROS_INFO_STREAM("x1: " << (*pair)[0]->x << " y1: " << (*pair)[0]->y << " | x1: " << (*pair)[1]->x << " y1: " << (*pair)[1]->y << " dist: " << dist <<
-        " angle:" << std::min(angleDiff, M_PI * 2.0 - angleDiff));
+        /*ROS_INFO_STREAM("x1: " << (*pair)[0]->x << " y1: " << (*pair)[0]->y << " | x1: " << (*pair)[1]->x << " y1: " << (*pair)[1]->y << " dist: " << dist <<
+        " angle:" << std::min(angleDiff, M_PI * 2.0 - angleDiff));*/
         if (dist > maxDist)
         {
             

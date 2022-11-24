@@ -23,7 +23,7 @@ public:
     SearchTree(VehicleModel* vehicleModel, std::vector<double> startState);
 
     //Destructor
-    //~SearchTree();
+    ~SearchTree();
 
     //Add child node
     SearchTreeNode* addChild(SearchTreeNode* parentNode, std::vector<double> state, double nodeCost);

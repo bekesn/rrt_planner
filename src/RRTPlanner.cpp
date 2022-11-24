@@ -112,7 +112,7 @@ void RRTPlanner::planOpenTrackRRT()
     int iteration = 0;
 
     // TODO
-    while((!sTree.maxNumOfNodesReached()) || (iteration == 1500))
+    while((!sTree.maxNumOfNodesReached()) && (iteration <= 1500))
     {
         bool closeToGoal = extend();
         if (closeToGoal)
@@ -120,6 +120,7 @@ void RRTPlanner::planOpenTrackRRT()
             pathFound = true;
             break;
         }
+        iteration++;
     }
 
     if (pathFound)
