@@ -93,11 +93,11 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
                 //Compare costs
                 if ((newNodeCost + segmentCost) < sTree.getAbsCost(*it))
                 {
-                    ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
+                    //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
                     //Rewire if it reduces cost
                     sTree.rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
-                    ROS_INFO_STREAM("best dist after:" << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
+                    //ROS_INFO_STREAM("best dist after:" << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
                 }
             }
         }

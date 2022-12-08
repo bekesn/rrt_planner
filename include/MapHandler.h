@@ -21,6 +21,7 @@ private:
     float spawnRange;
     float goalHorizon;
     bool mapReceived;
+    float maxConeDist;
 
 public:
     MapHandler();

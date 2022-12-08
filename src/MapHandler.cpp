@@ -8,6 +8,7 @@ MapHandler::MapHandler()
     spawnRange = 3;
     goalHorizon = 20;
     mapReceived = false;
+    maxConeDist = 6;
 }
 
 MapHandler::MapHandler(VehicleModel* vm)
@@ -16,8 +17,9 @@ MapHandler::MapHandler(VehicleModel* vm)
     vehicleModel = vm;
     collisionRange = 6;
     spawnRange = 3;
-    goalHorizon = 20;
+    goalHorizon = 15;
     mapReceived = false;
+    maxConeDist = 6;
 }
 
 bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
@@ -101,13 +103,16 @@ bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<fr
             dx2 = (*cones)[j]->x - (*vehicleState)[0];
             dy2 = (*cones)[j]->y - (*vehicleState)[1];
             coneDist = sqrt(dx*dx + dy*dy);
-            dist = abs(dx * dy2 - dx2 * dy) / coneDist;
-            projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;
-            //ROS_INFO_STREAM("dist: " << dist << "   coneDist: " << coneDist << "   proj: " << projected << "   d: " << sqrt(dx2*dx2 + dy2*dy2));
-            if((dist < maxDist) && (projected >= 0) && (projected <= coneDist))
+            if(coneDist < maxConeDist)
             {
-                isOnTrackEdge = true;
-                break;
+                dist = abs(dx * dy2 - dx2 * dy) / coneDist;
+                projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;
+                //ROS_INFO_STREAM("dist: " << dist << "   coneDist: " << coneDist << "   proj: " << projected << "   d: " << sqrt(dx2*dx2 + dy2*dy2));
+                if((dist < maxDist) && (projected >= 0) && (projected <= coneDist))
+                {
+                    isOnTrackEdge = true;
+                    break;
+                }
             }
         }
     }
@@ -202,6 +207,7 @@ void MapHandler::calculateGoalState()
         " angle:" << std::min(angleDiff, M_PI * 2.0 - angleDiff));*/
         if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < goalHorizon))
         {
+            ROS_INFO_STREAM("goaldist = " << dist);
             maxDist = dist;
             goalState = state;            
         }
