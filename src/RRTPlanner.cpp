@@ -46,7 +46,7 @@ bool RRTPlanner::extend()
     SearchTreeNode* nearest = sTree.getNearest(randState);
 
     // Simulate movement towards new state
-    trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState);
+    trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState, vehicleModel.getMaximalDistance());
 
     // Check for offCourse
     offCourse = mapHandler.isOffCourse(trajectory);
@@ -74,15 +74,16 @@ bool RRTPlanner::extend()
 
 bool RRTPlanner::rewire(SearchTreeNode* newNode)
 {
+    double maxConnDist = vehicleModel.getMaximalDistance();
     std::vector<std::vector<double>>* trajectory;
-    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode, vehicleModel.getMaximalDistance());
+    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode, 3*maxConnDist);
     std::vector<SearchTreeNode*>::iterator it;
     float newNodeCost = sTree.getAbsCost(newNode);
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
-        trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState());
+        trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState(), 3*maxConnDist);
         if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state

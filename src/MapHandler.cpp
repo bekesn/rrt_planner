@@ -47,7 +47,7 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
                 case frt_custom_msgs::Landmark::YELLOW:
                     closeYellowLandmarks->push_back(cone);
                     break;
-                case frt_custom_msgs::Landmark::ORANGE_SMALL:
+                case frt_custom_msgs::Landmark::ORANGE_BIG:
                     col = getClosestLandmark(cone, frt_custom_msgs::Landmark::UNKNOWN)->color;
                     switch (col)
                     {

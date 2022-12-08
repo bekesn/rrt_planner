@@ -16,7 +16,7 @@ class VehicleModel
 
     // Function pointers
     double (VehicleModel::*distanceFunction)(std::vector<double> start, std::vector<double> goal);
-    std::vector<std::vector<double>>* (VehicleModel::*simulation)(std::vector<double> startState, std::vector<double> goalState);
+    std::vector<std::vector<double>>* (VehicleModel::*simulation)(std::vector<double> startState, std::vector<double> goalState, double maxConnDist);
 
     // Parameters
     float simulationTimeStep;
@@ -28,7 +28,7 @@ public:
     
     VehicleModel();
     VehicleModel(double (VehicleModel::*distFun)(std::vector<double> start, std::vector<double> goal),
-                            std::vector<std::vector<double>>* (VehicleModel::*simFun)(std::vector<double> startState, std::vector<double> goalState));
+                            std::vector<std::vector<double>>* (VehicleModel::*simFun)(std::vector<double> startState, std::vector<double> goalState, double maxConnDist));
     //~VehicleModel();
 
     // Update vehicle pose
@@ -38,7 +38,7 @@ public:
     geometry_msgs::Pose2D getCurrentPose();
 
     // Simulate advancing towards target
-    std::vector<std::vector<double>>* simulateToTarget(std::vector<double> start, std::vector<double> goal);
+    std::vector<std::vector<double>>* simulateToTarget(std::vector<double> start, std::vector<double> goal, double maxConnDist);
 
     // Distance function
     double distance(std::vector<double> start, std::vector<double> goal);
@@ -48,7 +48,7 @@ public:
 
     // SIMULATION FUNCTIONS
     // Holonomic model
-    std::vector<std::vector<double>>* simulateHolonomic(std::vector<double> start, std::vector<double> goal);
+    std::vector<std::vector<double>>* simulateHolonomic(std::vector<double> start, std::vector<double> goal, double maxConnDist);
 
     // DISTANCE FUNCTIONS
     // Euclidean distance
