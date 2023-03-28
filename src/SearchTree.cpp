@@ -86,6 +86,8 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node, double
 
 void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 {
+    if(tree->size() < 2) return;
+    
     visualization_msgs::Marker treeNodes;
         treeNodes.header.frame_id = "map";
         treeNodes.header.stamp = ros::Time::now();

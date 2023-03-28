@@ -8,6 +8,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 {
     // Init
     pathFound = false;
+    pathClosed = false;
+    state = NOMAP;
     bestPath = new std::vector<std::vector<double>>;
 
     ros::init(argc, argv, "rrt_planner");
@@ -30,6 +32,27 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     goalRadius = 0.5;
     
     ros::spin();
+}
+
+void RRTPlanner::stateMachine()
+{
+    bool loopClosed = false;// TODO
+    switch(state)
+    {
+        case NOMAP:
+            if (mapHandler.hasMap()) state = LOCALPLANNING;
+            break;
+        case LOCALPLANNING:
+            planLocalRRT();
+            if(loopClosed) state = WAITFORGLOBAL;
+        case WAITFORGLOBAL:
+            //TODO
+            planLocalRRT();
+            if(pathClosed) state = GLOBALPLANNING;
+        case GLOBALPLANNING:
+            planGlobalRRT();
+            break;
+    }
 }
 
 
@@ -140,17 +163,7 @@ void RRTPlanner::planGlobalRRT()
 
 void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 {
-    if (!mapHandler.hasMap()) return;
-
-    bool loopClosed = false; // TODO
-    if(!loopClosed)
-    {
-        planLocalRRT();
-    }
-    else
-    {
-        planGlobalRRT();
-    }
+    stateMachine();
     visualize();
     ROS_INFO_STREAM("-------------");
 }

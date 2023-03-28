@@ -24,14 +24,30 @@ class RRTPlanner
 
     visualization_msgs::MarkerArray markerArray;
 
-    bool pathFound;
-    std::vector<std::vector<double>>* bestPath;
+    typedef enum {
+        NOMAP,
+        LOCALPLANNING,
+        WAITFORGLOBAL,
+        GLOBALPLANNING
+    }PlannerState;
 
+    // Variables
+    bool pathFound;
+    bool pathClosed;
+    std::vector<std::vector<double>>* bestPath;
+    PlannerState state;
+
+    // Parameters
     float goalRadius;
+
+
 
 public:
     RRTPlanner(int argc, char** argv);
     //~RRTPlanner();
+
+    // State machine of planner
+    void stateMachine();
     
     // Extend searchtree by a new node
     SearchTreeNode* extend();

@@ -9,6 +9,8 @@ MapHandler::MapHandler()
     goalHorizon = 20;
     mapReceived = false;
     maxConeDist = 6;
+
+    goalState = {0, 0};
 }
 
 MapHandler::MapHandler(VehicleModel* vm)
@@ -20,6 +22,8 @@ MapHandler::MapHandler(VehicleModel* vm)
     goalHorizon = 15;
     mapReceived = false;
     maxConeDist = 6;
+
+    goalState = {0, 0};
 }
 
 bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
@@ -246,6 +250,8 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 
 void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray)
 {
+    if(!mapReceived);
+
     visualization_msgs::Marker goal;
         goal.header.frame_id = "map";
         goal.header.stamp = ros::Time::now();
