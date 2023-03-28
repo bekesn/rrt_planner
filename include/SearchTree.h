@@ -41,7 +41,7 @@ public:
     void drawTree(visualization_msgs::MarkerArray* markerArray);
 
     // Delete tree and create new
-    void reset(std::vector<double> startState);
+    void init(std::vector<double> startState);
 
     // Traceback to root
     std::vector<std::vector<double>>* traceBackToRoot(std::vector<double> goalState);

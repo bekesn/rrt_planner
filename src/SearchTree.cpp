@@ -155,7 +155,7 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
     }*/
 }
 
-void SearchTree::reset(std::vector<double> startState)
+void SearchTree::init(std::vector<double> startState)
 {
     delete tree;
     tree = new std::vector<SearchTreeNode*>;

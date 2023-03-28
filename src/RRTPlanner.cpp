@@ -16,7 +16,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     // Init objects
     vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean, &VehicleModel::simulateHolonomic);
     mapHandler = MapHandler(&vehicleModel);
-    sTree = SearchTree(&vehicleModel, {10.0, 0.0, 0.0});
+    sTree = SearchTree(&vehicleModel, {0.0, 0.0, 0.0});
 
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
@@ -27,13 +27,15 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
     timer = nh.createWallTimer(ros::WallDuration(0.1), &RRTPlanner::timerCallback, this);
 
+    goalRadius = 0.5;
     
     ros::spin();
 }
 
 
-bool RRTPlanner::extend()
+SearchTreeNode* RRTPlanner::extend()
 {
+    SearchTreeNode* newNode;
     bool offCourse;
     std::vector<double> randState;
     std::vector<double> newState;
@@ -54,22 +56,14 @@ bool RRTPlanner::extend()
     // Add node
     if (!offCourse && (trajectory->size() > 0))
     {
-        SearchTreeNode* newNode;
         newState = trajectory->back();
         newNode = sTree.addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
-
-        if (newNode)
-        {
-            rewire(newNode);
-
-            if (vehicleModel.getDistEuclidean(newState, mapHandler.getGoalState()) < 0.5)
-            {
-                return true;
-            }
-        }
-        
     }
-    return false;
+    else
+    {
+        newNode = NULL;
+    }
+    return newNode;
 }
 
 bool RRTPlanner::rewire(SearchTreeNode* newNode)
@@ -105,23 +99,23 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
     return false;
 }
 
-void RRTPlanner::planOpenTrackRRT()
+void RRTPlanner::planLocalRRT()
 {
     geometry_msgs::Pose2D pose = vehicleModel.getCurrentPose();
-    sTree.reset({pose.x, pose.y, 0.0});
+    sTree.init({pose.x, pose.y, 0.0});
     pathFound = false;
     int iteration = 0;
 
-    if (!mapHandler.hasMap()) return;
-
     // TODO
-    while((!sTree.maxNumOfNodesReached()) && (iteration <= 2500))
+    while((!sTree.maxNumOfNodesReached()) && (iteration <= 500))
     {
-        bool closeToGoal = extend();
-        if (closeToGoal)
-        {
+        SearchTreeNode * node = extend();
+        if (node != NULL)
+        {   
+            rewire(node);
+            float goalDist = vehicleModel.getDistEuclidean(node->getState(), mapHandler.getGoalState());
+            if(goalDist < goalRadius)
             pathFound = true;
-            break;
         }
         iteration++;
     }
@@ -132,27 +126,33 @@ void RRTPlanner::planOpenTrackRRT()
         bestPath = sTree.traceBackToRoot(mapHandler.getGoalState());
     }
 
-    visualize();
     ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
-    ROS_INFO_STREAM("-------------");
 }
 
-void RRTPlanner::planClosedTrackRRT()
+void RRTPlanner::planGlobalRRT()
 {
-    sTree.reset({10.0, 0.0, 0.0});
-
     // TODO
     for(int i = 0; i < 300; i++)
     {
         extend();
     }
-    visualize();
-    ROS_INFO_STREAM("-------------");
 }
 
 void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 {
-    planOpenTrackRRT();
+    if (!mapHandler.hasMap()) return;
+
+    bool loopClosed = false; // TODO
+    if(!loopClosed)
+    {
+        planLocalRRT();
+    }
+    else
+    {
+        planGlobalRRT();
+    }
+    visualize();
+    ROS_INFO_STREAM("-------------");
 }
 
 void RRTPlanner::visualize()

@@ -27,20 +27,22 @@ class RRTPlanner
     bool pathFound;
     std::vector<std::vector<double>>* bestPath;
 
+    float goalRadius;
+
 public:
     RRTPlanner(int argc, char** argv);
     //~RRTPlanner();
     
     // Extend searchtree by a new node
-    bool extend();
+    SearchTreeNode* extend();
 
     bool rewire(SearchTreeNode* newNode);
 
     // RRT on partially discovered map
-    void planOpenTrackRRT();
+    void planLocalRRT();
 
     // RRT on fully discovered map
-    void planClosedTrackRRT();
+    void planGlobalRRT();
 
     // Timer callback
     void timerCallback(const ros::WallTimerEvent &event);

@@ -203,11 +203,8 @@ void MapHandler::calculateGoalState()
 
         std::vector<double> state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
         double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
-        /*ROS_INFO_STREAM("x1: " << (*pair)[0]->x << " y1: " << (*pair)[0]->y << " | x1: " << (*pair)[1]->x << " y1: " << (*pair)[1]->y << " dist: " << dist <<
-        " angle:" << std::min(angleDiff, M_PI * 2.0 - angleDiff));*/
         if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < goalHorizon))
         {
-            ROS_INFO_STREAM("goaldist = " << dist);
             maxDist = dist;
             goalState = state;            
         }
