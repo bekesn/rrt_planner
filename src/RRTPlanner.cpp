@@ -20,6 +20,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     mapHandler = MapHandler(&vehicleModel);
     sTree = SearchTree(&vehicleModel, {0.0, 0.0, 0.0});
 
+    loadParameters();
+
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
     mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
@@ -28,8 +30,6 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
 
     timer = nh.createWallTimer(ros::WallDuration(0.1), &RRTPlanner::timerCallback, this);
-
-    goalRadius = 0.5;
     
     ros::spin();
 }
@@ -56,7 +56,7 @@ void RRTPlanner::stateMachine()
 }
 
 
-SearchTreeNode* RRTPlanner::extend()
+SearchTreeNode* RRTPlanner::extend(void)
 {
     SearchTreeNode* newNode;
     bool offCourse;
@@ -122,7 +122,7 @@ bool RRTPlanner::rewire(SearchTreeNode* newNode)
     return false;
 }
 
-void RRTPlanner::planLocalRRT()
+void RRTPlanner::planLocalRRT(void)
 {
     geometry_msgs::Pose2D pose = vehicleModel.getCurrentPose();
     sTree.init({pose.x, pose.y, 0.0});
@@ -152,7 +152,7 @@ void RRTPlanner::planLocalRRT()
     ROS_INFO_STREAM("dist: " << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
 }
 
-void RRTPlanner::planGlobalRRT()
+void RRTPlanner::planGlobalRRT(void)
 {
     // TODO
     for(int i = 0; i < 300; i++)
@@ -168,7 +168,7 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
     ROS_INFO_STREAM("-------------");
 }
 
-void RRTPlanner::visualize()
+void RRTPlanner::visualize(void)
 {
     markerArray.markers.clear();
     sTree.drawTree(&markerArray);
@@ -215,4 +215,79 @@ int main(int argc, char** argv)
 {
     RRTPlanner planner(argc, argv);
     return 0;
+}
+
+void RRTPlanner::loadParameters(void)
+{
+    if (!ros::param::get("/RRT/collisionRange", mapHandler.collisionRange))
+    {
+        mapHandler.collisionRange = 6.0f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/collisionRange not found."); 
+    }
+
+    if (!ros::param::get("/RRT/goalBias", mapHandler.goalBias))
+    {
+        mapHandler.goalBias = 0.2f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/goalBias not found."); 
+    }
+
+    if (!ros::param::get("/RRT/goalHorizon", mapHandler.goalHorizon))
+    {
+        mapHandler.goalHorizon = 6.0f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/goalHorizon not found."); 
+    }
+
+    if (!ros::param::get("/RRT/goalRadius", goalRadius))
+    {
+        goalRadius = 1.0f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/goalRadius not found."); 
+    }
+
+    if (!ros::param::get("/RRT/maxConeDist", mapHandler.maxConeDist))
+    {
+        mapHandler.maxConeDist = 6.0f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/maxConeDist not found."); 
+    }
+
+    if (!ros::param::get("/RRT/maxNumOfNodes", sTree.maxNumOfNodes))
+    {
+        sTree.maxNumOfNodes = 1000;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/maxNumOfNodes not found."); 
+    }
+
+    if (!ros::param::get("/VehicleModel/maxVelocity", vehicleModel.maxVelocity))
+    {
+        vehicleModel.maxVelocity = 10.0f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/maxVelocity not found."); 
+    }
+
+    if (!ros::param::get("/VehicleModel/resolution", vehicleModel.resolution))
+    {
+        vehicleModel.resolution = 0.05f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/resolution not found."); 
+    }
+
+    if (!ros::param::get("/RRT/sampleRange", mapHandler.sampleRange))
+    {
+        mapHandler.sampleRange = 0.3f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/sampleRange not found."); 
+    }
+
+    if (!ros::param::get("/VehicleModel/simulationTimeStep", vehicleModel.simulationTimeStep))
+    {
+        vehicleModel.simulationTimeStep = 0.1f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/simulationTimeStep not found."); 
+    }
+
+    if (!ros::param::get("/VehicleModel/track", vehicleModel.track))
+    {
+        vehicleModel.track = 1.2f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/track not found."); 
+    }
+
+    if (!ros::param::get("/VehicleModel/wheelBase", vehicleModel.wheelBase))
+    {
+        vehicleModel.wheelBase = 0.1f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/wheelBase not found."); 
+    }
 }

@@ -1,1 +1,15 @@
-maxNumofNodes:  100
+RRT:
+  collisionRange:     6     # cones in this range will be checked for collision - in [m]
+  goalBias:           0.1   
+  goalRadius:         0.5   # acceptance range in [m]
+  goalHorizon:        15    # maximal distance for local goal state in [m]
+  maxConeDist:        6     # maximal distance between consecutive cones in [m]
+  maxNumOfNodes:      2000  # limits number of nodes in searchtree
+  sampleRange:        3     # used for random sampling near the detected cones, range in [m]
+
+VehicleModel:
+  maxVelocity:        10    # in [m/s]
+  resolution:         0.05  # interpolation steps in [m]
+  simulationTimeStep: 0.1   # in [s]
+  track:              1.2   # in [m]
+  wheelBase:          1.54  # in [m]

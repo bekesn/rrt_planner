@@ -15,10 +15,11 @@ private:
     VehicleModel* vehicleModel;
     std::vector<double> goalState;
 
+public:
     // Parameters
     float goalBias;
     float collisionRange;
-    float spawnRange;
+    float sampleRange;
     float goalHorizon;
     bool mapReceived;
     float maxConeDist;

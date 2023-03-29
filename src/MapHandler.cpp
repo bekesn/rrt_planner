@@ -2,28 +2,16 @@
 
 MapHandler::MapHandler()
 {
-    goalBias = 0.2;
+    // Initialize values
     vehicleModel = NULL;
-    collisionRange = 6;
-    spawnRange = 3;
-    goalHorizon = 20;
     mapReceived = false;
-    maxConeDist = 6;
-
     goalState = {0, 0};
+
 }
 
-MapHandler::MapHandler(VehicleModel* vm)
+MapHandler::MapHandler(VehicleModel* vm) : MapHandler()
 {
-    goalBias = 0.2;
     vehicleModel = vm;
-    collisionRange = 6;
-    spawnRange = 3;
-    goalHorizon = 15;
-    mapReceived = false;
-    maxConeDist = 6;
-
-    goalState = {0, 0};
 }
 
 bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
@@ -148,8 +136,8 @@ std::vector<double> MapHandler::getRandomState(std::vector<std::vector<double>>*
         {
             // Choose a cone randomly and place a state near it
             int coneID = rand() % numOfCones;
-            randState[0] = map[coneID]->x + (rand()%((int) (200*spawnRange))) / 100.0 - spawnRange;
-            randState[1] = map[coneID]->y + (rand()%((int) (200*spawnRange))) / 100.0 - spawnRange;
+            randState[0] = map[coneID]->x + (rand()%((int) (200*sampleRange))) / 100.0 - sampleRange;
+            randState[1] = map[coneID]->y + (rand()%((int) (200*sampleRange))) / 100.0 - sampleRange;
             randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
         }

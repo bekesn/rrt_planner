@@ -11,13 +11,6 @@ VehicleModel::VehicleModel(double (VehicleModel::*distFun)(std::vector<double> s
 {
     distanceFunction = distFun;
     simulation = simFun;
-
-    //TODO
-    simulationTimeStep = 0.1;
-    maxSpeed = 10;
-    resolution = 0.05;
-    track = 1.22;
-
 }
 
 
@@ -52,7 +45,7 @@ double VehicleModel::distance(std::vector<double> start, std::vector<double> goa
 
 double VehicleModel::getMaximalDistance()
 {
-    return maxSpeed*simulationTimeStep;
+    return maxVelocity*simulationTimeStep;
 }
 
 

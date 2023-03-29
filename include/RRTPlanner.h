@@ -46,25 +46,28 @@ public:
     RRTPlanner(int argc, char** argv);
     //~RRTPlanner();
 
+    // load ROS parameters
+    void loadParameters(void);
+
     // State machine of planner
-    void stateMachine();
+    void stateMachine(void);
     
     // Extend searchtree by a new node
-    SearchTreeNode* extend();
+    SearchTreeNode* extend(void);
 
     bool rewire(SearchTreeNode* newNode);
 
     // RRT on partially discovered map
-    void planLocalRRT();
+    void planLocalRRT(void);
 
     // RRT on fully discovered map
-    void planGlobalRRT();
+    void planGlobalRRT(void);
 
     // Timer callback
     void timerCallback(const ros::WallTimerEvent &event);
 
     // Visualize markers
-    void visualize();
+    void visualize(void);
 
     // Visualize best path
     void visualizeBestPath(visualization_msgs::MarkerArray* mArray);

@@ -18,14 +18,16 @@ class VehicleModel
     double (VehicleModel::*distanceFunction)(std::vector<double> start, std::vector<double> goal);
     std::vector<std::vector<double>>* (VehicleModel::*simulation)(std::vector<double> startState, std::vector<double> goalState, double maxConnDist);
 
+// TODO
+public:
     // Parameters
     float simulationTimeStep;
-    float maxSpeed;
+    float maxVelocity;
     float resolution;
+    float track;
+    float wheelBase;
 
 public:
-    float track;
-    
     VehicleModel();
     VehicleModel(double (VehicleModel::*distFun)(std::vector<double> start, std::vector<double> goal),
                             std::vector<std::vector<double>>* (VehicleModel::*simFun)(std::vector<double> startState, std::vector<double> goalState, double maxConnDist));
