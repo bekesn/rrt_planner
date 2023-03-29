@@ -10,17 +10,18 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     pathFound = false;
     pathClosed = false;
     state = NOMAP;
-    bestPath = new std::vector<std::vector<double>>;
+    bestPath = new PATH_TYPE;
 
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
 
-    // Init objects
-    vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean, &VehicleModel::simulateHolonomic);
-    mapHandler = MapHandler(&vehicleModel);
-    sTree = SearchTree(&vehicleModel, {0.0, 0.0, 0.0});
-
+    // Load ROS parameters
     loadParameters();
+
+    // Init objects
+    vehicleModel = VehicleModel(&VehicleModel::getDistEuclidean, &VehicleModel::simulateHolonomic, param);
+    mapHandler = MapHandler(&vehicleModel);
+    sTree = SearchTree(&vehicleModel, {0.0, 0.0, 0.0}, param);
 
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
@@ -60,9 +61,9 @@ SearchTreeNode* RRTPlanner::extend(void)
 {
     SearchTreeNode* newNode;
     bool offCourse;
-    std::vector<double> randState;
-    std::vector<double> newState;
-    std::vector<std::vector<double>>* trajectory;
+    SS_VECTOR randState;
+    SS_VECTOR newState;
+    PATH_TYPE* trajectory;
 
     // Get random state
     randState = mapHandler.getRandomState(bestPath);
@@ -91,16 +92,15 @@ SearchTreeNode* RRTPlanner::extend(void)
 
 bool RRTPlanner::rewire(SearchTreeNode* newNode)
 {
-    double maxConnDist = vehicleModel.getMaximalDistance();
-    std::vector<std::vector<double>>* trajectory;
-    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode, 3*maxConnDist);
+    PATH_TYPE* trajectory;
+    std::vector<SearchTreeNode*>* nearbyNodes = sTree.getNearby(newNode, param->rewireRange);
     std::vector<SearchTreeNode*>::iterator it;
     float newNodeCost = sTree.getAbsCost(newNode);
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
-        trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState(), 3*maxConnDist);
+        trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState(), param->rewireRange);
         if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state
@@ -137,7 +137,7 @@ void RRTPlanner::planLocalRRT(void)
         {   
             rewire(node);
             float goalDist = vehicleModel.getDistEuclidean(node->getState(), mapHandler.getGoalState());
-            if(goalDist < goalRadius)
+            if(goalDist < param->goalRadius)
             pathFound = true;
         }
         iteration++;
@@ -197,7 +197,7 @@ void RRTPlanner::visualizeBestPath(visualization_msgs::MarkerArray* mArray)
         bestPathLine.color.b = 1.0f;
         bestPathLine.color.a = 1.0f;
 
-    std::vector<std::vector<double>>::iterator it;
+    PATH_TYPE::iterator it;
     geometry_msgs::Point coord;
 
     for (it = bestPath->begin(); it != bestPath->end(); it++)
@@ -219,75 +219,74 @@ int main(int argc, char** argv)
 
 void RRTPlanner::loadParameters(void)
 {
-    if (!ros::param::get("/RRT/collisionRange", mapHandler.collisionRange))
+    if (!ros::param::get("/RRT/collisionRange", param->collisionRange))
     {
-        mapHandler.collisionRange = 6.0f;
+        param->collisionRange = 6.0f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/collisionRange not found."); 
     }
 
-    if (!ros::param::get("/RRT/goalBias", mapHandler.goalBias))
+    if (!ros::param::get("/RRT/goalBias", param->goalBias))
     {
-        mapHandler.goalBias = 0.2f;
+        param->goalBias = 0.2f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/goalBias not found."); 
     }
 
-    if (!ros::param::get("/RRT/goalHorizon", mapHandler.goalHorizon))
+    if (!ros::param::get("/RRT/goalHorizon", param->goalHorizon))
     {
-        mapHandler.goalHorizon = 6.0f;
+        param->goalHorizon = 6.0f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/goalHorizon not found."); 
     }
 
-    if (!ros::param::get("/RRT/goalRadius", goalRadius))
+    if (!ros::param::get("/RRT/goalRadius", param->goalRadius))
     {
-        goalRadius = 1.0f;
+        param->goalRadius = 1.0f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/goalRadius not found."); 
     }
 
-    if (!ros::param::get("/RRT/maxConeDist", mapHandler.maxConeDist))
+    if (!ros::param::get("/RRT/maxConeDist", param->maxConeDist))
     {
-        mapHandler.maxConeDist = 6.0f;
+        param->maxConeDist = 6.0f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/maxConeDist not found."); 
     }
 
-    if (!ros::param::get("/RRT/maxNumOfNodes", sTree.maxNumOfNodes))
+    if (!ros::param::get("/RRT/maxNumOfNodes", param->maxNumOfNodes))
     {
-        sTree.maxNumOfNodes = 1000;
+        param->maxNumOfNodes = 1000;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/maxNumOfNodes not found."); 
     }
 
-    if (!ros::param::get("/VehicleModel/maxVelocity", vehicleModel.maxVelocity))
+    if (!ros::param::get("/VehicleModel/maxVelocity", param->maxVelocity))
     {
-        vehicleModel.maxVelocity = 10.0f;
+        param->maxVelocity = 10.0f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/maxVelocity not found."); 
     }
 
-    if (!ros::param::get("/VehicleModel/resolution", vehicleModel.resolution))
+    if (!ros::param::get("/VehicleModel/resolution", param->resolution))
     {
-        vehicleModel.resolution = 0.05f;
+        param->resolution = 0.05f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/resolution not found."); 
     }
-
-    if (!ros::param::get("/RRT/sampleRange", mapHandler.sampleRange))
+    if (!ros::param::get("/RRT/rewireRange", param->rewireRange))
     {
-        mapHandler.sampleRange = 0.3f;
-        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/sampleRange not found."); 
+        param->rewireRange = 9.0f;
+        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/rewireRange not found."); 
     }
 
-    if (!ros::param::get("/VehicleModel/simulationTimeStep", vehicleModel.simulationTimeStep))
+    if (!ros::param::get("/VehicleModel/simulationTimeStep", param->simulationTimeStep))
     {
-        vehicleModel.simulationTimeStep = 0.1f;
+        param->simulationTimeStep = 0.1f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/simulationTimeStep not found."); 
     }
 
-    if (!ros::param::get("/VehicleModel/track", vehicleModel.track))
+    if (!ros::param::get("/VehicleModel/track", param->track))
     {
-        vehicleModel.track = 1.2f;
+        param->track = 1.2f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/track not found."); 
     }
 
-    if (!ros::param::get("/VehicleModel/wheelBase", vehicleModel.wheelBase))
+    if (!ros::param::get("/VehicleModel/wheelBase", param->wheelBase))
     {
-        vehicleModel.wheelBase = 0.1f;
+        param->wheelBase = 0.1f;
         ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << "/wheelBase not found."); 
     }
 }

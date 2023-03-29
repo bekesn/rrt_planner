@@ -15,27 +15,26 @@ private:
     std::vector<SearchTreeNode*> *tree;
     VehicleModel* vehicle;
 
-public:
-    // Parameters
-    int maxNumOfNodes;
+    // Parameter struct
+    RRT_PARAMETERS* param;
 
 public:
 
     //Constructor
     SearchTree();
-    SearchTree(VehicleModel* vehicleModel, std::vector<double> startState);
+    SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PARAMETERS* par);
 
     //Destructor
     ~SearchTree();
 
     //Add child node
-    SearchTreeNode* addChild(SearchTreeNode* parentNode, std::vector<double> state, double nodeCost);
+    SearchTreeNode* addChild(SearchTreeNode* parentNode, SS_VECTOR state, double nodeCost);
 
     //Remove node
     void remove(SearchTreeNode* node);
 
     //Get nearest node
-    SearchTreeNode* getNearest(std::vector<double> state);
+    SearchTreeNode* getNearest(SS_VECTOR state);
 
     //Get nearby nodes
     std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node, double maxDist);
@@ -44,10 +43,10 @@ public:
     void drawTree(visualization_msgs::MarkerArray* markerArray);
 
     // Delete tree and create new
-    void init(std::vector<double> startState);
+    void init(SS_VECTOR startState);
 
     // Traceback to root
-    std::vector<std::vector<double>>* traceBackToRoot(std::vector<double> goalState);
+    PATH_TYPE* traceBackToRoot(SS_VECTOR goalState);
 
     // Get absolute cost to node
     float getAbsCost(SearchTreeNode* node);

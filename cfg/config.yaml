@@ -5,6 +5,7 @@ RRT:
   goalHorizon:        15    # maximal distance for local goal state in [m]
   maxConeDist:        6     # maximal distance between consecutive cones in [m]
   maxNumOfNodes:      2000  # limits number of nodes in searchtree
+  rewireRange:        9     # Range in which connection is checked in [m]
   sampleRange:        3     # used for random sampling near the detected cones, range in [m]
 
 VehicleModel:

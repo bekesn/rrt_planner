@@ -13,16 +13,11 @@ private:
     
     std::vector<frt_custom_msgs::Landmark*> map;
     VehicleModel* vehicleModel;
-    std::vector<double> goalState;
-
-public:
-    // Parameters
-    float goalBias;
-    float collisionRange;
-    float sampleRange;
-    float goalHorizon;
+    SS_VECTOR goalState;
     bool mapReceived;
-    float maxConeDist;
+
+    // Parameter struct
+    RRT_PARAMETERS* param;
 
 public:
     MapHandler();
@@ -30,17 +25,17 @@ public:
     //~MapHandler();
     
     // Check for offcourse
-    bool isOffCourse(std::vector<std::vector<double>>* path);
+    bool isOffCourse(PATH_TYPE* path);
 
     // Check for collision with lines
-    bool isOnTrackEdge(std::vector<double>* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones);
+    bool isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones);
 
     // Get random state
-    std::vector<double> getRandomState(std::vector<std::vector<double>>* path);
+    SS_VECTOR getRandomState(PATH_TYPE* path);
 
     // Calculate and get goal state
     void calculateGoalState();
-    std::vector<double> getGoalState();
+    SS_VECTOR getGoalState();
 
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);

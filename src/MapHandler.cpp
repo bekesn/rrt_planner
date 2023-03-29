@@ -14,7 +14,7 @@ MapHandler::MapHandler(VehicleModel* vm) : MapHandler()
     vehicleModel = vm;
 }
 
-bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
+bool MapHandler::isOffCourse(PATH_TYPE* trajectory)
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -23,13 +23,13 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
     bool isOC;
     std::vector<frt_custom_msgs::Landmark*>* closeBlueLandmarks = new std::vector<frt_custom_msgs::Landmark*>();
     std::vector<frt_custom_msgs::Landmark*>* closeYellowLandmarks = new std::vector<frt_custom_msgs::Landmark*>();
-    std::vector<std::vector<double>>::iterator it;
+    PATH_TYPE::iterator it;
 
     // Collect nearby cones with the same color
     for (auto & cone : map)
     {
         double dist = vehicleModel->getDistEuclidean(trajectory->front(), {cone->x, cone->y, 0});
-        if (dist < collisionRange)
+        if (dist < param->collisionRange)
         {
             switch (cone->color)
             {
@@ -79,11 +79,11 @@ bool MapHandler::isOffCourse(std::vector<std::vector<double>>* trajectory)
     return isOC;
 }
 
-bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones)
+bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones)
 {
     double dx, dy, dx2, dy2, dist, projected, coneDist;
     int size = cones->size();
-    float maxDist = vehicleModel->track / 2;
+    float maxDist = param->track / 2;
     bool isOnTrackEdge = false;
 
     for(int i = 0; i < size; i++)
@@ -95,7 +95,7 @@ bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<fr
             dx2 = (*cones)[j]->x - (*vehicleState)[0];
             dy2 = (*cones)[j]->y - (*vehicleState)[1];
             coneDist = sqrt(dx*dx + dy*dy);
-            if(coneDist < maxConeDist)
+            if(coneDist < param->maxConeDist)
             {
                 dist = abs(dx * dy2 - dx2 * dy) / coneDist;
                 projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;
@@ -111,9 +111,9 @@ bool MapHandler::isOnTrackEdge(std::vector<double>* vehicleState, std::vector<fr
     return isOnTrackEdge;
 }
 
-std::vector<double> MapHandler::getRandomState(std::vector<std::vector<double>>* path)
+SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path)
 {
-    std::vector<double> randState(3);
+    SS_VECTOR randState(3);
 
 
     if ((path->size() > 0) && (((rand() % 1000) / 1000.0) > 0.5))
@@ -125,7 +125,7 @@ std::vector<double> MapHandler::getRandomState(std::vector<std::vector<double>>*
         randState[1] = (*path)[nodeID][1] + (rand()%((int) (200*range))) / 100.0 - range;
         randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0 - M_PI;
     }
-    else if (((rand()%1000)/1000.0) > goalBias) 
+    else if (((rand()%1000)/1000.0) > param->goalBias) 
     {
         int numOfCones = map.size();
         if (numOfCones == 0)
@@ -136,8 +136,8 @@ std::vector<double> MapHandler::getRandomState(std::vector<std::vector<double>>*
         {
             // Choose a cone randomly and place a state near it
             int coneID = rand() % numOfCones;
-            randState[0] = map[coneID]->x + (rand()%((int) (200*sampleRange))) / 100.0 - sampleRange;
-            randState[1] = map[coneID]->y + (rand()%((int) (200*sampleRange))) / 100.0 - sampleRange;
+            randState[0] = map[coneID]->x + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
+            randState[1] = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
             randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
         }
@@ -154,7 +154,7 @@ void MapHandler::calculateGoalState()
 {
     std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
     float maxDist = 0;
-    std::vector<double> currentState = {vehicleModel->getCurrentPose().x, vehicleModel->getCurrentPose().y, vehicleModel->getCurrentPose().theta};
+    SS_VECTOR currentState = {vehicleModel->getCurrentPose().x, vehicleModel->getCurrentPose().y, vehicleModel->getCurrentPose().theta};
     
 
 
@@ -193,9 +193,9 @@ void MapHandler::calculateGoalState()
         dist += vehicleModel->getDistEuclidean(currentState, {(*pair)[1]->x, (*pair)[1]->y});
         dist = dist/2.0;
 
-        std::vector<double> state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
+        SS_VECTOR state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
         double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
-        if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < goalHorizon))
+        if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < param->goalHorizon))
         {
             maxDist = dist;
             goalState = state;            
@@ -204,7 +204,7 @@ void MapHandler::calculateGoalState()
 
 }
 
-std::vector<double> MapHandler::getGoalState()
+SS_VECTOR MapHandler::getGoalState()
 {
     return goalState;
 }

@@ -34,13 +34,11 @@ class RRTPlanner
     // Variables
     bool pathFound;
     bool pathClosed;
-    std::vector<std::vector<double>>* bestPath;
+    PATH_TYPE* bestPath;
     PlannerState state;
 
     // Parameters
-    float goalRadius;
-
-
+    RRT_PARAMETERS* param;
 
 public:
     RRTPlanner(int argc, char** argv);

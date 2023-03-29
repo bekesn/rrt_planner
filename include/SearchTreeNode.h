@@ -4,6 +4,7 @@
 #include <vector>
 #include <ros/ros.h>
 #include <iterator>
+#include "Types.h"
 
 class SearchTreeNode
 {

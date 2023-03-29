@@ -6,11 +6,12 @@ VehicleModel::VehicleModel()
     simulation = &VehicleModel::simulateHolonomic;
 }
 
-VehicleModel::VehicleModel(double (VehicleModel::*distFun)(std::vector<double> start, std::vector<double> goal),
-                            std::vector<std::vector<double>>* (VehicleModel::*simFun)(std::vector<double> startState, std::vector<double> goalState, double maxConnDist))
+VehicleModel::VehicleModel(double (VehicleModel::*distFun)(SS_VECTOR start, SS_VECTOR goal),
+                            PATH_TYPE* (VehicleModel::*simFun)(SS_VECTOR startState, SS_VECTOR goalState, double maxConnDist), RRT_PARAMETERS* par)
 {
     distanceFunction = distFun;
     simulation = simFun;
+    param = par;
 }
 
 
@@ -33,34 +34,34 @@ geometry_msgs::Pose2D VehicleModel::getCurrentPose()
     return currentPose;
 }
 
-std::vector<std::vector<double>>* VehicleModel::simulateToTarget(std::vector<double> startState, std::vector<double> goalState, double maxConnDist)
+PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR startState, SS_VECTOR goalState, double maxConnDist)
 {
     return (*this.*simulation)(startState, goalState, maxConnDist);
 }
 
-double VehicleModel::distance(std::vector<double> start, std::vector<double> goal)
+double VehicleModel::distance(SS_VECTOR start, SS_VECTOR goal)
 {
     return (*this.*distanceFunction)(start, goal);
 }
 
 double VehicleModel::getMaximalDistance()
 {
-    return maxVelocity*simulationTimeStep;
+    return param->maxVelocity * param->simulationTimeStep;
 }
 
 
-std::vector<std::vector<double>>* VehicleModel::simulateHolonomic(std::vector<double> start, std::vector<double> goal, double maxConndist)
+PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, double maxConndist)
 {
     double distance, ratio, x, y, pathParam;
     int i, numOfStates;
     Eigen::Vector3d startVec(start.data());
     Eigen::Vector3d goalVec(goal.data());
-    std::vector<std::vector<double>>* path = new std::vector<std::vector<double>>;
+    PATH_TYPE* path = new PATH_TYPE;
 
     distance = getDistEuclidean(start, goal);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
-    numOfStates = (int) (ratio*distance/resolution);
+    numOfStates = (int) (ratio*distance/param->resolution);
 
     for(i = 0; i < numOfStates; i++)
     {
@@ -71,19 +72,19 @@ std::vector<std::vector<double>>* VehicleModel::simulateHolonomic(std::vector<do
     return path;
 }
 
-double VehicleModel::getDistEuclidean(std::vector<double> start, std::vector<double> goal)
+double VehicleModel::getDistEuclidean(SS_VECTOR start, SS_VECTOR goal)
 {
     double dx = start[0]- goal[0];
     double dy = start[1] - goal[1];
     return(sqrt(dx*dx + dy*dy));
 }
 
-double VehicleModel::getDistanceCost(std::vector<std::vector<double>>* trajectory)
+double VehicleModel::getDistanceCost(PATH_TYPE* trajectory)
 {
     if(trajectory->size() < 2) return 0;
     
-    std::vector<double> prevState = (*trajectory)[0];
-    std::vector<double> currState;
+    SS_VECTOR prevState = (*trajectory)[0];
+    SS_VECTOR currState;
     int size = trajectory->size();
     double length = 0;
     for (int i = 1; i < size; i++)

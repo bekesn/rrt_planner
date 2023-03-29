@@ -6,8 +6,9 @@ SearchTree::SearchTree()
     tree = new std::vector<SearchTreeNode*>;
 }
 
-SearchTree::SearchTree(VehicleModel* vehicleModel, std::vector<double> startState)
+SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PARAMETERS* par)
 {
+    par = param;
     vehicle = vehicleModel;
     tree = new std::vector<SearchTreeNode*>(0);
     tree->push_back(new SearchTreeNode(NULL, startState, 0));
@@ -18,7 +19,7 @@ SearchTree::~SearchTree()
     delete(tree->front());
 }
 
-SearchTreeNode* SearchTree::addChild(SearchTreeNode* parentNode, std::vector<double> state, double nodeCost)
+SearchTreeNode* SearchTree::addChild(SearchTreeNode* parentNode, SS_VECTOR state, double nodeCost)
 {
     if (!maxNumOfNodesReached())
     {
@@ -38,7 +39,7 @@ void SearchTree::remove(SearchTreeNode* node)
 
 }
 
-SearchTreeNode* SearchTree::getNearest(std::vector<double> toState)
+SearchTreeNode* SearchTree::getNearest(SS_VECTOR toState)
 {
     //ROS_INFO_STREAM("new:  " << toState[0] << "  " << toState[1]);
     std::vector<SearchTreeNode*>::iterator it;
@@ -87,7 +88,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node, double
 void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 {
     if(tree->size() < 2) return;
-    
+
     visualization_msgs::Marker treeNodes;
         treeNodes.header.frame_id = "map";
         treeNodes.header.stamp = ros::Time::now();
@@ -157,17 +158,17 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
     }*/
 }
 
-void SearchTree::init(std::vector<double> startState)
+void SearchTree::init(SS_VECTOR startState)
 {
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
     tree->push_back(new SearchTreeNode(NULL, startState, 0));
 }
 
-std::vector<std::vector<double>>* SearchTree::traceBackToRoot(std::vector<double> goalState)
+PATH_TYPE* SearchTree::traceBackToRoot(SS_VECTOR goalState)
 {
     SearchTreeNode* closestNode = getNearest(goalState);
-    std::vector<std::vector<double>>* path = new std::vector<std::vector<double>>;
+    PATH_TYPE* path = new PATH_TYPE;
     closestNode->traceBackToRoot(path);
     return path;
 }
@@ -181,7 +182,7 @@ float SearchTree::getAbsCost(SearchTreeNode* node)
 
 bool SearchTree::maxNumOfNodesReached()
 {
-    return (tree->size() == maxNumOfNodes);
+    return (tree->size() == param->maxNumOfNodes);
 }
 
 void SearchTree::rewire(SearchTreeNode* node, SearchTreeNode* newParent)
