@@ -8,7 +8,7 @@ SearchTree::SearchTree()
 
 SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PARAMETERS* par)
 {
-    par = param;
+    param = par;
     vehicle = vehicleModel;
     tree = new std::vector<SearchTreeNode*>(0);
     tree->push_back(new SearchTreeNode(NULL, startState, 0));

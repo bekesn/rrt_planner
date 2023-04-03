@@ -2,16 +2,12 @@
 
 VehicleModel::VehicleModel()
 {
-    distanceFunction = &VehicleModel::getDistEuclidean;
-    simulation = &VehicleModel::simulateHolonomic;
+    
 }
 
-VehicleModel::VehicleModel(double (VehicleModel::*distFun)(SS_VECTOR start, SS_VECTOR goal),
-                            PATH_TYPE* (VehicleModel::*simFun)(SS_VECTOR startState, SS_VECTOR goalState, double maxConnDist), RRT_PARAMETERS* par)
+VehicleModel::VehicleModel(VEHICLE_PARAMETERS* par)
 {
-    distanceFunction = distFun;
-    simulation = simFun;
-    param = par;
+    vehicleParam = par;
 }
 
 
@@ -34,23 +30,77 @@ geometry_msgs::Pose2D VehicleModel::getCurrentPose()
     return currentPose;
 }
 
-PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR startState, SS_VECTOR goalState, double maxConnDist)
+
+VEHICLE_PARAMETERS* VehicleModel::getParameters()
 {
-    return (*this.*simulation)(startState, goalState, maxConnDist);
+    return vehicleParam;
+}
+
+PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR startState, SS_VECTOR goalState, RRT_PARAMETERS* param)
+{
+    PATH_TYPE* trajectory;
+
+    switch(vehicleParam->simType)
+    {
+        case HOLONOMIC:
+            trajectory = simulateHolonomic(startState, goalState, param);
+            break;
+        case HOLONOMIC_CONSTRAINED:
+            //TODO
+            break;
+        case BICYCLE_SIMPLE:
+            //TODO
+            break;
+        case BICYCLE:
+            //TODO
+            break;
+        default:
+            throw std::invalid_argument("Wrong simulation type");
+            break;
+    }
+
+    return trajectory;
 }
 
 double VehicleModel::distance(SS_VECTOR start, SS_VECTOR goal)
 {
-    return (*this.*distanceFunction)(start, goal);
+    double distance;
+    switch(vehicleParam->distType)
+    {
+        case EUCLIDEAN:
+            distance = getDistEuclidean(start, goal);
+            break;
+        case SIMULATED:
+            //TODO
+            break;
+        default:
+            throw std::invalid_argument("Wrong distance calculation type");
+            break;
+    }
+
+    return distance;
 }
 
-double VehicleModel::getMaximalDistance()
+double VehicleModel::cost(PATH_TYPE* trajectory)
 {
-    return param->maxVelocity * param->simulationTimeStep;
+    double cost;
+    switch(vehicleParam->costType)
+    {
+        case EUCLIDEAN:
+            cost = getDistanceCost(trajectory);
+            break;
+        case SIMULATED:
+            cost = getTimeCost(trajectory);
+            break;
+        default:
+            throw std::invalid_argument("Wrong cost calculation type");
+            break;
+    }
+
+    return cost;
 }
 
-
-PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, double maxConndist)
+PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param)
 {
     double distance, ratio, x, y, pathParam;
     int i, numOfStates;
@@ -58,6 +108,7 @@ PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, doub
     Eigen::Vector3d goalVec(goal.data());
     PATH_TYPE* path = new PATH_TYPE;
 
+    double maxConndist = param->maxVelocity * param->simulationTimeStep;
     distance = getDistEuclidean(start, goal);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
@@ -94,4 +145,11 @@ double VehicleModel::getDistanceCost(PATH_TYPE* trajectory)
         prevState = currState;
     }
     return length;
+}
+
+double VehicleModel::getTimeCost(PATH_TYPE* trajectory)
+{
+    double elapsed = 0;
+    //TODO
+    return elapsed;
 }

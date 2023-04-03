@@ -9,12 +9,13 @@ MapHandler::MapHandler()
 
 }
 
-MapHandler::MapHandler(VehicleModel* vm) : MapHandler()
+MapHandler::MapHandler(MAP_PARAMETERS* param, VehicleModel* vm) : MapHandler()
 {
+    mapParam = param;
     vehicleModel = vm;
 }
 
-bool MapHandler::isOffCourse(PATH_TYPE* trajectory)
+bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -66,7 +67,7 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory)
     isOC = false;
     for (it = trajectory->begin(); it != trajectory->end(); it++)
     {
-         if(isOnTrackEdge(&(*it), closeBlueLandmarks) || isOnTrackEdge(&(*it), closeYellowLandmarks))
+         if(isOnTrackEdge(&(*it), closeBlueLandmarks, param) || isOnTrackEdge(&(*it), closeYellowLandmarks, param))
          {
             isOC = true;
             break;
@@ -79,11 +80,11 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory)
     return isOC;
 }
 
-bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones)
+bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, RRT_PARAMETERS* param)
 {
     double dx, dy, dx2, dy2, dist, projected, coneDist;
     int size = cones->size();
-    float maxDist = param->track / 2;
+    float maxDist = vehicleModel->getParameters()->track / 2;
     bool isOnTrackEdge = false;
 
     for(int i = 0; i < size; i++)
@@ -111,7 +112,7 @@ bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_m
     return isOnTrackEdge;
 }
 
-SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path)
+SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
 {
     SS_VECTOR randState(3);
 
@@ -119,7 +120,7 @@ SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path)
     if ((path->size() > 0) && (((rand() % 1000) / 1000.0) > 0.5))
     {
         int nodeID = rand() % path->size();
-        double range = vehicleModel->getMaximalDistance()/10;
+        double range = param->sampleRange/10;
 
         randState[0] = (*path)[nodeID][0] + (rand()%((int) (200*range))) / 100.0 - range;
         randState[1] = (*path)[nodeID][1] + (rand()%((int) (200*range))) / 100.0 - range;
@@ -136,6 +137,7 @@ SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path)
         {
             // Choose a cone randomly and place a state near it
             int coneID = rand() % numOfCones;
+            ROS_INFO_STREAM("" << map[coneID]);
             randState[0] = map[coneID]->x + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
             randState[1] = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
             randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0;
@@ -195,7 +197,7 @@ void MapHandler::calculateGoalState()
 
         SS_VECTOR state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
         double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
-        if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < param->goalHorizon))
+        if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < mapParam->goalHorizon))
         {
             maxDist = dist;
             goalState = state;            

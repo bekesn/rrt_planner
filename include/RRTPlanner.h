@@ -17,12 +17,29 @@ class RRTPlanner
 
     ros::WallTimer timer;
 
-
+    // Objects
     MapHandler mapHandler;
     VehicleModel vehicleModel;
-    SearchTree sTree;
+    VEHICLE_PARAMETERS* vehicleParam;
+    MAP_PARAMETERS* mapParam;
 
-    visualization_msgs::MarkerArray markerArray;
+    typedef struct RRTObject{
+        SearchTree* tree;
+
+        // Parameters
+        RRT_PARAMETERS* param;
+
+        // Variables
+        bool pathFound;
+        bool pathClosed;
+        PATH_TYPE* bestPath;
+
+        // Visualisation
+        visualization_msgs::MarkerArray markerArray;
+    };
+
+    RRTObject* localRRT;
+    RRTObject* globalRRT;
 
     typedef enum {
         NOMAP,
@@ -31,29 +48,29 @@ class RRTPlanner
         GLOBALPLANNING
     }PlannerState;
 
-    // Variables
-    bool pathFound;
-    bool pathClosed;
-    PATH_TYPE* bestPath;
     PlannerState state;
 
-    // Parameters
-    RRT_PARAMETERS* param;
 
 public:
     RRTPlanner(int argc, char** argv);
     //~RRTPlanner();
 
+    // Init local or global object
+    void initObject(RRTObject* obj);
+
     // load ROS parameters
+    void loadParameter(const std::string& topic, float* parameter, const float defaultValue);
+    void loadParameter(const std::string& topic, int* parameter, const int defaultValue);
+    void loadParameter(const std::string& topic, std::string* parameter, const std::string defaultValue);
     void loadParameters(void);
 
     // State machine of planner
     void stateMachine(void);
     
     // Extend searchtree by a new node
-    SearchTreeNode* extend(void);
+    SearchTreeNode* extend(RRTObject* rrt);
 
-    bool rewire(SearchTreeNode* newNode);
+    bool rewire(RRTObject* rrt, SearchTreeNode* newNode);
 
     // RRT on partially discovered map
     void planLocalRRT(void);
@@ -65,10 +82,10 @@ public:
     void timerCallback(const ros::WallTimerEvent &event);
 
     // Visualize markers
-    void visualize(void);
+    void visualize(RRTObject* rrt);
 
     // Visualize best path
-    void visualizeBestPath(visualization_msgs::MarkerArray* mArray);
+    void visualizeBestPath(RRTObject* rrt);
 
 };
 

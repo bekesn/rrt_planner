@@ -15,17 +15,12 @@ class VehicleModel
 {
     geometry_msgs::Pose2D currentPose;
 
-    // Function pointers
-    double (VehicleModel::*distanceFunction)(SS_VECTOR start, SS_VECTOR goal);
-    PATH_TYPE* (VehicleModel::*simulation)(SS_VECTOR startState, SS_VECTOR goalState, double maxConnDist);
-
     // Parameter struct
-    RRT_PARAMETERS* param;
+    VEHICLE_PARAMETERS* vehicleParam;
 
 public:
     VehicleModel();
-    VehicleModel(double (VehicleModel::*distFun)(SS_VECTOR start, SS_VECTOR goal),
-                            PATH_TYPE* (VehicleModel::*simFun)(SS_VECTOR startState, SS_VECTOR goalState, double maxConnDist), RRT_PARAMETERS* par);
+    VehicleModel(VEHICLE_PARAMETERS* par);
     //~VehicleModel();
 
     // Update vehicle pose
@@ -34,27 +29,32 @@ public:
     // Get vehicle pose
     geometry_msgs::Pose2D getCurrentPose();
 
+    // Get parameters
+    VEHICLE_PARAMETERS* getParameters();
+
     // Simulate advancing towards target
-    PATH_TYPE* simulateToTarget(SS_VECTOR start, SS_VECTOR goal, double maxConnDist);
+    PATH_TYPE* simulateToTarget(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
 
     // Distance function
     double distance(SS_VECTOR start, SS_VECTOR goal);
 
-    // Get the maximal distance in a timestep
-    double getMaximalDistance();
+    // Cost function
+    double cost(PATH_TYPE* trajectory);
 
     // SIMULATION FUNCTIONS
     // Holonomic model
-    PATH_TYPE* simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, double maxConnDist);
+    PATH_TYPE* simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
 
     // DISTANCE FUNCTIONS
     // Euclidean distance
-    double getDistEuclidean(std::vector<double> start, std::vector<double> goal);
+    double getDistEuclidean(SS_VECTOR start, SS_VECTOR goal);
 
-    //COST FUNCTIONS
+    // COST FUNCTIONS
+    // Cost according to length of trajectory
     double getDistanceCost(PATH_TYPE* trajectory);
 
-
+    // Cost according to elapsed time
+    double getTimeCost(PATH_TYPE* trajectory);
 };
 
 
