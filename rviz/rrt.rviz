@@ -6,8 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /MarkerArray1
-        - /MarkerArray3/Namespaces1
+        - /MarkerArray2/Namespaces1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -79,13 +78,13 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_global_viz
       Name: MarkerArray
       Namespaces:
-        {}
+        rrt_goal: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /rrt_local_viz
@@ -93,8 +92,8 @@ Visualization Manager:
       Namespaces:
         rrt_best_path: true
         rrt_goal: true
-        rrt_graph_edge: false
-        rrt_states: false
+        rrt_graph_edge: true
+        rrt_states: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -125,7 +124,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 66.22393798828125
+      Distance: 55.795570373535156
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -141,9 +140,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6553945541381836
+      Pitch: 0.7053943872451782
       Target Frame: <Fixed Frame>
-      Yaw: 2.135363817214966
+      Yaw: 1.98536217212677
     Saved: ~
 Window Geometry:
   Displays:

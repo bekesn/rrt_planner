@@ -176,9 +176,6 @@ void MapHandler::calculateGoalState()
             default:
                 break;
         }
-        if(pair->size() > 0)
-        {
-        }
 
         if((pair->size() > 0) && (vehicleModel->getDistEuclidean({landmark->x, landmark->y}, {(*pair)[1]->x, (*pair)[1]->y}) < 8))
         {
@@ -195,11 +192,11 @@ void MapHandler::calculateGoalState()
         dist = dist/2.0;
 
         SS_VECTOR state = {((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2};
-        double angleDiff = abs((atan2((state[1] - currentState[1]), (state[0] - currentState[0])) - currentState[2]));
-        if ((dist > maxDist) && (std::min(angleDiff, M_PI * 2.0 - angleDiff) < 1) && (dist < mapParam->goalHorizon))
+        double angleDiff = abs(vehicleModel->angularDifference(currentState, state));
+        if ((dist > maxDist) && (angleDiff < 1) && (dist < mapParam->goalHorizon))
         {
             maxDist = dist;
-            goalState = state;            
+            goalState = state;         
         }
     }
 

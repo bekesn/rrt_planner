@@ -46,7 +46,7 @@ PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR startState, SS_VECTOR goalSt
             trajectory = simulateHolonomic(startState, goalState, param);
             break;
         case HOLONOMIC_CONSTRAINED:
-            //TODO
+            trajectory = simulateHolonomicConstrained(startState, goalState, param);
             break;
         case BICYCLE_SIMPLE:
             //TODO
@@ -102,13 +102,13 @@ double VehicleModel::cost(PATH_TYPE* trajectory)
 
 PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param)
 {
-    double distance, ratio, x, y, pathParam;
+    float distance, ratio, x, y;
     int i, numOfStates;
     Eigen::Vector3d startVec(start.data());
     Eigen::Vector3d goalVec(goal.data());
     PATH_TYPE* path = new PATH_TYPE;
 
-    double maxConndist = param->maxVelocity * param->simulationTimeStep;
+    float maxConndist = param->maxVelocity * param->simulationTimeStep;
     distance = getDistEuclidean(start, goal);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
@@ -116,9 +116,51 @@ PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, RRT_
 
     for(i = 0; i < numOfStates; i++)
     {
-        x = start[0] + (goal[0] - start[0]) * ratio * (i+1) / (double) numOfStates;
-        y = start[1] + (goal[1] - start[1]) * ratio * (i+1) / (double) numOfStates;
+        x = start[0] + (goal[0] - start[0]) * ratio * (i+1) / (float) numOfStates;
+        y = start[1] + (goal[1] - start[1]) * ratio * (i+1) / (float) numOfStates;
         path->push_back({x, y, goal[2]});
+    }
+    return path;
+}
+
+PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param, float maxAngle)
+{
+
+    float distance, ratio, x, y, orientation, dx, dy;
+    int i, numOfStates;
+    Eigen::Vector3d startVec(start.data());
+    Eigen::Vector3d goalVec(goal.data());
+    PATH_TYPE* path = new PATH_TYPE;
+
+    float maxConndist = param->maxVelocity * param->simulationTimeStep;
+    distance = getDistEuclidean(start, goal);
+    float angleDiff = angularDifference(start, goal);
+    if ((-maxAngle <= angleDiff ) && (angleDiff < maxAngle))
+    {
+        orientation = atan2((goal[1] - start[1]), (goal[0] - start[0]));
+        
+    }
+    else if ((-M_PI <= angleDiff ) && (angleDiff < -maxAngle))
+    {
+        orientation = std::remainder(start[2] - maxAngle, 2*M_PI);
+    }
+    else
+    {
+        orientation = std::remainder(start[2] + maxAngle, 2*M_PI);
+    }
+
+    dx = cos(orientation) * distance;
+    dy = sin(orientation) * distance;
+
+    ratio = maxConndist / distance;
+    if (ratio > 1) ratio = 1;
+    numOfStates = (int) (ratio*distance/param->resolution);
+
+    for(i = 0; i < numOfStates; i++)
+    {
+        x = start[0] + dx * ratio * (i+1) / (float) numOfStates;
+        y = start[1] + dy * ratio * (i+1) / (float) numOfStates;
+        path->push_back({x, y, orientation});
     }
     return path;
 }
@@ -153,3 +195,9 @@ double VehicleModel::getTimeCost(PATH_TYPE* trajectory)
     //TODO
     return elapsed;
 }
+
+double VehicleModel::angularDifference(SS_VECTOR vehicleState, SS_VECTOR target)
+{
+    return std::remainder(atan2((target[1] - vehicleState[1]), (target[0] - vehicleState[0])) - vehicleState[2], 2*M_PI);
+}
+    

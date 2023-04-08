@@ -58,7 +58,8 @@ void RRTPlanner::initObject(RRTObject* obj, const char* ID)
 
 void RRTPlanner::stateMachine()
 {
-    bool loopClosed = false;// TODO
+    bool loopClosed;// TODO
+    geometry_msgs::Pose2D p; 
     switch(state)
     {
         case NOMAP:
@@ -66,15 +67,18 @@ void RRTPlanner::stateMachine()
             break;
         case LOCALPLANNING:
             planLocalRRT();
-            if(loopClosed)
+            p = vehicleModel.getCurrentPose();
+            if (vehicleModel.getDistEuclidean({0.0, 0.0, 0.0},{p.x, p.y, 0.0}) < 2)
             {
                 state = WAITFORGLOBAL;
                 globalRRT->tree->init({0.0, 0.0, 0.0});
             }
+            break;
         case WAITFORGLOBAL:
             planLocalRRT();
             planGlobalRRT();
             if(globalRRT->pathClosed) state = GLOBALPLANNING;
+            break;
         case GLOBALPLANNING:
             planGlobalRRT();
             break;
@@ -150,7 +154,7 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
 void RRTPlanner::planLocalRRT(void)
 {
     geometry_msgs::Pose2D pose = vehicleModel.getCurrentPose();
-    localRRT->tree->init({pose.x, pose.y, 0.0});
+    localRRT->tree->init({pose.x, pose.y, pose.theta});
     localRRT->pathFound = false;
     int iteration = 0;
 
@@ -173,7 +177,7 @@ void RRTPlanner::planLocalRRT(void)
         localRRT->bestPath = localRRT->tree->traceBackToRoot(mapHandler.getGoalState());
     }
 
-    ROS_INFO_STREAM("dist: " << localRRT->tree->getAbsCost(localRRT->tree->getNearest(mapHandler.getGoalState())));
+    //ROS_INFO_STREAM("dist: " << localRRT->tree->getAbsCost(localRRT->tree->getNearest(mapHandler.getGoalState())));
 }
 
 void RRTPlanner::planGlobalRRT(void)
@@ -331,7 +335,7 @@ void RRTPlanner::loadParameters(void)
     std::string simType;
     loadParameter("/VEHICLE/simType", &simType, "HOLONOMIC");
     if (simType == "HOLONOMIC") vehicleParam->simType = HOLONOMIC;
-    else if (simType == "HOLONOMIC_CONTRAINED") vehicleParam->simType = HOLONOMIC_CONSTRAINED;
+    else if (simType == "HOLONOMIC_CONSTRAINED") vehicleParam->simType = HOLONOMIC_CONSTRAINED;
     else if (simType == "BICYCLE_SIMPLE") vehicleParam->simType = BICYCLE_SIMPLE;
     else if (simType == "BICYCLE") vehicleParam->simType = BICYCLE;
 

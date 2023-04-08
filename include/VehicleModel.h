@@ -45,6 +45,9 @@ public:
     // Holonomic model
     PATH_TYPE* simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
 
+    // Holonomic model with constraints
+    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param, float maxAngle = 0.2f);
+
     // DISTANCE FUNCTIONS
     // Euclidean distance
     double getDistEuclidean(SS_VECTOR start, SS_VECTOR goal);
@@ -55,6 +58,10 @@ public:
 
     // Cost according to elapsed time
     double getTimeCost(PATH_TYPE* trajectory);
+
+    // Calculate angular difference in rad
+    // Anticlockwise
+    double angularDifference(SS_VECTOR vehicleState, SS_VECTOR target);
 };
 
 
