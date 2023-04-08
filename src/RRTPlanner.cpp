@@ -18,8 +18,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     vehicleParam = new VEHICLE_PARAMETERS;
     mapParam = new MAP_PARAMETERS;
 
-    initObject(localRRT);
-    initObject(globalRRT);
+    initObject(localRRT, "local");
+    initObject(globalRRT, "global");
 
     vehicleModel = VehicleModel(vehicleParam);
     mapHandler = MapHandler(mapParam, &vehicleModel);
@@ -32,8 +32,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
     mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
     poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &vehicleModel);
-    markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_viz", 10);
-
+    localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
+    globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
 
     timer = nh.createWallTimer(ros::WallDuration(0.1), &RRTPlanner::timerCallback, this);
     
@@ -41,8 +41,10 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 }
 
 
-void RRTPlanner::initObject(RRTObject* obj)
+void RRTPlanner::initObject(RRTObject* obj, const char* ID)
 {
+    obj->name = new std::string(1, *ID);
+
     obj->pathFound = false;
     obj->pathClosed = false;
     
@@ -210,7 +212,7 @@ void RRTPlanner::visualize(RRTObject* rrt)
     rrt->tree->drawTree(&rrt->markerArray);
     visualizeBestPath(rrt);
     mapHandler.visualizePoints(&rrt->markerArray);
-    markerPublisher.publish(rrt->markerArray);
+    rrt->markerPublisher.publish(rrt->markerArray);
 }
 
 void RRTPlanner::visualizeBestPath(RRTObject* rrt)
@@ -313,6 +315,9 @@ void RRTPlanner::loadParameters(void)
 
     loadParameter("/LOCAL/rewireRange", &localRRT->param->rewireRange, 1.0f);
     loadParameter("/GLOBAL/rewireRange", &globalRRT->param->rewireRange, 1.0f);
+
+    loadParameter("/LOCAL/simulationTimeStep", &localRRT->param->sampleRange, 3);
+    loadParameter("/GLOBAL/simulationTimeStep", &globalRRT->param->sampleRange, 3);
 
     loadParameter("/LOCAL/simulationTimeStep", &localRRT->param->simulationTimeStep, 0.1f);
     loadParameter("/GLOBAL/simulationTimeStep", &globalRRT->param->simulationTimeStep, 0.1f);

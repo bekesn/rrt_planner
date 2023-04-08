@@ -7,8 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /MarkerArray1
-        - /MarkerArray2
-        - /MarkerArray2/Status1
+        - /MarkerArray3/Namespaces1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -80,13 +79,23 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /rrt_viz
+      Enabled: false
+      Marker Topic: /rrt_global_viz
       Name: MarkerArray
       Namespaces:
-        rrt_graph_edge: true
-        rrt_states: true
-      Queue Size: 1000
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /rrt_local_viz
+      Name: MarkerArray
+      Namespaces:
+        rrt_best_path: true
+        rrt_goal: true
+        rrt_graph_edge: false
+        rrt_states: false
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -116,7 +125,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 73.58929443359375
+      Distance: 66.22393798828125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -124,17 +133,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 3.805084228515625
-        Y: 3.7510204315185547
-        Z: 9.62196159362793
+        X: -6.640519618988037
+        Y: -2.0720348358154297
+        Z: 9.914891242980957
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6353956460952759
+      Pitch: 0.6553945541381836
       Target Frame: <Fixed Frame>
-      Yaw: 2.96036696434021
+      Yaw: 2.135363817214966
     Saved: ~
 Window Geometry:
   Displays:

@@ -137,7 +137,6 @@ SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
         {
             // Choose a cone randomly and place a state near it
             int coneID = rand() % numOfCones;
-            ROS_INFO_STREAM("" << map[coneID]);
             randState[0] = map[coneID]->x + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
             randState[1] = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
             randState[2] = (rand() % ((int) (2000*M_PI))) / 1000.0;

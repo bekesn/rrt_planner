@@ -13,8 +13,6 @@ class RRTPlanner
     ros::Subscriber mapSubscriber;
     ros::Subscriber poseSubscriber;
 
-    ros::Publisher markerPublisher;
-
     ros::WallTimer timer;
 
     // Objects
@@ -24,6 +22,7 @@ class RRTPlanner
     MAP_PARAMETERS* mapParam;
 
     typedef struct RRTObject{
+        std::string* name;
         SearchTree* tree;
 
         // Parameters
@@ -35,6 +34,7 @@ class RRTPlanner
         PATH_TYPE* bestPath;
 
         // Visualisation
+        ros::Publisher markerPublisher;
         visualization_msgs::MarkerArray markerArray;
     };
 
@@ -56,7 +56,7 @@ public:
     //~RRTPlanner();
 
     // Init local or global object
-    void initObject(RRTObject* obj);
+    void initObject(RRTObject* obj, const char* ID);
 
     // load ROS parameters
     void loadParameter(const std::string& topic, float* parameter, const float defaultValue);
