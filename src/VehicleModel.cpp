@@ -142,12 +142,13 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR start, SS_VECTOR
     }
     else if ((-M_PI <= angleDiff ) && (angleDiff < -maxAngle))
     {
-        orientation = std::remainder(start[2] - maxAngle, 2*M_PI);
+        orientation = std::remainder(start[2] - maxAngle, 2.0*M_PI);
     }
     else
     {
-        orientation = std::remainder(start[2] + maxAngle, 2*M_PI);
+        orientation = std::remainder(start[2] + maxAngle, 2.0*M_PI);
     }
+
 
     dx = cos(orientation) * distance;
     dy = sin(orientation) * distance;
@@ -198,6 +199,12 @@ double VehicleModel::getTimeCost(PATH_TYPE* trajectory)
 
 double VehicleModel::angularDifference(SS_VECTOR vehicleState, SS_VECTOR target)
 {
-    return std::remainder(atan2((target[1] - vehicleState[1]), (target[0] - vehicleState[0])) - vehicleState[2], 2*M_PI);
+    auto dy = target[1] - vehicleState[1];
+    auto dx = target[0] - vehicleState[0];
+    auto angle = atan2(dy, dx);
+    auto diff = angle - vehicleState[2];
+    auto res = std::remainder(diff, 2*M_PI);
+    //ROS_INFO_STREAM("" << dy << "  " << dx << "  "  << angle << "  "  << diff << "  "  << res);
+    return res;
 }
     

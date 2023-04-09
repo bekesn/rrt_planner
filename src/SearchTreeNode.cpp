@@ -29,9 +29,9 @@ SearchTreeNode::~SearchTreeNode()
     std::vector<SearchTreeNode*>::iterator it;
     for (it = childNodes->begin(); it != childNodes->end(); it++)
     {
-        delete(*it);
+        delete *it;
     }
-    delete(childNodes);
+    delete childNodes;
 }
 
 

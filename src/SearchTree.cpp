@@ -16,7 +16,8 @@ SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PAR
 
 SearchTree::~SearchTree()
 {
-    delete(tree->front());
+    delete tree->front();
+    delete tree;
 }
 
 SearchTreeNode* SearchTree::addChild(SearchTreeNode* parentNode, SS_VECTOR state, double nodeCost)
@@ -160,6 +161,7 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 
 void SearchTree::init(SS_VECTOR startState)
 {
+    delete tree->front();
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
     tree->push_back(new SearchTreeNode(NULL, startState, 0));

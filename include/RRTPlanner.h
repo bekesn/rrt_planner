@@ -21,7 +21,7 @@ class RRTPlanner
     VEHICLE_PARAMETERS* vehicleParam;
     MAP_PARAMETERS* mapParam;
 
-    typedef struct RRTObject{
+    struct RRTObject{
         std::string* name;
         SearchTree* tree;
 
@@ -41,12 +41,12 @@ class RRTPlanner
     RRTObject* localRRT;
     RRTObject* globalRRT;
 
-    typedef enum {
+    enum PlannerState{
         NOMAP,
         LOCALPLANNING,
         WAITFORGLOBAL,
         GLOBALPLANNING
-    }PlannerState;
+    };
 
     PlannerState state;
 

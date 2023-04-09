@@ -116,6 +116,9 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     {
         newNode = NULL;
     }
+
+    delete trajectory;
+
     return newNode;
 }
 
@@ -147,7 +150,10 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
                 }
             }
         }
+        delete trajectory;
     }
+    delete nearbyNodes;
+
     return false;
 }
 
@@ -173,11 +179,9 @@ void RRTPlanner::planLocalRRT(void)
 
     if (localRRT->pathFound)
     {
-        localRRT->bestPath->clear();
+        delete localRRT->bestPath;
         localRRT->bestPath = localRRT->tree->traceBackToRoot(mapHandler.getGoalState());
     }
-
-    //ROS_INFO_STREAM("dist: " << localRRT->tree->getAbsCost(localRRT->tree->getNearest(mapHandler.getGoalState())));
 }
 
 void RRTPlanner::planGlobalRRT(void)
@@ -197,7 +201,7 @@ void RRTPlanner::planGlobalRRT(void)
 
     if (globalRRT->pathFound)
     {
-        globalRRT->bestPath->clear();
+        delete globalRRT->bestPath;
         globalRRT->bestPath = globalRRT->tree->traceBackToRoot(mapHandler.getGoalState());
     }
 }

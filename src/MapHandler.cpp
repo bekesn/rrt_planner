@@ -60,8 +60,6 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
                     break;
             }
         }
-
-        
     }
 
     isOC = false;
@@ -74,8 +72,8 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
          }
     }
 
-    free(closeBlueLandmarks);
-    free(closeYellowLandmarks);
+    delete closeBlueLandmarks;
+    delete closeYellowLandmarks;
 
     return isOC;
 }
@@ -198,6 +196,8 @@ void MapHandler::calculateGoalState()
             maxDist = dist;
             goalState = state;         
         }
+
+        delete pair;
     }
 
 }
