@@ -1,8 +1,11 @@
+GENERAL:
+  timerPeriod:        0.1           # period of path planning task in [s]
+
 LOCAL:
-  collisionRange:     6           # cones in this range will be checked for collision - in [m]
+  collisionRange:     6             # cones in this range will be checked for collision - in [m]
   goalBias:           0.1   
-  goalRadius:         1           # acceptance range in [m]
-  iterations:         1000          # iterations for planning
+  goalRadius:         1             # acceptance range in [m]
+  iterations:         500           # iterations for planning
   maxConeDist:        6             # maximal distance between consecutive cones in [m]
   maxNumOfNodes:      2000          # limits number of nodes in searchtree
   maxVelocity:        10            # in [m/s]

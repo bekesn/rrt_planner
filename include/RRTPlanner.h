@@ -12,6 +12,7 @@ class RRTPlanner
 {
     ros::Subscriber mapSubscriber;
     ros::Subscriber poseSubscriber;
+    std::string nodeName;
 
     ros::WallTimer timer;
 
@@ -20,6 +21,7 @@ class RRTPlanner
     VehicleModel vehicleModel;
     VEHICLE_PARAMETERS* vehicleParam;
     MAP_PARAMETERS* mapParam;
+    GENERAL_PARAMETERS* genParam;
 
     struct RRTObject{
         std::string* name;

@@ -49,7 +49,7 @@ PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR startState, SS_VECTOR goalSt
             trajectory = simulateHolonomicConstrained(startState, goalState, param);
             break;
         case BICYCLE_SIMPLE:
-            //TODO
+            trajectory = simulateBicycleSimple(startState, goalState, param);
             break;
         case BICYCLE:
             //TODO
@@ -166,6 +166,24 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR start, SS_VECTOR
     return path;
 }
 
+PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param)
+{
+    PATH_TYPE* path = new PATH_TYPE;
+    SS_VECTOR state = start;
+
+    // TODO kokany
+    float dt = param->resolution/param->maxVelocity;
+    float t;
+
+    while (t <= param->simulationTimeStep)
+    {
+        state = RK4(state, dt, &VehicleModel::SSEquationSimple);
+        path->push_back(state);
+    }
+
+    return path;
+}
+
 double VehicleModel::getDistEuclidean(SS_VECTOR start, SS_VECTOR goal)
 {
     double dx = start[0]- goal[0];
@@ -206,5 +224,26 @@ double VehicleModel::angularDifference(SS_VECTOR vehicleState, SS_VECTOR target)
     auto res = std::remainder(diff, 2*M_PI);
     //ROS_INFO_STREAM("" << dy << "  " << dx << "  "  << angle << "  "  << diff << "  "  << res);
     return res;
+}
+
+
+SS_VECTOR VehicleModel::SSEquationSimple(SS_VECTOR state)
+{
+    SS_VECTOR stateDot;
+    // TODO
+
+    return stateDot;
+}
+
+SS_VECTOR VehicleModel::RK4(SS_VECTOR startState, float dt, SS_VECTOR (VehicleModel::*equation)(SS_VECTOR state))
+{
+    SS_VECTOR k1, k2, k3, k4, k;
+    /*k1 = dt * (*this.*equation)(startState);
+    k2 = dt * (*this.*equation)(startState + 0.5*k1);
+    k3 = dt * (*this.*equation)(startState + 0.5*k2);
+    k4 = dt * (*this.*equation)(startState + k3);
+    k = (k1+2*k2+2*k3+k4)/6;*/
+
+    return startState;// + k;
 }
     

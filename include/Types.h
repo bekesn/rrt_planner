@@ -52,5 +52,8 @@ struct MAP_PARAMETERS{
     float goalHorizon;
 };
 
+struct GENERAL_PARAMETERS{
+    float timerPeriod;
+};
 
 #endif

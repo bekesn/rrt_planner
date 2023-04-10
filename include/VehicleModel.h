@@ -48,6 +48,9 @@ public:
     // Holonomic model with constraints
     PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param, float maxAngle = 0.2f);
 
+    // Simple kinematic bicycle model
+    PATH_TYPE* simulateBicycleSimple(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
+
     // DISTANCE FUNCTIONS
     // Euclidean distance
     double getDistEuclidean(SS_VECTOR start, SS_VECTOR goal);
@@ -62,6 +65,14 @@ public:
     // Calculate angular difference in rad
     // Anticlockwise
     double angularDifference(SS_VECTOR vehicleState, SS_VECTOR target);
+
+    // EQUATION
+    // Simple kinematic equation
+    SS_VECTOR SSEquationSimple(SS_VECTOR state);
+
+    // DIFFERENTIAL EQUATION SOLVER
+    // Runge-Kutta 4th order
+    SS_VECTOR RK4(SS_VECTOR startState, float dt, SS_VECTOR (VehicleModel::*equation)(SS_VECTOR state));
 };
 
 

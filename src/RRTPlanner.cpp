@@ -8,6 +8,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 {
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
+    nodeName = "[" + ros::this_node::getName() + "]";
 
     state = NOMAP;
 
@@ -17,6 +18,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
     vehicleParam = new VEHICLE_PARAMETERS;
     mapParam = new MAP_PARAMETERS;
+    genParam = new GENERAL_PARAMETERS;
 
     initObject(localRRT, "local");
     initObject(globalRRT, "global");
@@ -35,7 +37,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
     globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
 
-    timer = nh.createWallTimer(ros::WallDuration(0.1), &RRTPlanner::timerCallback, this);
+    timer = nh.createWallTimer(ros::WallDuration(genParam->timerPeriod), &RRTPlanner::timerCallback, this);
     
     ros::spin();
 }
@@ -208,10 +210,15 @@ void RRTPlanner::planGlobalRRT(void)
 
 void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 {
+    ros::Time startTime = ros::Time::now();
     stateMachine();
     visualize(localRRT);
     visualize(globalRRT);
-    ROS_INFO_STREAM("-------------");
+    ros::Duration runTime = ros::Time::now() - startTime;
+    if(runTime.toSec() > genParam->timerPeriod)
+    {
+         ROS_WARN_STREAM("[" << ros::this_node::getName() << "] Runtime high: " << ((int) (runTime.toSec()*1000)) << " ms");
+    }
 }
 
 void RRTPlanner::visualize(RRTObject* rrt)
@@ -269,9 +276,9 @@ void RRTPlanner::loadParameter(const std::string& topic, float* parameter, const
     if (!ros::param::get(topic, *parameter))
     {
         *parameter = defaultValue;
-        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << topic << " not found."); 
+        ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
     }
-    ROS_INFO_STREAM(topic << "  =  " <<  std::to_string(*parameter)); 
+    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(*parameter)); 
 }
 
 void RRTPlanner::loadParameter(const std::string& topic, int* parameter, const int defaultValue)
@@ -279,9 +286,9 @@ void RRTPlanner::loadParameter(const std::string& topic, int* parameter, const i
     if (!ros::param::get(topic, *parameter))
     {
         *parameter = defaultValue;
-        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << topic << " not found."); 
+        ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
     }
-    ROS_INFO_STREAM(topic << "  =  " <<  std::to_string(*parameter)); 
+    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(*parameter)); 
 }
 
 void RRTPlanner::loadParameter(const std::string& topic, std::string* parameter, const std::string defaultValue)
@@ -289,14 +296,16 @@ void RRTPlanner::loadParameter(const std::string& topic, std::string* parameter,
     if (!ros::param::get(topic, *parameter))
     {
         *parameter = defaultValue;
-        ROS_ERROR_STREAM("Parameter " << ros::this_node::getName() << topic << " not found."); 
+        ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
     }
-    ROS_INFO_STREAM(topic << "  =  " <<  *parameter);     
+    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  *parameter);     
 }
 
 void RRTPlanner::loadParameters(void)
 {
-    ROS_INFO_STREAM("LOADING PARAMETERS");
+    ROS_INFO_STREAM(nodeName << " LOADING PARAMETERS");
+    loadParameter("/GENERAL/timerPeriod", &genParam->timerPeriod, 0.1f);
+
     loadParameter("/LOCAL/collisionRange", &localRRT->param->collisionRange, 6.0f);
     loadParameter("/GLOBAL/collisionRange", &globalRRT->param->collisionRange, 6.0f);
 
