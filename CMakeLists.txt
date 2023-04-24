@@ -127,6 +127,9 @@ include_directories(
 )
 
 ## Declare a C++ library
+add_library(StateSpace2D src/StateSpace2D.cpp)
+target_link_libraries(StateSpace2D ${catkin_LIBRARIES})
+
 add_library(MapHandler src/MapHandler.cpp)
 target_link_libraries(MapHandler ${catkin_LIBRARIES})
 
@@ -151,6 +154,7 @@ target_link_libraries(SearchTree SearchTreeNode)
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rrt_planner_node src/RRTPlanner.cpp)
 target_link_libraries(rrt_planner_node 
+  StateSpace2D
   SearchTreeNode
   SearchTree
   MapHandler

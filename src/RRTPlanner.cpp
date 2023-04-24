@@ -54,14 +54,14 @@ void RRTPlanner::initObject(RRTObject* obj, const char* ID)
     obj->param = new RRT_PARAMETERS;
 
     // Init objects
-    obj->tree = new SearchTree(&vehicleModel, {0.0, 0.0, 0.0}, obj->param);
+    obj->tree = new SearchTree(&vehicleModel, StateSpace2D(0.0, 0.0, 0.0), obj->param);
 
 }
 
 void RRTPlanner::stateMachine()
 {
     bool loopClosed;// TODO
-    geometry_msgs::Pose2D p; 
+    SS_VECTOR* p; 
     switch(state)
     {
         case NOMAP:
@@ -70,10 +70,10 @@ void RRTPlanner::stateMachine()
         case LOCALPLANNING:
             planLocalRRT();
             p = vehicleModel.getCurrentPose();
-            if (vehicleModel.getDistEuclidean({0.0, 0.0, 0.0},{p.x, p.y, 0.0}) < 2)
+            if (p->distanceToTarget(new StateSpace2D(0.0, 0.0, 0.0)) < 2)
             {
                 state = WAITFORGLOBAL;
-                globalRRT->tree->init({0.0, 0.0, 0.0});
+                globalRRT->tree->init(new StateSpace2D(0.0, 0.0, 0.0));
             }
             break;
         case WAITFORGLOBAL:
@@ -100,10 +100,10 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     randState = mapHandler.getRandomState(rrt->bestPath, rrt->param);
 
     // Get nearest node
-    SearchTreeNode* nearest = rrt->tree->getNearest(randState);
+    SearchTreeNode* nearest = rrt->tree->getNearest(&randState);
 
     // Simulate movement towards new state
-    trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState, rrt->param);
+    trajectory = vehicleModel.simulateToTarget(nearest->getState(), &randState, rrt->param);
 
     // Check for offCourse
     offCourse = mapHandler.isOffCourse(trajectory, rrt->param);
@@ -138,7 +138,7 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
         if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state
-            if (vehicleModel.getDistEuclidean(trajectory->back(), (*it)->getState()) < 0.01)
+            if (trajectory->back().distanceToTarget((*it)->getState()) < 0.01)
             {
                 float segmentCost = vehicleModel.getDistanceCost(trajectory);
                 //Compare costs
@@ -161,10 +161,11 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
 
 void RRTPlanner::planLocalRRT(void)
 {
-    geometry_msgs::Pose2D pose = vehicleModel.getCurrentPose();
-    localRRT->tree->init({pose.x, pose.y, pose.theta});
+    SS_VECTOR* pose = vehicleModel.getCurrentPose();
+    localRRT->tree->init(pose);
     localRRT->pathFound = false;
     int iteration = 0;
+    SS_VECTOR goalState = mapHandler.getGoalState();
 
     // TODO
     while((!localRRT->tree->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
@@ -173,7 +174,7 @@ void RRTPlanner::planLocalRRT(void)
         if (node != NULL)
         {   
             rewire(localRRT, node);
-            float goalDist = vehicleModel.getDistEuclidean(node->getState(), mapHandler.getGoalState());
+            float goalDist = node->getState()->distanceToTarget(&goalState);
             if(goalDist < localRRT->param->goalRadius) localRRT->pathFound = true;
         }
         iteration++;
@@ -182,14 +183,14 @@ void RRTPlanner::planLocalRRT(void)
     if (localRRT->pathFound)
     {
         delete localRRT->bestPath;
-        localRRT->bestPath = localRRT->tree->traceBackToRoot(mapHandler.getGoalState());
+        localRRT->bestPath = localRRT->tree->traceBackToRoot(&goalState);
     }
 }
 
 void RRTPlanner::planGlobalRRT(void)
 {
     int iteration = 0;
-
+    SS_VECTOR goalState = mapHandler.getGoalState();
     while((!globalRRT->tree->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
     {
         SearchTreeNode * node = extend(globalRRT);
@@ -204,7 +205,7 @@ void RRTPlanner::planGlobalRRT(void)
     if (globalRRT->pathFound)
     {
         delete globalRRT->bestPath;
-        globalRRT->bestPath = globalRRT->tree->traceBackToRoot(mapHandler.getGoalState());
+        globalRRT->bestPath = globalRRT->tree->traceBackToRoot(&goalState);
     }
 }
 
@@ -256,8 +257,8 @@ void RRTPlanner::visualizeBestPath(RRTObject* rrt)
     for (it = rrt->bestPath->begin(); it != rrt->bestPath->end(); it++)
     {
         
-        coord.x = (*it)[0];
-        coord.y = (*it)[1];
+        coord.x = (*it).x();
+        coord.y = (*it).y();
         bestPathLine.points.push_back(coord); 
     }
 

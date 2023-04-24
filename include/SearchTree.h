@@ -34,7 +34,7 @@ public:
     void remove(SearchTreeNode* node);
 
     //Get nearest node
-    SearchTreeNode* getNearest(SS_VECTOR state);
+    SearchTreeNode* getNearest(SS_VECTOR* state);
 
     //Get nearby nodes
     std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node, double maxDist);
@@ -43,10 +43,10 @@ public:
     void drawTree(visualization_msgs::MarkerArray* markerArray);
 
     // Delete tree and create new
-    void init(SS_VECTOR startState);
+    void init(SS_VECTOR* startState);
 
     // Traceback to root
-    PATH_TYPE* traceBackToRoot(SS_VECTOR goalState);
+    PATH_TYPE* traceBackToRoot(SS_VECTOR* goalState);
 
     // Get absolute cost to node
     float getAbsCost(SearchTreeNode* node);

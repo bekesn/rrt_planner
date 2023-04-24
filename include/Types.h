@@ -1,7 +1,7 @@
 #ifndef types_h
 #define types_h
 
-#define SS_VECTOR   std::vector<double>
+#define SS_VECTOR   StateSpace2D
 #define PATH_TYPE   std::vector<SS_VECTOR>
 
 enum RRT_TYPE{
@@ -50,6 +50,10 @@ struct VEHICLE_PARAMETERS{
 
 struct MAP_PARAMETERS{
     float goalHorizon;
+};
+
+struct CONTROL_PARAMETERS{
+    float k;
 };
 
 struct GENERAL_PARAMETERS{

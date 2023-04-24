@@ -30,7 +30,7 @@ GLOBAL:
 VEHICLE:
   track:              1.2           # in [m]
   wheelBase:          1.54          # in [m]
-  simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+  simType:            "HOLONOMIC"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   distType:           "EUCLIDEAN"   # can be "EUCLIDEAN" , "SIMULATED"
   costType:           "DISTANCE"    # can be "DISTANCE" , "TIME"
 

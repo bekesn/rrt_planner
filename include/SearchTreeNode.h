@@ -5,13 +5,14 @@
 #include <ros/ros.h>
 #include <iterator>
 #include "Types.h"
+#include "StateSpace2D.h"
 
 class SearchTreeNode
 {
 private:
     SearchTreeNode* parentNode;
     std::vector<SearchTreeNode *> *childNodes;
-    std::vector<double> state;
+    SS_VECTOR state;
     float cost;
 
 public:
@@ -19,7 +20,7 @@ public:
     // Constructor
     SearchTreeNode();
     SearchTreeNode(const SearchTreeNode &original);
-    SearchTreeNode(SearchTreeNode* parent, std::vector<double> stateSpace, double nodeCost);
+    SearchTreeNode(SearchTreeNode* parent, SS_VECTOR stateSpace, double nodeCost);
 
     // Destructor
     ~SearchTreeNode();
@@ -38,7 +39,7 @@ public:
     std::vector<SearchTreeNode*> *getChildren();
 
     // Get state
-    std::vector<double> getState();
+    SS_VECTOR* getState();
 
     // Cost
     float getSegmentCost(void);
@@ -46,7 +47,7 @@ public:
     void addToAbsoluteCost(float* absCost);
 
     // Trace back to parent and add state
-    void traceBackToRoot(std::vector<std::vector<double>>* stateVector);
+    void traceBackToRoot(PATH_TYPE* stateVector);
 
 };
 

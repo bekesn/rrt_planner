@@ -40,7 +40,7 @@ void SearchTree::remove(SearchTreeNode* node)
 
 }
 
-SearchTreeNode* SearchTree::getNearest(SS_VECTOR toState)
+SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState)
 {
     //ROS_INFO_STREAM("new:  " << toState[0] << "  " << toState[1]);
     std::vector<SearchTreeNode*>::iterator it;
@@ -111,8 +111,8 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
     std::vector<SearchTreeNode*>::iterator it;
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        coord.x = (*it)->getState()[0];
-        coord.y = (*it)->getState()[1];
+        coord.x = (*it)->getState()->x();
+        coord.y = (*it)->getState()->y();
         treeNodes.points.push_back(coord);
     }
 
@@ -142,11 +142,11 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
         children = (*treeIterator)->getChildren();
         for (childIterator = children->begin(); childIterator != children->end(); childIterator++)
         {
-            coord.x = (*treeIterator)->getState()[0];
-            coord.y = (*treeIterator)->getState()[1];
+            coord.x = (*treeIterator)->getState()->x();
+            coord.y = (*treeIterator)->getState()->y();
             graphEdge.points.push_back(coord);
-            coord.x = (*childIterator)->getState()[0];
-            coord.y = (*childIterator)->getState()[1];
+            coord.x = (*childIterator)->getState()->x();
+            coord.y = (*childIterator)->getState()->y();
             graphEdge.points.push_back(coord);
         }
     }
@@ -159,15 +159,15 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
     }*/
 }
 
-void SearchTree::init(SS_VECTOR startState)
+void SearchTree::init(SS_VECTOR* startState)
 {
     delete tree->front();
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
-    tree->push_back(new SearchTreeNode(NULL, startState, 0));
+    tree->push_back(new SearchTreeNode(NULL, *startState, 0));
 }
 
-PATH_TYPE* SearchTree::traceBackToRoot(SS_VECTOR goalState)
+PATH_TYPE* SearchTree::traceBackToRoot(SS_VECTOR* goalState)
 {
     SearchTreeNode* closestNode = getNearest(goalState);
     PATH_TYPE* path = new PATH_TYPE;

@@ -3,17 +3,17 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Pose2D.h>
 #include <tf/tf.h>
 #include <Eigen/Dense>
 #include <math.h>
 #include "Types.h"
+#include "StateSpace2D.h"
 
 #define STATESPACE_DIM  3
 
 class VehicleModel
 {
-    geometry_msgs::Pose2D currentPose;
+    SS_VECTOR currentPose;
 
     // Parameter struct
     VEHICLE_PARAMETERS* vehicleParam;
@@ -27,33 +27,29 @@ public:
     void poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
     // Get vehicle pose
-    geometry_msgs::Pose2D getCurrentPose();
+    SS_VECTOR* getCurrentPose();
 
     // Get parameters
     VEHICLE_PARAMETERS* getParameters();
 
     // Simulate advancing towards target
-    PATH_TYPE* simulateToTarget(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
+    PATH_TYPE* simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
     // Distance function
-    double distance(SS_VECTOR start, SS_VECTOR goal);
+    double distance(SS_VECTOR* start, SS_VECTOR* goal);
 
     // Cost function
     double cost(PATH_TYPE* trajectory);
 
     // SIMULATION FUNCTIONS
     // Holonomic model
-    PATH_TYPE* simulateHolonomic(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
+    PATH_TYPE* simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
     // Holonomic model with constraints
-    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param, float maxAngle = 0.2f);
+    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle = 0.2f);
 
     // Simple kinematic bicycle model
-    PATH_TYPE* simulateBicycleSimple(SS_VECTOR start, SS_VECTOR goal, RRT_PARAMETERS* param);
-
-    // DISTANCE FUNCTIONS
-    // Euclidean distance
-    double getDistEuclidean(SS_VECTOR start, SS_VECTOR goal);
+    PATH_TYPE* simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
     // COST FUNCTIONS
     // Cost according to length of trajectory
@@ -62,17 +58,13 @@ public:
     // Cost according to elapsed time
     double getTimeCost(PATH_TYPE* trajectory);
 
-    // Calculate angular difference in rad
-    // Anticlockwise
-    double angularDifference(SS_VECTOR vehicleState, SS_VECTOR target);
-
     // EQUATION
     // Simple kinematic equation
-    SS_VECTOR SSEquationSimple(SS_VECTOR state);
+    SS_VECTOR SSEquationSimple(SS_VECTOR* state);
 
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order
-    SS_VECTOR RK4(SS_VECTOR startState, float dt, SS_VECTOR (VehicleModel::*equation)(SS_VECTOR state));
+    SS_VECTOR RK4(SS_VECTOR* startState, float dt, SS_VECTOR (VehicleModel::*equation)(SS_VECTOR* state));
 };
 
 
