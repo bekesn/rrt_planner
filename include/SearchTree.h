@@ -13,7 +13,6 @@ class SearchTree
 {
 private:
     std::vector<SearchTreeNode*> *tree;
-    VehicleModel* vehicle;
 
     // Parameter struct
     RRT_PARAMETERS* param;
@@ -34,10 +33,13 @@ public:
     void remove(SearchTreeNode* node);
 
     //Get nearest node
-    SearchTreeNode* getNearest(SS_VECTOR* state);
+    SearchTreeNode* getNearest(SS_VECTOR* state, float minCost = 0.0f);
 
     //Get nearby nodes
-    std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node, double maxDist);
+    std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node);
+
+    // Decide whether almost similar state already exists
+    bool alreadyInTree(SS_VECTOR* state);
 
     // Draw tree as lines
     void drawTree(visualization_msgs::MarkerArray* markerArray);

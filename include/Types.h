@@ -33,18 +33,20 @@ struct RRT_PARAMETERS{
     int iterations;
     float maxConeDist;
     int maxNumOfNodes;
+    float minCost;
+    float minDeviation;
     float sampleRange;
     float maxVelocity;
     float resolution;
     float rewireRange;
     float simulationTimeStep;
+    float thetaWeight;
 };
 
 struct VEHICLE_PARAMETERS{
     float track;
     float wheelBase;
     SIMULATION_TYPE simType;
-    DISTANCE_TYPE distType;
     COST_TYPE costType;
 };
 

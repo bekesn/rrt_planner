@@ -29,7 +29,7 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
     // Collect nearby cones with the same color
     for (auto & cone : map)
     {
-        double dist = trajectory->front().distanceToTarget({(float) cone->x, (float) cone->y, 0});
+        double dist = trajectory->front().getDistEuclidean({(float) cone->x, (float) cone->y, 0});
         if (dist < param->collisionRange)
         {
             switch (cone->color)
@@ -189,8 +189,8 @@ void MapHandler::calculateGoalState()
 
     for (auto & pair : closestLandmarks)
     {
-        float dist = currentState->distanceToTarget({(float) (*pair)[0]->x,(float) (*pair)[0]->y});
-        dist += currentState->distanceToTarget({(float) (*pair)[1]->x, (float) (*pair)[1]->y});
+        float dist = currentState->getDistEuclidean({(float) (*pair)[0]->x,(float) (*pair)[0]->y});
+        dist += currentState->getDistEuclidean({(float) (*pair)[1]->x, (float) (*pair)[1]->y});
         dist = dist/2.0;
 
         SS_VECTOR state = StateSpace2D(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0);

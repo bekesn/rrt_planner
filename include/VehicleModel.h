@@ -35,25 +35,22 @@ public:
     // Simulate advancing towards target
     PATH_TYPE* simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
-    // Distance function
-    double distance(SS_VECTOR* start, SS_VECTOR* goal);
-
     // Cost function
-    double cost(PATH_TYPE* trajectory);
+    double cost(PATH_TYPE* trajectory, RRT_PARAMETERS* param);
 
     // SIMULATION FUNCTIONS
     // Holonomic model
     PATH_TYPE* simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
     // Holonomic model with constraints
-    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle = 0.2f);
+    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle = 0.25f);
 
     // Simple kinematic bicycle model
     PATH_TYPE* simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
     // COST FUNCTIONS
     // Cost according to length of trajectory
-    double getDistanceCost(PATH_TYPE* trajectory);
+    double getDistanceCost(PATH_TYPE* trajectory, RRT_PARAMETERS* param);
 
     // Cost according to elapsed time
     double getTimeCost(PATH_TYPE* trajectory);

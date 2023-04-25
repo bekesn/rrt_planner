@@ -70,7 +70,7 @@ void RRTPlanner::stateMachine()
         case LOCALPLANNING:
             planLocalRRT();
             p = vehicleModel.getCurrentPose();
-            if (p->distanceToTarget(new StateSpace2D(0.0, 0.0, 0.0)) < 2)
+            if (p->distanceToTarget(new StateSpace2D(0.0, 0.0, 0.0), globalRRT->param) < 2)
             {
                 state = WAITFORGLOBAL;
                 globalRRT->tree->init(new StateSpace2D(0.0, 0.0, 0.0));
@@ -91,7 +91,7 @@ void RRTPlanner::stateMachine()
 SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
 {
     SearchTreeNode* newNode;
-    bool offCourse;
+    bool offCourse, alreadyInTree;
     SS_VECTOR randState;
     SS_VECTOR newState;
     PATH_TYPE* trajectory;
@@ -109,10 +109,16 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     offCourse = mapHandler.isOffCourse(trajectory, rrt->param);
 
     // Add node
-    if (!offCourse && (trajectory->size() > 0))
+    if ((!offCourse) && (trajectory->size() > 0))
     {
+        // Check if new node would be duplicate
         newState = trajectory->back();
-        newNode = rrt->tree->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
+        alreadyInTree = rrt->tree->alreadyInTree(&newState);
+
+        if(!alreadyInTree)
+        {
+            newNode = rrt->tree->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory, rrt->param));
+        }
     }
     else
     {
@@ -127,7 +133,7 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
 bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
 {
     PATH_TYPE* trajectory;
-    std::vector<SearchTreeNode*>* nearbyNodes = rrt->tree->getNearby(newNode, rrt->param->rewireRange);
+    std::vector<SearchTreeNode*>* nearbyNodes = rrt->tree->getNearby(newNode);
     std::vector<SearchTreeNode*>::iterator it;
     float newNodeCost = rrt->tree->getAbsCost(newNode);
 
@@ -138,9 +144,9 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
         if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state
-            if (trajectory->back().distanceToTarget((*it)->getState()) < 0.01)
+            if (trajectory->back().distanceToTarget((*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
-                float segmentCost = vehicleModel.getDistanceCost(trajectory);
+                float segmentCost = vehicleModel.getDistanceCost(trajectory, rrt->param);
                 //Compare costs
                 if ((newNodeCost + segmentCost) < rrt->tree->getAbsCost(*it))
                 {
@@ -174,7 +180,7 @@ void RRTPlanner::planLocalRRT(void)
         if (node != NULL)
         {   
             rewire(localRRT, node);
-            float goalDist = node->getState()->distanceToTarget(&goalState);
+            float goalDist = node->getState()->distanceToTarget(&goalState, localRRT->param);
             if(goalDist < localRRT->param->goalRadius) localRRT->pathFound = true;
         }
         iteration++;
@@ -328,6 +334,12 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/maxVelocity", &localRRT->param->maxVelocity, 10.0f);
     loadParameter("/GLOBAL/maxVelocity", &globalRRT->param->maxVelocity, 10.0f);
 
+    loadParameter("/LOCAL/minCost", &localRRT->param->minCost, 0.0f);
+    loadParameter("/GLOBAL/minCost", &globalRRT->param->minCost, 3.0f);
+
+    loadParameter("/LOCAL/minDeviation", &localRRT->param->minDeviation, 0.05f);
+    loadParameter("/GLOBAL/minDeviation", &globalRRT->param->minDeviation, 0.05f);
+
     loadParameter("/LOCAL/resolution", &localRRT->param->resolution, 0.05f);
     loadParameter("/GLOBAL/resolution", &globalRRT->param->resolution, 0.05f);
 
@@ -339,6 +351,9 @@ void RRTPlanner::loadParameters(void)
 
     loadParameter("/LOCAL/simulationTimeStep", &localRRT->param->simulationTimeStep, 0.1f);
     loadParameter("/GLOBAL/simulationTimeStep", &globalRRT->param->simulationTimeStep, 0.1f);
+
+    loadParameter("/LOCAL/thetaWeight", &localRRT->param->thetaWeight, 0.1f);
+    loadParameter("/GLOBAL/thetaWeight", &globalRRT->param->thetaWeight, 0.1f);
 
     loadParameter("/VEHICLE/track", &vehicleParam->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", &vehicleParam->wheelBase, 1.54f); 
@@ -354,14 +369,8 @@ void RRTPlanner::loadParameters(void)
     else if (simType == "BICYCLE") vehicleParam->simType = BICYCLE;
 
     // Choose distance calculation type
-    std::string distType;
-    loadParameter("/VEHICLE/distType", &distType, "EUCLIDEAN");
-    if (distType == "EUCLIDEAN") vehicleParam->distType = EUCLIDEAN;
-    else if (distType == "SIMULATED") vehicleParam->distType = SIMULATED;
-
-    // Choose distance calculation type
     std::string costType;
-    loadParameter("/VEHICLE/costType", &distType, "DISTANCE");
+    loadParameter("/VEHICLE/costType", &costType, "DISTANCE");
     if (costType == "DISTANCE") vehicleParam->costType = DISTANCE;
     else if (costType == "TIME") vehicleParam->costType = TIME;
 }

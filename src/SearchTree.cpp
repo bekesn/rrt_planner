@@ -9,7 +9,6 @@ SearchTree::SearchTree()
 SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PARAMETERS* par)
 {
     param = par;
-    vehicle = vehicleModel;
     tree = new std::vector<SearchTreeNode*>(0);
     tree->push_back(new SearchTreeNode(NULL, startState, 0));
 }
@@ -40,35 +39,37 @@ void SearchTree::remove(SearchTreeNode* node)
 
 }
 
-SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState)
+SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState, float minCost)
 {
-    //ROS_INFO_STREAM("new:  " << toState[0] << "  " << toState[1]);
     std::vector<SearchTreeNode*>::iterator it;
     double minDist;
     double dist;
     SearchTreeNode* closest;
 
     // Initialize closest node and distance
-    minDist = vehicle->distance(tree->front()->getState(), toState);
+    minDist = tree->front()->getState()->distanceToTarget(toState, param);
     closest = tree->front();
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        dist = vehicle->distance((*it)->getState(), toState);
-        if (dist < minDist)
+        if(getAbsCost(*it) >= minCost)
         {
-            minDist = dist;
-            closest = (*it);
+            dist = (*it)->getState()->distanceToTarget(toState, param);
+            if (dist < minDist)
+            {
+                minDist = dist;
+                closest = (*it);
+            }
         }
     }
 
-    //ROS_INFO_STREAM("closest:   " << closest->getState()[0] << "   " << closest->getState()[1]);
+    if(getAbsCost(closest) < minCost) closest = NULL;
 
     return closest;
 }
 
-std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node, double maxDist)
+std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
 {
     std::vector<SearchTreeNode*>::iterator it;
     std::vector<SearchTreeNode*>* closeNodes = new std::vector<SearchTreeNode*>;
@@ -76,7 +77,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node, double
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if (((vehicle->distance((*it)->getState(), node->getState())) < maxDist) && ((*it) != node))
+        if (((*it)->getState()->distanceToTarget(node->getState(), param) < (param->rewireRange)) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }
@@ -84,6 +85,11 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node, double
 
     return closeNodes;
 
+}
+
+bool SearchTree::alreadyInTree(SS_VECTOR* state)
+{
+    return getNearest(state)->getState()->distanceToTarget(state, param) < param->minDeviation;
 }
 
 void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
@@ -169,7 +175,7 @@ void SearchTree::init(SS_VECTOR* startState)
 
 PATH_TYPE* SearchTree::traceBackToRoot(SS_VECTOR* goalState)
 {
-    SearchTreeNode* closestNode = getNearest(goalState);
+    SearchTreeNode* closestNode = getNearest(goalState, param->minCost);
     PATH_TYPE* path = new PATH_TYPE;
     closestNode->traceBackToRoot(path);
     return path;

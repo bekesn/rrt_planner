@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <geometry_msgs/Pose2D.h>
+#include "Types.h"
 
 
 class StateSpace2D
@@ -17,11 +18,11 @@ public:
     //~StateSpace2D();
 
     // Calculate distance to target
-    float distanceToTarget(StateSpace2D* target);
-    float distanceToTarget(std::vector<float> target);
+    float distanceToTarget(StateSpace2D* target, RRT_PARAMETERS* param);
 
     // Euclidean distance
     static double getDistEuclidean(const std::vector<float> start, const std::vector<float> goal);
+    float getDistEuclidean(std::vector<float> target);
 
     // Calculate angular difference in rad
     // Anticlockwise

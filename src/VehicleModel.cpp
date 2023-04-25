@@ -59,32 +59,13 @@ PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goal
     return trajectory;
 }
 
-double VehicleModel::distance(SS_VECTOR* start, SS_VECTOR* goal)
-{
-    double distance;
-    switch(vehicleParam->distType)
-    {
-        case EUCLIDEAN:
-            distance = start->distanceToTarget(goal);
-            break;
-        case SIMULATED:
-            //TODO
-            break;
-        default:
-            throw std::invalid_argument("Wrong distance calculation type");
-            break;
-    }
-
-    return distance;
-}
-
-double VehicleModel::cost(PATH_TYPE* trajectory)
+double VehicleModel::cost(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
 {
     double cost;
     switch(vehicleParam->costType)
     {
         case EUCLIDEAN:
-            cost = getDistanceCost(trajectory);
+            cost = getDistanceCost(trajectory, param);
             break;
         case SIMULATED:
             cost = getTimeCost(trajectory);
@@ -104,7 +85,7 @@ PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RR
     PATH_TYPE* path = new PATH_TYPE;
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
-    distance = start->distanceToTarget(goal);
+    distance = start->distanceToTarget(goal, param);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
     numOfStates = (int) (ratio*distance/param->resolution);
@@ -126,7 +107,7 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTO
     PATH_TYPE* path = new PATH_TYPE;
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
-    distance = start->distanceToTarget(goal);
+    distance = start->distanceToTarget(goal, param);
     angleDiff = start->angleToTarget(goal);
     if ((-maxAngle <= angleDiff ) && (angleDiff < maxAngle))
     {
@@ -177,7 +158,7 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
     return path;
 }
 
-double VehicleModel::getDistanceCost(PATH_TYPE* trajectory)
+double VehicleModel::getDistanceCost(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
 {
     if(trajectory->size() < 2) return 0;
     
@@ -188,7 +169,7 @@ double VehicleModel::getDistanceCost(PATH_TYPE* trajectory)
     for (int i = 1; i < size; i++)
     {
         currState = (*trajectory)[i];
-        length += prevState.distanceToTarget(&currState);
+        length += prevState.distanceToTarget(&currState, param);
         prevState = currState;
     }
     return length;
