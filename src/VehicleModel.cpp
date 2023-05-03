@@ -135,7 +135,7 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTO
     {
         x = start->x() + dx * ratio * (i+1) / (float) numOfStates;
         y = start->y() + dy * ratio * (i+1) / (float) numOfStates;
-        path->push_back(StateSpace2D(x, y, orientation));
+        path->push_back(SS_VECTOR(x, y, orientation));
     }
     return path;
 }
@@ -151,7 +151,8 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
 
     while (t <= param->simulationTimeStep)
     {
-        state = RK4(&state, dt, &VehicleModel::SSEquationSimple);
+        Control* controlInput = Control::angleControl(goal);
+        state = RK4(&state, controlInput, dt);
         path->push_back(state);
     }
 
@@ -182,25 +183,16 @@ double VehicleModel::getTimeCost(PATH_TYPE* trajectory)
     return elapsed;
 }
 
-
-SS_VECTOR VehicleModel::SSEquationSimple(SS_VECTOR* state)
-{
-    SS_VECTOR stateDot;
-    // TODO
-
-    return stateDot;
-}
-
-SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, float dt, SS_VECTOR (VehicleModel::*equation)(SS_VECTOR* state))
+SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float dt)
 {
     SS_VECTOR k1, k2, k3, k4, k;
-    k1 = (*this.*equation)(startState) * dt;
+    k1 = *(startState->derivative(controlInput, vehicleParam)) * dt;
     k2 = *startState + k1*0.5;
-    k2 = (*this.*equation)(&k2) * dt;
+    k2 = *(k2.derivative(controlInput, vehicleParam)) * dt;
     k3 = *startState + k2*0.5;
-    k3 = (*this.*equation)(&k3) * dt;
+    k3 = *(k3.derivative(controlInput, vehicleParam)) * dt;
     k4 = *startState + k3;
-    k4 = (*this.*equation)(&k4) * dt;
+    k4 = *(k4.derivative(controlInput, vehicleParam)) * dt;
     k = (k1 + k2*2 + k3*2 + k4) * (1.0f/6.0f);
 
     return *startState + k;

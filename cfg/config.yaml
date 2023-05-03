@@ -41,3 +41,6 @@ VEHICLE:
 
 MAP:
   goalHorizon:        15            # maximal distance for local goal state in [m]
+
+CONTROL:
+  k:                  10

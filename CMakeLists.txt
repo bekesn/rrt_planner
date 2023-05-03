@@ -127,14 +127,21 @@ include_directories(
 )
 
 ## Declare a C++ library
+add_library(Control src/Control.cpp)
+target_link_libraries(Control ${catkin_LIBRARIES})
+
 add_library(StateSpace2D src/StateSpace2D.cpp)
 target_link_libraries(StateSpace2D ${catkin_LIBRARIES})
+
+add_library(StateSpaceSimulated src/StateSpaceSimulated.cpp)
+target_link_libraries(StateSpaceSimulated ${catkin_LIBRARIES})
 
 add_library(MapHandler src/MapHandler.cpp)
 target_link_libraries(MapHandler ${catkin_LIBRARIES})
 
 add_library(VehicleModel src/VehicleModel.cpp)
 target_link_libraries(VehicleModel ${catkin_LIBRARIES})
+target_link_libraries(VehicleModel Control)
 
 add_library(SearchTreeNode src/SearchTreeNode.cpp)
 target_link_libraries(SearchTreeNode ${catkin_LIBRARIES})
@@ -155,6 +162,7 @@ target_link_libraries(SearchTree SearchTreeNode)
 add_executable(rrt_planner_node src/RRTPlanner.cpp)
 target_link_libraries(rrt_planner_node 
   StateSpace2D
+  StateSpaceSimulated
   SearchTreeNode
   SearchTree
   MapHandler

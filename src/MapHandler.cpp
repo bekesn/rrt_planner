@@ -5,7 +5,7 @@ MapHandler::MapHandler()
     // Initialize values
     vehicleModel = NULL;
     mapReceived = false;
-    goalState = StateSpace2D();
+    goalState = SS_VECTOR();
 
 }
 
@@ -110,9 +110,9 @@ bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_m
     return isOnTrackEdge;
 }
 
-SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
+SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
 {
-    SS_VECTOR randState;
+    SS_VECTOR* randState;
     double x, y, theta;
 
 
@@ -125,14 +125,14 @@ SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
         y  = (*path)[nodeID].y() + (rand()%((int) (200*range))) / 100.0 - range;
         theta = (rand() % ((int) (2000*M_PI))) / 1000.0 - M_PI;
 
-        randState = SS_VECTOR(x, y, theta);
+        randState = new SS_VECTOR(x, y, theta);
     }
     else if (((rand()%1000)/1000.0) > param->goalBias) 
     {
         int numOfCones = map.size();
         if (numOfCones == 0)
         {
-            randState = getGoalState();
+            randState = new SS_VECTOR(getGoalState());
         }
         else
         {
@@ -142,12 +142,12 @@ SS_VECTOR MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
             y = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
             theta = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
-            randState = SS_VECTOR(x, y, theta);
+            randState = new SS_VECTOR(x, y, theta);
         }
     }
     else
     {
-        randState = getGoalState();
+            randState = new SS_VECTOR(getGoalState());
     }
 
     return randState;
@@ -157,7 +157,7 @@ void MapHandler::calculateGoalState()
 {
     std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
     float maxDist = 0;
-    SS_VECTOR* currentState = vehicleModel->getCurrentPose();
+    StateSpace2D* currentState = vehicleModel->getCurrentPose();
     
 
 
@@ -193,7 +193,7 @@ void MapHandler::calculateGoalState()
         dist += currentState->getDistEuclidean({(float) (*pair)[1]->x, (float) (*pair)[1]->y});
         dist = dist/2.0;
 
-        SS_VECTOR state = StateSpace2D(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0);
+        SS_VECTOR state = SS_VECTOR(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0);
         double angleDiff = abs(currentState->angleToTarget(&state));
         if ((dist > maxDist) && (angleDiff < 1) && (dist < mapParam->goalHorizon))
         {

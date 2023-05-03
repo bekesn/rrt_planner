@@ -6,18 +6,22 @@
 
 class Control
 {
-    float throttle;
-    float steeringAngle;
-    float MYaw;
-
-    CONTROL_PARAMETERS* param;
-
+    inline static CONTROL_PARAMETERS* controlParam;
 
 public:
-    Control();
-    Control(CONTROL_PARAMETERS* par);
 
-    static Control* StanleyToTarget(StateSpace2D* target);
+    float dv;
+    float ddelta;
+    float MYaw;
+
+    Control();
+
+    // Return Control object for controlling the vehicle
+    static Control* stanleyToTarget(StateSpace2D* target);
+    static Control* angleControl(StateSpace2D* target);
+
+    // Set control parameters
+    static void setParam(CONTROL_PARAMETERS* param);
 };
 
 #endif // CONTROL_H

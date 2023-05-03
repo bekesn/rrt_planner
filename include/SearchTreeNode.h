@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 #include <iterator>
 #include "Types.h"
-#include "StateSpace2D.h"
+#include "StateSpaceSimulated.h"
 
 class SearchTreeNode
 {

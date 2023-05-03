@@ -7,9 +7,7 @@
 #include <Eigen/Dense>
 #include <math.h>
 #include "Types.h"
-#include "StateSpace2D.h"
-
-#define STATESPACE_DIM  3
+#include "StateSpaceSimulated.h"
 
 class VehicleModel
 {
@@ -55,13 +53,9 @@ public:
     // Cost according to elapsed time
     double getTimeCost(PATH_TYPE* trajectory);
 
-    // EQUATION
-    // Simple kinematic equation
-    SS_VECTOR SSEquationSimple(SS_VECTOR* state);
-
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order
-    SS_VECTOR RK4(SS_VECTOR* startState, float dt, SS_VECTOR (VehicleModel::*equation)(SS_VECTOR* state));
+    SS_VECTOR RK4(SS_VECTOR* startState, Control* controlInput, float dt);
 };
 
 

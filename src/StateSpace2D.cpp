@@ -14,6 +14,13 @@ StateSpace2D::StateSpace2D(float x, float y, float theta)
     theta_ = theta;
 }
 
+StateSpace2D::StateSpace2D(const StateSpace2D &original)
+{
+    x_ = original.x_;
+    y_ = original.y_;
+    theta_ = original.theta_;
+}
+
 float StateSpace2D::distanceToTarget(StateSpace2D* target, RRT_PARAMETERS* param)
 {
     float dx = target->x_ - x_;
@@ -47,30 +54,30 @@ double StateSpace2D::angleToTarget(StateSpace2D* target)
 
 StateSpace2D StateSpace2D::operator+ (const StateSpace2D & otherState) const
 {
-    return StateSpace2D(x_ + otherState.x_, y_ + otherState.y_, (theta_ + otherState.theta_)/2);
+    return StateSpace2D(x_ + otherState.x_, y_ + otherState.y_, theta_ + otherState.theta_);
 }
 
 StateSpace2D StateSpace2D::operator- (const StateSpace2D & otherState) const
 {
-    return StateSpace2D(x_ - otherState.x_, y_ - otherState.y_, (theta_ - otherState.theta_)/2);
+    return StateSpace2D(x_ - otherState.x_, y_ - otherState.y_, theta_ - otherState.theta_);
 }
 
 StateSpace2D StateSpace2D::operator* (const float & multiplier) const
 {
-    return StateSpace2D(x_ * multiplier, y_ * multiplier, theta_);
+    return StateSpace2D(x_ * multiplier, y_ * multiplier, theta_ * multiplier);
 }
 
-float StateSpace2D::x()
+float StateSpace2D::x(void)
 {
     return x_;
 }
 
-float StateSpace2D::y()
+float StateSpace2D::y(void)
 {
     return y_;
 }
 
-float StateSpace2D::theta()
+float StateSpace2D::theta(void)
 {
     return theta_;
 }

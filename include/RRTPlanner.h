@@ -22,6 +22,7 @@ class RRTPlanner
     VEHICLE_PARAMETERS* vehicleParam;
     MAP_PARAMETERS* mapParam;
     GENERAL_PARAMETERS* genParam;
+    CONTROL_PARAMETERS* controlParam;
 
     struct RRTObject{
         std::string* name;

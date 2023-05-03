@@ -19,6 +19,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     vehicleParam = new VEHICLE_PARAMETERS;
     mapParam = new MAP_PARAMETERS;
     genParam = new GENERAL_PARAMETERS;
+    controlParam = new CONTROL_PARAMETERS;
 
     initObject(localRRT, "local");
     initObject(globalRRT, "global");
@@ -29,6 +30,9 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
     // Load ROS parameters
     loadParameters();
+    
+    // Set parameters
+    Control::setParam(controlParam);
 
     // Subscribe to map
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
@@ -54,7 +58,7 @@ void RRTPlanner::initObject(RRTObject* obj, const char* ID)
     obj->param = new RRT_PARAMETERS;
 
     // Init objects
-    obj->tree = new SearchTree(&vehicleModel, StateSpace2D(0.0, 0.0, 0.0), obj->param);
+    obj->tree = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), obj->param);
 
 }
 
@@ -73,7 +77,7 @@ void RRTPlanner::stateMachine()
             if (p->distanceToTarget(new StateSpace2D(0.0, 0.0, 0.0), globalRRT->param) < 2)
             {
                 state = WAITFORGLOBAL;
-                globalRRT->tree->init(new StateSpace2D(0.0, 0.0, 0.0));
+                globalRRT->tree->init(new SS_VECTOR(0.0, 0.0, 0.0));
             }
             break;
         case WAITFORGLOBAL:
@@ -92,7 +96,7 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
 {
     SearchTreeNode* newNode;
     bool offCourse, alreadyInTree;
-    SS_VECTOR randState;
+    SS_VECTOR* randState;
     SS_VECTOR newState;
     PATH_TYPE* trajectory;
 
@@ -100,10 +104,10 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     randState = mapHandler.getRandomState(rrt->bestPath, rrt->param);
 
     // Get nearest node
-    SearchTreeNode* nearest = rrt->tree->getNearest(&randState);
+    SearchTreeNode* nearest = rrt->tree->getNearest(randState);
 
     // Simulate movement towards new state
-    trajectory = vehicleModel.simulateToTarget(nearest->getState(), &randState, rrt->param);
+    trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState, rrt->param);
 
     // Check for offCourse
     offCourse = mapHandler.isOffCourse(trajectory, rrt->param);
@@ -124,7 +128,7 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     {
         newNode = NULL;
     }
-
+    delete randState;
     delete trajectory;
 
     return newNode;

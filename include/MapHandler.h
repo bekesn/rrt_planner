@@ -30,7 +30,7 @@ public:
     bool isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, RRT_PARAMETERS* param);
 
     // Get random state
-    SS_VECTOR getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param);
+    SS_VECTOR* getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param);
 
     // Calculate and get goal state
     void calculateGoalState();

@@ -8,6 +8,7 @@
 
 class StateSpace2D
 {
+protected:
     float x_;
     float y_;
     float theta_;
@@ -15,6 +16,7 @@ class StateSpace2D
 public:
     StateSpace2D();
     StateSpace2D(float x, float y, float theta);
+    StateSpace2D(const StateSpace2D &original);
     //~StateSpace2D();
 
     // Calculate distance to target
@@ -33,9 +35,9 @@ public:
     StateSpace2D operator- (const StateSpace2D & otherState) const;
     StateSpace2D operator* (const float & multiplier) const;
 
-    float x();
-    float y();
-    float theta();
+    float x(void);
+    float y(void);
+    float theta(void);
     
 };
 

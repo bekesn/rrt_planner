@@ -1,7 +1,7 @@
 #ifndef types_h
 #define types_h
 
-#define SS_VECTOR   StateSpace2D
+#define SS_VECTOR   StateSpaceSimulated
 #define PATH_TYPE   std::vector<SS_VECTOR>
 
 enum RRT_TYPE{
