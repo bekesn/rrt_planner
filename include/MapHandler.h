@@ -6,6 +6,7 @@
 #include "VehicleModel.h"
 #include "frt_custom_msgs/Map.h"
 #include "frt_custom_msgs/Landmark.h"
+#include "frt_custom_msgs/SlamStatus.h"
 
 class MapHandler
 {
@@ -15,11 +16,12 @@ private:
     VehicleModel* vehicleModel;
     SS_VECTOR goalState;
     bool mapReceived;
+    bool loopClosed;
 
     MAP_PARAMETERS* mapParam;
 
 public:
-    MapHandler();
+    MapHandler(void);
     MapHandler(MAP_PARAMETERS* param, VehicleModel* vehicleModel);
     //~MapHandler();
     
@@ -39,6 +41,9 @@ public:
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
 
+    // Update SLAM status
+    void SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg);
+
     // Visualize significant points
     void visualizePoints(visualization_msgs::MarkerArray* mArray);
 
@@ -46,7 +51,10 @@ public:
     frt_custom_msgs::Landmark* getClosestLandmark(frt_custom_msgs::Landmark* landmark, frt_custom_msgs::Landmark::_color_type color);
 
     // Return if map arrived
-    bool hasMap();
+    bool hasMap(void);
+
+    // Return if loop is closed in SLAM
+    bool isLoopClosed(void);
 
 };
 

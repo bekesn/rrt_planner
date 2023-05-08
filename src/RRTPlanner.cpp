@@ -30,7 +30,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
     // Load ROS parameters
     loadParameters();
-    
+
     // Set parameters
     Control::setParam(controlParam);
 
@@ -38,6 +38,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
     mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
     poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &vehicleModel);
+    SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &mapHandler);
     localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
     globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
 
@@ -64,8 +65,6 @@ void RRTPlanner::initObject(RRTObject* obj, const char* ID)
 
 void RRTPlanner::stateMachine()
 {
-    bool loopClosed;// TODO
-    SS_VECTOR* p; 
     switch(state)
     {
         case NOMAP:
@@ -73,11 +72,10 @@ void RRTPlanner::stateMachine()
             break;
         case LOCALPLANNING:
             planLocalRRT();
-            p = vehicleModel.getCurrentPose();
-            if (p->distanceToTarget(new StateSpace2D(0.0, 0.0, 0.0), globalRRT->param) < 2)
+            if (mapHandler.isLoopClosed())
             {
                 state = WAITFORGLOBAL;
-                globalRRT->tree->init(new SS_VECTOR(0.0, 0.0, 0.0));
+                globalRRT->tree->init(vehicleModel.getCurrentPose());
             }
             break;
         case WAITFORGLOBAL:
@@ -151,8 +149,9 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
             if (trajectory->back().distanceToTarget((*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
                 float segmentCost = vehicleModel.getDistanceCost(trajectory, rrt->param);
-                //Compare costs
-                if ((newNodeCost + segmentCost) < rrt->tree->getAbsCost(*it))
+                float childCost = rrt->tree->getAbsCost(*it);
+                // Compare costs. If the childCost is significantly
+                if (((newNodeCost + segmentCost) < childCost) || ((newNodeCost - rrt->param->minCost) > childCost))
                 {
                     //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
                     //Rewire if it reduces cost
@@ -200,14 +199,18 @@ void RRTPlanner::planLocalRRT(void)
 void RRTPlanner::planGlobalRRT(void)
 {
     int iteration = 0;
+    bool changed = false;
     SS_VECTOR goalState = mapHandler.getGoalState();
     while((!globalRRT->tree->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
     {
         SearchTreeNode * node = extend(globalRRT);
         if (node != NULL)
         {   
-            bool changed = rewire(globalRRT, node);
-            globalRRT->pathFound = changed;
+            bool rewired = rewire(globalRRT, node);
+            if(rewired) changed = true;
+
+            float goalDist = node->getState()->distanceToTarget(globalRRT->tree->getRoot(), globalRRT->param);
+            if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
         iteration++;
     }
@@ -215,7 +218,7 @@ void RRTPlanner::planGlobalRRT(void)
     if (globalRRT->pathFound)
     {
         delete globalRRT->bestPath;
-        globalRRT->bestPath = globalRRT->tree->traceBackToRoot(&goalState);
+        globalRRT->bestPath = globalRRT->tree->traceBackToRoot(globalRRT->tree->getRoot());
     }
 }
 

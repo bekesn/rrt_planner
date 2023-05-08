@@ -24,7 +24,7 @@ void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 SS_VECTOR* VehicleModel::getCurrentPose()
 {
-    return &currentPose;
+    return new SS_VECTOR(currentPose);
 }
 
 

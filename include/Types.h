@@ -44,10 +44,11 @@ struct RRT_PARAMETERS{
 };
 
 struct VEHICLE_PARAMETERS{
+    SIMULATION_TYPE simType;
+    float maxDelta;
+    COST_TYPE costType;
     float track;
     float wheelBase;
-    SIMULATION_TYPE simType;
-    COST_TYPE costType;
 };
 
 struct MAP_PARAMETERS{

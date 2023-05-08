@@ -12,6 +12,7 @@ class RRTPlanner
 {
     ros::Subscriber mapSubscriber;
     ros::Subscriber poseSubscriber;
+    ros::Subscriber SLAMStatusSubscriber;
     std::string nodeName;
 
     ros::WallTimer timer;

@@ -4,12 +4,14 @@
 SearchTree::SearchTree()
 {
     tree = new std::vector<SearchTreeNode*>;
+    loopClosingNodes = new std::vector<SearchTreeNode*>;
 }
 
 SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PARAMETERS* par)
 {
     param = par;
     tree = new std::vector<SearchTreeNode*>(0);
+    loopClosingNodes = new std::vector<SearchTreeNode*>(0);
     tree->push_back(new SearchTreeNode(NULL, startState, 0));
 }
 
@@ -171,6 +173,11 @@ void SearchTree::init(SS_VECTOR* startState)
     delete tree;
     tree = new std::vector<SearchTreeNode*>;
     tree->push_back(new SearchTreeNode(NULL, *startState, 0));
+}
+
+SS_VECTOR* SearchTree::getRoot()
+{
+    return tree->front()->getState();
 }
 
 PATH_TYPE* SearchTree::traceBackToRoot(SS_VECTOR* goalState)

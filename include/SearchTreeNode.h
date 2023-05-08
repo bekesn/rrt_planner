@@ -14,6 +14,7 @@ private:
     std::vector<SearchTreeNode *> *childNodes;
     SS_VECTOR state;
     float cost;
+    bool isRoot;
 
 public:
 

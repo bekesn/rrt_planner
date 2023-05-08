@@ -1,6 +1,6 @@
 #include "MapHandler.h"
 
-MapHandler::MapHandler()
+MapHandler::MapHandler(void)
 {
     // Initialize values
     vehicleModel = NULL;
@@ -114,10 +114,11 @@ SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
 {
     SS_VECTOR* randState;
     double x, y, theta;
-
+    int numOfCones = map.size();
 
     if ((path->size() > 0) && (((rand() % 1000) / 1000.0) > 0.5))
     {
+        // Choose a state from best path randomly and place a state near it
         int nodeID = rand() % path->size();
         double range = param->sampleRange/10;
 
@@ -127,27 +128,19 @@ SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
 
         randState = new SS_VECTOR(x, y, theta);
     }
-    else if (((rand()%1000)/1000.0) > param->goalBias) 
+    else if ((((rand()%1000)/1000.0) > param->goalBias) && (numOfCones != 0)) 
     {
-        int numOfCones = map.size();
-        if (numOfCones == 0)
-        {
-            randState = new SS_VECTOR(getGoalState());
-        }
-        else
-        {
-            // Choose a cone randomly and place a state near it
-            int coneID = rand() % numOfCones;
-            x = map[coneID]->x + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
-            y = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
-            theta = (rand() % ((int) (2000*M_PI))) / 1000.0;
+        // Choose a cone randomly and place a state near it
+        int coneID = rand() % numOfCones;
+        x = map[coneID]->x + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
+        y = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
+        theta = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
-            randState = new SS_VECTOR(x, y, theta);
-        }
+        randState = new SS_VECTOR(x, y, theta);
     }
     else
     {
-            randState = new SS_VECTOR(getGoalState());
+        randState = new SS_VECTOR(getGoalState());
     }
 
     return randState;
@@ -238,6 +231,11 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
     calculateGoalState();
 }
 
+void MapHandler::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)
+{
+    loopClosed = msg.loop_closed;
+}
+
 void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray)
 {
     if(!mapReceived);
@@ -299,7 +297,12 @@ frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landm
     return closestLandmark;
 }
 
-bool MapHandler::hasMap()
+bool MapHandler::hasMap(void)
 {
     return mapReceived;
+}
+
+bool MapHandler::isLoopClosed(void)
+{
+    return loopClosed;
 }

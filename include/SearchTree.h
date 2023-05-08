@@ -13,6 +13,7 @@ class SearchTree
 {
 private:
     std::vector<SearchTreeNode*> *tree;
+    std::vector<SearchTreeNode*> *loopClosingNodes;
 
     // Parameter struct
     RRT_PARAMETERS* param;
@@ -46,6 +47,9 @@ public:
 
     // Delete tree and create new
     void init(SS_VECTOR* startState);
+
+    // Get root
+    SS_VECTOR* getRoot();
 
     // Traceback to root
     PATH_TYPE* traceBackToRoot(SS_VECTOR* goalState);
