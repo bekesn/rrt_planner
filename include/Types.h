@@ -57,6 +57,7 @@ struct MAP_PARAMETERS{
 
 struct CONTROL_PARAMETERS{
     float k;
+    float maxdDelta;
 };
 
 struct GENERAL_PARAMETERS{

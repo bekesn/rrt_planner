@@ -11,7 +11,7 @@ LOCAL:
   maxVelocity:        10            # in [m/s]
   minCost:            0.0           # cost threshold used to filter nodes when tracing back the path to root
   minDeviation:       0.01          # minimum difference between states
-  resolution:         0.05          # interpolation steps in [m]
+  resolution:         0.5          # interpolation steps in [m]
   rewireRange:        1             # Range in which connection is checked in [m]
   sampleRange:        3             # used for random sampling near the detected cones, range in [m]
   simulationTimeStep: 0.1           # in [s]
@@ -35,8 +35,8 @@ GLOBAL:
 
 VEHICLE:
   costType:           "DISTANCE"    # can be "DISTANCE" , "TIME"
-  maxDelta:           0.38          # maximum front axis steeering angle in [rad]
-  simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+  maxDelta:           0.38          # maximum front axis steering angle in [rad]
+  simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]
   wheelBase:          1.54          # in [m]
 
@@ -44,4 +44,5 @@ MAP:
   goalHorizon:        15            # maximal distance for local goal state in [m]
 
 CONTROL:
-  k:                  10
+  k:                  -10
+  maxdDelta:          0.3           # maximum change of front axis steering angle in [rad] in one timestep

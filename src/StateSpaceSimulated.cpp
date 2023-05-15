@@ -34,7 +34,7 @@ StateSpaceSimulated* StateSpaceSimulated::derivative(Control* controlInput, VEHI
 
     x = v_ * cos(theta_);
     y = v_ * sin(theta_);
-    theta_ = v_ / param->track * tan(delta_);
+    theta = v_ / param->track * tan(delta_);
     v = controlInput->dv;
     delta = controlInput->ddelta;
     
@@ -50,15 +50,25 @@ void StateSpaceSimulated::limitVariables(RRT_PARAMETERS* rrtParam)
 
 StateSpaceSimulated StateSpaceSimulated::operator+ (const StateSpaceSimulated & otherState) const
 {
-    return StateSpaceSimulated(x_ + otherState.x_, y_ + otherState.y_, theta_ + otherState.theta_, v_ + otherState.theta_, delta_ + otherState.delta_);
+    return StateSpaceSimulated(x_ + otherState.x_, y_ + otherState.y_, theta_ + otherState.theta_, v_ + otherState.v_, delta_ + otherState.delta_);
 }
 
 StateSpaceSimulated StateSpaceSimulated::operator- (const StateSpaceSimulated & otherState) const
 {
-    return StateSpaceSimulated(x_ - otherState.x_, y_ - otherState.y_, theta_ - otherState.theta_, v_ - otherState.theta_, delta_ - otherState.delta_);
+    return StateSpaceSimulated(x_ - otherState.x_, y_ - otherState.y_, theta_ - otherState.theta_, v_ - otherState.v_, delta_ - otherState.delta_);
 }
 
 StateSpaceSimulated StateSpaceSimulated::operator* (const float & multiplier) const
 {
     return StateSpaceSimulated(x_ * multiplier, y_ * multiplier, theta_ * multiplier, v_ * multiplier, delta_ * multiplier);
+}
+
+float StateSpaceSimulated::v()
+{
+    return v_;
+}
+
+float StateSpaceSimulated::delta()
+{
+    return delta_;
 }

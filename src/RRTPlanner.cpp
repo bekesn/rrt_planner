@@ -362,10 +362,14 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/thetaWeight", &localRRT->param->thetaWeight, 0.1f);
     loadParameter("/GLOBAL/thetaWeight", &globalRRT->param->thetaWeight, 0.1f);
 
+    loadParameter("/VEHICLE/maxDelta", &vehicleParam->maxDelta, 0.38f);
     loadParameter("/VEHICLE/track", &vehicleParam->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", &vehicleParam->wheelBase, 1.54f); 
 
     loadParameter("/MAP/goalHorizon", &mapParam->goalHorizon, 15.0f);
+
+    loadParameter("/CONTROL/k", &controlParam->k, 15.0f);
+    loadParameter("/CONTROL/maxdDelta", &controlParam->maxdDelta, 0.1f);
 
     // Choose simulation type
     std::string simType;

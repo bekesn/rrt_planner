@@ -147,13 +147,18 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
 
     // TODO kokany
     float dt = param->resolution/param->maxVelocity;
-    float t;
+    float t = 0;
 
     while (t <= param->simulationTimeStep)
     {
-        Control* controlInput = Control::angleControl(goal);
+        Control* controlInput = Control::angleControl(&state, goal);
+        //if(controlInput->ddelta > 0) ROS_INFO_STREAM("" << controlInput->ddelta);
         state = RK4(&state, controlInput, dt);
+        state.limitVariables(param);
         path->push_back(state);
+        t += dt;
+
+        delete controlInput;
     }
 
     return path;
@@ -185,6 +190,7 @@ double VehicleModel::getTimeCost(PATH_TYPE* trajectory)
 
 SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float dt)
 {
+    // TODO leakage
     SS_VECTOR k1, k2, k3, k4, k;
     k1 = *(startState->derivative(controlInput, vehicleParam)) * dt;
     k2 = *startState + k1*0.5;
@@ -195,6 +201,6 @@ SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float 
     k4 = *(k4.derivative(controlInput, vehicleParam)) * dt;
     k = (k1 + k2*2 + k3*2 + k4) * (1.0f/6.0f);
 
-    return *startState + k;
+    return ((*startState) + k);
 }
     
