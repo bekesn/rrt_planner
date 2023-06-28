@@ -10,7 +10,7 @@ class StateSpaceSimulated : public StateSpace2D
     float delta_;
 public:
     StateSpaceSimulated();
-    StateSpaceSimulated(float x, float y, float theta, float v = 4, float delta = 0); //TODO
+    StateSpaceSimulated(float x, float y, float theta, float v = 10, float delta = 0); //TODO
     StateSpaceSimulated(const StateSpaceSimulated &original);
     //~StateSpace();
 

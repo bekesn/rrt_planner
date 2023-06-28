@@ -39,6 +39,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
     poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &vehicleModel);
     SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &mapHandler);
+    odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &VehicleModel::velocityCallback, &vehicleModel);
     localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
     globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
 
@@ -353,8 +354,8 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/rewireRange", &localRRT->param->rewireRange, 1.0f);
     loadParameter("/GLOBAL/rewireRange", &globalRRT->param->rewireRange, 1.0f);
 
-    loadParameter("/LOCAL/simulationTimeStep", &localRRT->param->sampleRange, 3);
-    loadParameter("/GLOBAL/simulationTimeStep", &globalRRT->param->sampleRange, 3);
+    loadParameter("/LOCAL/sampleRange", &localRRT->param->sampleRange, 3);
+    loadParameter("/GLOBAL/sampleRange", &globalRRT->param->sampleRange, 3);
 
     loadParameter("/LOCAL/simulationTimeStep", &localRRT->param->simulationTimeStep, 0.1f);
     loadParameter("/GLOBAL/simulationTimeStep", &globalRRT->param->simulationTimeStep, 0.1f);

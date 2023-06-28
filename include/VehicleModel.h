@@ -21,8 +21,9 @@ public:
     VehicleModel(VEHICLE_PARAMETERS* par);
     //~VehicleModel();
 
-    // Update vehicle pose
+    // Update vehicle pose and velocity
     void poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
+    void velocityCallback(const geometry_msgs::TwistStamped::ConstPtr &msg);
 
     // Get vehicle pose
     SS_VECTOR* getCurrentPose();

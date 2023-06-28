@@ -18,8 +18,20 @@ void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
 
-    currentPose = SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw);
+    currentPose = SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw, currentPose.v(), currentPose.delta());
 
+}
+
+
+void VehicleModel::velocityCallback(const geometry_msgs::TwistStamped::ConstPtr &msg)
+{
+    float v = msg->twist.linear.x;
+    v = v < 1 ? 1 : v;      // Avoid slow speeds when planning
+
+    float yawRate = msg->twist.angular.z;
+    float delta = atan(vehicleParam->wheelBase * yawRate / v);
+
+    currentPose = SS_VECTOR(currentPose.x(), currentPose.y(), currentPose.theta(), v, delta);
 }
 
 SS_VECTOR* VehicleModel::getCurrentPose()
