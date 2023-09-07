@@ -184,7 +184,7 @@ void RRTPlanner::planLocalRRT(void)
         if (node != NULL)
         {   
             rewire(localRRT, node);
-            float goalDist = node->getState()->distanceToTarget(&goalState, localRRT->param);
+            float goalDist = node->getState()->getDistEuclidean(&goalState);
             if(goalDist < localRRT->param->goalRadius) localRRT->pathFound = true;
         }
         iteration++;

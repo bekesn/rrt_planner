@@ -21,7 +21,7 @@ StateSpace2D::StateSpace2D(const StateSpace2D &original)
     theta_ = original.theta_;
 }
 
-float StateSpace2D::distanceToTarget(StateSpace2D* target, RRT_PARAMETERS* param)
+float StateSpace2D::distanceToTarget(const StateSpace2D* target, const RRT_PARAMETERS* param)
 {
     float dx = target->x_ - x_;
     float dy = target->y_ - y_;
@@ -29,9 +29,14 @@ float StateSpace2D::distanceToTarget(StateSpace2D* target, RRT_PARAMETERS* param
     return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight);
 }
 
-float StateSpace2D::getDistEuclidean(std::vector<float> target)
+float StateSpace2D::getDistEuclidean(const std::vector<float> target)
 {
     return getDistEuclidean({x_, y_}, target);
+}
+
+float StateSpace2D::getDistEuclidean(const StateSpace2D* target)
+{
+    return getDistEuclidean({x_, y_}, {target->x_,target->y_});
 }
 
 double StateSpace2D::getDistEuclidean(const std::vector<float> start, const std::vector<float> goal)
@@ -41,7 +46,7 @@ double StateSpace2D::getDistEuclidean(const std::vector<float> start, const std:
     return sqrt(dx*dx + dy*dy);
 }
 
-double StateSpace2D::angleToTarget(StateSpace2D* target)
+double StateSpace2D::angleToTarget(const StateSpace2D* target)
 {
     auto dy = target->y_ - y_;
     auto dx = target->x_ - x_;
