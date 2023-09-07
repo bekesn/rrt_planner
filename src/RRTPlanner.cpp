@@ -371,6 +371,7 @@ void RRTPlanner::loadParameters(void)
 
     loadParameter("/CONTROL/k", &controlParam->k, 15.0f);
     loadParameter("/CONTROL/maxdDelta", &controlParam->maxdDelta, 0.1f);
+    loadParameter("/CONTROL/maxLongAccel", &controlParam->maxLongAccel, 5.0f);
 
     // Choose simulation type
     std::string simType;

@@ -35,7 +35,7 @@ StateSpaceSimulated* StateSpaceSimulated::derivative(Control* controlInput, VEHI
     x = v_ * cos(theta_);
     y = v_ * sin(theta_);
     theta = v_ / param->track * tan(delta_);
-    v = controlInput->dv;
+    v = controlInput->ax;
     delta = controlInput->ddelta;
     
     return new StateSpaceSimulated(x, y, theta, v, delta);
@@ -45,7 +45,7 @@ void StateSpaceSimulated::limitVariables(RRT_PARAMETERS* rrtParam)
 {
     // Limit v
     if(v_ > rrtParam->maxVelocity) v_ = rrtParam->maxVelocity;
-    else if(v_ <= 0) v_ = 0;
+    else if(v_ <= 1) v_ = 1;
 }
 
 StateSpaceSimulated StateSpaceSimulated::operator+ (const StateSpaceSimulated & otherState) const

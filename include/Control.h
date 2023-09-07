@@ -12,7 +12,7 @@ class Control
 
 public:
 
-    float dv;
+    float ax;
     float ddelta;
     float MYaw;
 
@@ -21,6 +21,9 @@ public:
     // Return Control object for controlling the vehicle
     static Control* stanleyToTarget(SS_VECTOR* state, StateSpace2D* target);
     static Control* angleControl(SS_VECTOR* state, StateSpace2D* target);
+
+    // Get random acceleration value
+    static double getRandomAccel(void);
 
     // Set control parameters
     static void setParam(CONTROL_PARAMETERS* param);

@@ -98,6 +98,13 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
 {
     if(tree->size() < 2) return;
 
+    float relativeVelocity;
+    std_msgs::ColorRGBA varColor;
+    varColor.r = 0;
+    varColor.g = 1;
+    varColor.b = 0;
+    varColor.a = 1;
+
     visualization_msgs::Marker treeNodes;
         treeNodes.header.frame_id = "map";
         treeNodes.header.stamp = ros::Time::now();
@@ -109,10 +116,10 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
         treeNodes.scale.x = 0.3f;
         treeNodes.scale.y = 0.3f;
         treeNodes.scale.z = 0.3f;
-        treeNodes.color.r = 0.176f;
+        /*treeNodes.color.r = 0.176f;
         treeNodes.color.g = 0.658f;
         treeNodes.color.b = 0.105f;
-        treeNodes.color.a = 1.0f;
+        treeNodes.color.a = 1.0f;*/
 
     geometry_msgs::Point coord;
     
@@ -122,6 +129,12 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
         coord.x = (*it)->getState()->x();
         coord.y = (*it)->getState()->y();
         treeNodes.points.push_back(coord);
+
+        relativeVelocity = (*it)->getState()->v() / param->maxVelocity;
+        if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
+        varColor.r = relativeVelocity;
+        varColor.g = 1 - relativeVelocity;
+        treeNodes.colors.push_back(varColor);
     }
 
     markerArray->markers.emplace_back(treeNodes);
@@ -135,7 +148,7 @@ void SearchTree::drawTree(visualization_msgs::MarkerArray* markerArray)
         graphEdge.pose.orientation.w = 1.0;
         graphEdge.id = 1;
         graphEdge.type = visualization_msgs::Marker::LINE_LIST;
-        graphEdge.scale.x = 0.3f;
+        graphEdge.scale.x = 0.15f;
         graphEdge.color.r = 1.0f;
         graphEdge.color.g = 0.65f;
         graphEdge.color.b = 0.0f;

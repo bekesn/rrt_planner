@@ -17,7 +17,7 @@ Control* Control::angleControl(SS_VECTOR* state, StateSpace2D* target)
     float angle = state->angleToTarget(target);
     Control* input = new Control();
     input->ddelta = (-controlParam->k * angle) - state->delta();
-    input->dv = 0;
+    input->ax = getRandomAccel();
     input->MYaw = 0;
 
     input->limitValues();
@@ -27,6 +27,11 @@ Control* Control::angleControl(SS_VECTOR* state, StateSpace2D* target)
 void Control::setParam(CONTROL_PARAMETERS* param)
 {
     controlParam = param;
+}
+
+double Control::getRandomAccel(void)
+{
+    return (((float) (rand() % 100)) / 100.0f - 0.5f) * controlParam->maxLongAccel;
 }
 
 void Control::limitValues(void)
