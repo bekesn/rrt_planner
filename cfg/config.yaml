@@ -34,7 +34,7 @@ GLOBAL:
   thetaWeight:        1000           # weight of orientation difference in distance calculation
 
 VEHICLE:
-  costType:           "TIME"    # can be "DISTANCE" , "TIME"
+  costType:           "DISTANCE"    # can be "DISTANCE" , "TIME"
   maxDelta:           0.38          # maximum front axis steering angle in [rad]
   simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]

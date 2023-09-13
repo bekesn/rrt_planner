@@ -41,11 +41,18 @@ StateSpaceSimulated* StateSpaceSimulated::derivative(Control* controlInput, VEHI
     return new StateSpaceSimulated(x, y, theta, v, delta);
 }
 
-void StateSpaceSimulated::limitVariables(RRT_PARAMETERS* rrtParam)
+void StateSpaceSimulated::limitVariables(RRT_PARAMETERS* rrtParam,  VEHICLE_PARAMETERS* vehicleParam)
 {
     // Limit v
     if(v_ > rrtParam->maxVelocity) v_ = rrtParam->maxVelocity;
-    else if(v_ <= 1) v_ = 1;
+    else if(v_ < 1) v_ = 1;
+
+    // Limit delta
+    if(delta_ > vehicleParam->maxDelta) delta_ = vehicleParam->maxDelta;
+    else if(delta_ < -vehicleParam->maxDelta) delta_ = -vehicleParam->maxDelta;
+
+    // Limit theta between -PI and PI
+    theta_ = std::remainder(theta_, 2*M_PI);
 }
 
 StateSpaceSimulated StateSpaceSimulated::operator+ (const StateSpaceSimulated & otherState) const

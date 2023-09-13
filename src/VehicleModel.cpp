@@ -76,10 +76,10 @@ double VehicleModel::cost(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
     double cost;
     switch(vehicleParam->costType)
     {
-        case EUCLIDEAN:
+        case DISTANCE:
             cost = getDistanceCost(trajectory, param);
             break;
-        case SIMULATED:
+        case TIME:
             cost = getTimeCost(trajectory);
             break;
         default:
@@ -166,7 +166,7 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
         Control* controlInput = Control::angleControl(&state, goal);
         //if(controlInput->ddelta > 0) ROS_INFO_STREAM("" << controlInput->ddelta);
         state = RK4(&state, controlInput, dt);
-        state.limitVariables(param);
+        state.limitVariables(param, vehicleParam);
         path->push_back(state);
         t += dt;
 

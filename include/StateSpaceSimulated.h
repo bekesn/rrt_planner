@@ -18,7 +18,7 @@ public:
     StateSpaceSimulated* derivative(Control* controlInput, VEHICLE_PARAMETERS* param);
 
     // Limit constrained state variables
-    void limitVariables(RRT_PARAMETERS* rrtParam);
+    void limitVariables(RRT_PARAMETERS* rrtParam, VEHICLE_PARAMETERS* vehicleParam);
     
     // Override operators
     StateSpaceSimulated operator+ (const StateSpaceSimulated & otherState) const;
