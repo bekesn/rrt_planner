@@ -23,7 +23,7 @@ GLOBAL:
   goalRadius:         3.0           # acceptance range in [m]
   iterations:         50            # iterations for planning
   maxConeDist:        6             # maximal distance between consecutive cones in [m]
-  maxNumOfNodes:      90          # limits number of nodes in searchtree
+  maxNumOfNodes:      9000          # limits number of nodes in searchtree
   maxVelocity:        10            # in [m/s]
   minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
   minDeviation:       0.05          # minimum difference between states
@@ -34,7 +34,7 @@ GLOBAL:
   thetaWeight:        1000           # weight of orientation difference in distance calculation
 
 VEHICLE:
-  costType:           "DISTANCE"    # can be "DISTANCE" , "TIME"
+  costType:           "TIME"    # can be "DISTANCE" , "TIME"
   maxDelta:           0.38          # maximum front axis steering angle in [rad]
   simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]

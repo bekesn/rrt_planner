@@ -15,14 +15,28 @@ private:
     std::vector<SearchTreeNode*> *tree;
     std::vector<SearchTreeNode*> *loopClosingNodes;
 
+    std::string* name;
+
+public:
+
     // Parameter struct
     RRT_PARAMETERS* param;
+
+    int nodeCount;
+    int rewireCount;
+    float pathCost;
+    bool pathClosed;
+    bool pathFound;
+    PATH_TYPE* bestPath;
+
+    ros::Publisher markerPublisher;
+    visualization_msgs::MarkerArray markerArray;
 
 public:
 
     //Constructor
     SearchTree();
-    SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, RRT_PARAMETERS* par);
+    SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID);
 
     //Destructor
     ~SearchTree();
@@ -43,7 +57,7 @@ public:
     bool alreadyInTree(SS_VECTOR* state);
 
     // Draw tree as lines
-    void drawTree(visualization_msgs::MarkerArray* markerArray);
+    void visualize(void);
 
     // Delete tree and create new
     void init(SS_VECTOR* startState);

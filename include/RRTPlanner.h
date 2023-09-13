@@ -26,25 +26,8 @@ class RRTPlanner
     GENERAL_PARAMETERS* genParam;
     CONTROL_PARAMETERS* controlParam;
 
-    struct RRTObject{
-        std::string* name;
-        SearchTree* tree;
-
-        // Parameters
-        RRT_PARAMETERS* param;
-
-        // Variables
-        bool pathFound;
-        bool pathClosed;
-        PATH_TYPE* bestPath;
-
-        // Visualisation
-        ros::Publisher markerPublisher;
-        visualization_msgs::MarkerArray markerArray;
-    };
-
-    RRTObject* localRRT;
-    RRTObject* globalRRT;
+    SearchTree* localRRT;
+    SearchTree* globalRRT;
 
     enum PlannerState{
         NOMAP,
@@ -60,9 +43,6 @@ public:
     RRTPlanner(int argc, char** argv);
     //~RRTPlanner();
 
-    // Init local or global object
-    void initObject(RRTObject* obj, const char* ID);
-
     // load ROS parameters
     void loadParameter(const std::string& topic, float* parameter, const float defaultValue);
     void loadParameter(const std::string& topic, int* parameter, const int defaultValue);
@@ -73,9 +53,9 @@ public:
     void stateMachine(void);
     
     // Extend searchtree by a new node
-    SearchTreeNode* extend(RRTObject* rrt);
+    SearchTreeNode* extend(SearchTree* rrt);
 
-    bool rewire(RRTObject* rrt, SearchTreeNode* newNode);
+    bool rewire(SearchTree* rrt, SearchTreeNode* newNode);
 
     // RRT on partially discovered map
     void planLocalRRT(void);
@@ -87,10 +67,7 @@ public:
     void timerCallback(const ros::WallTimerEvent &event);
 
     // Visualize markers
-    void visualize(RRTObject* rrt);
-
-    // Visualize best path
-    void visualizeBestPath(RRTObject* rrt);
+    void visualize(SearchTree* rrt);
 
 };
 

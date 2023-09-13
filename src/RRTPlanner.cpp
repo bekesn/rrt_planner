@@ -13,16 +13,13 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     state = NOMAP;
 
     // Init objects
-    localRRT = new RRTObject;
-    globalRRT = new RRTObject;
+    localRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), "local");
+    globalRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), "global");
 
     vehicleParam = new VEHICLE_PARAMETERS;
     mapParam = new MAP_PARAMETERS;
     genParam = new GENERAL_PARAMETERS;
     controlParam = new CONTROL_PARAMETERS;
-
-    initObject(localRRT, "local");
-    initObject(globalRRT, "global");
 
     vehicleModel = VehicleModel(vehicleParam);
     mapHandler = MapHandler(mapParam, &vehicleModel);
@@ -49,21 +46,6 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 }
 
 
-void RRTPlanner::initObject(RRTObject* obj, const char* ID)
-{
-    obj->name = new std::string(1, *ID);
-
-    obj->pathFound = false;
-    obj->pathClosed = false;
-    
-    obj->bestPath = new PATH_TYPE;
-    obj->param = new RRT_PARAMETERS;
-
-    // Init objects
-    obj->tree = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), obj->param);
-
-}
-
 void RRTPlanner::stateMachine()
 {
     switch(state)
@@ -76,7 +58,7 @@ void RRTPlanner::stateMachine()
             if (mapHandler.isLoopClosed())
             {
                 state = WAITFORGLOBAL;
-                globalRRT->tree->init(vehicleModel.getCurrentPose());
+                globalRRT->init(vehicleModel.getCurrentPose());
             }
             break;
         case WAITFORGLOBAL:
@@ -91,7 +73,7 @@ void RRTPlanner::stateMachine()
 }
 
 
-SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
+SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
 {
     SearchTreeNode* newNode;
     bool offCourse, alreadyInTree;
@@ -103,7 +85,7 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     randState = mapHandler.getRandomState(rrt->bestPath, rrt->param);
 
     // Get nearest node
-    SearchTreeNode* nearest = rrt->tree->getNearest(randState);
+    SearchTreeNode* nearest = rrt->getNearest(randState);
 
     // Simulate movement towards new state
     trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState, rrt->param);
@@ -116,11 +98,11 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     {
         // Check if new node would be duplicate
         newState = trajectory->back();
-        alreadyInTree = rrt->tree->alreadyInTree(&newState);
+        alreadyInTree = rrt->alreadyInTree(&newState);
 
         if(!alreadyInTree)
         {
-            newNode = rrt->tree->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory, rrt->param));
+            newNode = rrt->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory, rrt->param));
         }
     }
     else
@@ -133,12 +115,12 @@ SearchTreeNode* RRTPlanner::extend(RRTObject* rrt)
     return newNode;
 }
 
-bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
+bool RRTPlanner::rewire(SearchTree* rrt, SearchTreeNode* newNode)
 {
     PATH_TYPE* trajectory;
-    std::vector<SearchTreeNode*>* nearbyNodes = rrt->tree->getNearby(newNode);
+    std::vector<SearchTreeNode*>* nearbyNodes = rrt->getNearby(newNode);
     std::vector<SearchTreeNode*>::iterator it;
-    float newNodeCost = rrt->tree->getAbsCost(newNode);
+    float newNodeCost = rrt->getAbsCost(newNode);
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
@@ -150,13 +132,13 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
             if (trajectory->back().distanceToTarget((*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
                 float segmentCost = vehicleModel.getDistanceCost(trajectory, rrt->param);
-                float childCost = rrt->tree->getAbsCost(*it);
+                float childCost = rrt->getAbsCost(*it);
                 // Compare costs. If the childCost is significantly
                 if (((newNodeCost + segmentCost) < childCost) || ((newNodeCost - rrt->param->minCost) > childCost))
                 {
                     //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
                     //Rewire if it reduces cost
-                    rrt->tree->rewire(*it,newNode);
+                    rrt->rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
                     //ROS_INFO_STREAM("best dist after:" << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
                 }
@@ -172,13 +154,13 @@ bool RRTPlanner::rewire(RRTObject* rrt, SearchTreeNode* newNode)
 void RRTPlanner::planLocalRRT(void)
 {
     SS_VECTOR* pose = vehicleModel.getCurrentPose();
-    localRRT->tree->init(pose);
+    localRRT->init(pose);
     localRRT->pathFound = false;
     int iteration = 0;
     SS_VECTOR goalState = mapHandler.getGoalState();
 
     // TODO
-    while((!localRRT->tree->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
+    while((!localRRT->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
     {
         SearchTreeNode * node = extend(localRRT);
         if (node != NULL)
@@ -193,7 +175,8 @@ void RRTPlanner::planLocalRRT(void)
     if (localRRT->pathFound)
     {
         delete localRRT->bestPath;
-        localRRT->bestPath = localRRT->tree->traceBackToRoot(&goalState);
+        localRRT->bestPath = localRRT->traceBackToRoot(&goalState);
+        localRRT->pathCost = localRRT->getAbsCost(localRRT->getNearest(&goalState));
     }
 }
 
@@ -202,7 +185,7 @@ void RRTPlanner::planGlobalRRT(void)
     int iteration = 0;
     bool changed = false;
     SS_VECTOR goalState = mapHandler.getGoalState();
-    while((!globalRRT->tree->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
+    while((!globalRRT->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
     {
         SearchTreeNode * node = extend(globalRRT);
         if (node != NULL)
@@ -210,7 +193,7 @@ void RRTPlanner::planGlobalRRT(void)
             bool rewired = rewire(globalRRT, node);
             if(rewired) changed = true;
 
-            float goalDist = node->getState()->distanceToTarget(globalRRT->tree->getRoot(), globalRRT->param);
+            float goalDist = node->getState()->distanceToTarget(globalRRT->getRoot(), globalRRT->param);
             if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
         iteration++;
@@ -219,7 +202,7 @@ void RRTPlanner::planGlobalRRT(void)
     if (globalRRT->pathFound)
     {
         delete globalRRT->bestPath;
-        globalRRT->bestPath = globalRRT->tree->traceBackToRoot(globalRRT->tree->getRoot());
+        globalRRT->bestPath = globalRRT->traceBackToRoot(globalRRT->getRoot());
     }
 }
 
@@ -236,48 +219,14 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
     }
 }
 
-void RRTPlanner::visualize(RRTObject* rrt)
+void RRTPlanner::visualize(SearchTree* rrt)
 {
     rrt->markerArray.markers.clear();
-    rrt->tree->drawTree(&rrt->markerArray);
-    visualizeBestPath(rrt);
+    rrt->visualize();
     mapHandler.visualizePoints(&rrt->markerArray);
     rrt->markerPublisher.publish(rrt->markerArray);
 }
 
-void RRTPlanner::visualizeBestPath(RRTObject* rrt)
-{
-    // Return if path has been not found yet
-    if (!rrt->pathFound) return;
-
-
-    visualization_msgs::Marker bestPathLine;
-        bestPathLine.header.frame_id = "map";
-        bestPathLine.header.stamp = ros::Time::now();
-        bestPathLine.ns = "rrt_best_path";
-        bestPathLine.action = visualization_msgs::Marker::ADD;
-        bestPathLine.pose.orientation.w = 1.0;
-        bestPathLine.id = 2;
-        bestPathLine.type = visualization_msgs::Marker::LINE_STRIP;
-        bestPathLine.scale.x = 0.3f;
-        bestPathLine.color.r = 0.0f;
-        bestPathLine.color.g = 0.5f;
-        bestPathLine.color.b = 1.0f;
-        bestPathLine.color.a = 1.0f;
-
-    PATH_TYPE::iterator it;
-    geometry_msgs::Point coord;
-
-    for (it = rrt->bestPath->begin(); it != rrt->bestPath->end(); it++)
-    {
-        
-        coord.x = (*it).x();
-        coord.y = (*it).y();
-        bestPathLine.points.push_back(coord); 
-    }
-
-    rrt->markerArray.markers.emplace_back(bestPathLine);
-}
 
 int main(int argc, char** argv)
 {
