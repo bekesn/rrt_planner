@@ -26,7 +26,7 @@ GLOBAL:
   maxNumOfNodes:      9000          # limits number of nodes in searchtree
   maxVelocity:        10            # in [m/s]
   minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
-  minDeviation:       0.05          # minimum difference between states
+  minDeviation:       0.2          # minimum difference between states
   resolution:         0.1           # interpolation steps in [m]
   rewireRange:        1             # Range in which connection is checked in [m]
   sampleRange:        10             # used for random sampling near the detected cones, range in [m]

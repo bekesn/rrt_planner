@@ -103,7 +103,8 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
 
 bool SearchTree::alreadyInTree(SS_VECTOR* state)
 {
-    return getNearest(state)->getState()->distanceToTarget(state, param) < param->minDeviation;
+    SS_VECTOR* closest = getNearest(state)->getState();
+    return (closest->distanceToTarget(state, param) < param->minDeviation) || (state->distanceToTarget(closest, param) < param->minDeviation);
 }
 
 void SearchTree::visualize(void)
