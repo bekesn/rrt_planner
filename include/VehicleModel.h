@@ -49,7 +49,7 @@ public:
 
     // COST FUNCTIONS
     // Cost according to length of trajectory
-    double getDistanceCost(PATH_TYPE* trajectory, RRT_PARAMETERS* param);
+    double getDistanceCost(PATH_TYPE* trajectory);
 
     // Cost according to elapsed time
     double getTimeCost(PATH_TYPE* trajectory);

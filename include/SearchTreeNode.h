@@ -50,6 +50,9 @@ public:
     // Trace back to parent and add state
     void traceBackToRoot(PATH_TYPE* stateVector);
 
+    // Set isRoot property
+    void setRoot(bool isNodeRoot);
+
 };
 
 

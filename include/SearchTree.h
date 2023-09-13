@@ -24,7 +24,8 @@ public:
 
     int nodeCount;
     int rewireCount;
-    float pathCost;
+    float pathLength;
+    float pathTime;
     bool pathClosed;
     bool pathFound;
     PATH_TYPE* bestPath;

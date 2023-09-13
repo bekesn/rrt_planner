@@ -81,7 +81,7 @@ void SearchTreeNode::changeSegmentCost(float newCostValue)
 void SearchTreeNode::addToAbsoluteCost(float* absCost)
 {
     *absCost += cost;
-    if (parentNode != NULL) parentNode->addToAbsoluteCost(absCost);
+    if ((parentNode != NULL) && !isRoot) parentNode->addToAbsoluteCost(absCost);
 }
 
 void SearchTreeNode::traceBackToRoot(PATH_TYPE* stateVector)
@@ -91,3 +91,7 @@ void SearchTreeNode::traceBackToRoot(PATH_TYPE* stateVector)
     if ((parentNode != NULL) && !isRoot) parentNode->traceBackToRoot(stateVector);
 }
 
+void SearchTreeNode::setRoot(bool isNodeRoot)
+{
+    isRoot = isNodeRoot;
+}

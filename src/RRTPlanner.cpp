@@ -102,7 +102,7 @@ SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
 
         if(!alreadyInTree)
         {
-            newNode = rrt->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory, rrt->param));
+            newNode = rrt->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
         }
     }
     else
@@ -131,16 +131,17 @@ bool RRTPlanner::rewire(SearchTree* rrt, SearchTreeNode* newNode)
             // Check if new path leads close to new state
             if (trajectory->back().getDistOriented((*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
-                float segmentCost = vehicleModel.getDistanceCost(trajectory, rrt->param);
+                float segmentCost = vehicleModel.getDistanceCost(trajectory);
                 float childCost = rrt->getAbsCost(*it);
                 // Compare costs. If the childCost is significantly
                 if (((newNodeCost + segmentCost) < childCost) || ((newNodeCost - rrt->param->minCost) > childCost))
                 {
-                    //ROS_INFO_STREAM("" << newNodeCost << "     " << segmentCost << "     " << sTree.getAbsCost(*it));
                     //Rewire if it reduces cost
                     rrt->rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
-                    //ROS_INFO_STREAM("best dist after:" << sTree.getAbsCost(sTree.getNearest(mapHandler.getGoalState())));
+                    
+                    // If a node with lower cost is rewired to another, this causes a loop and has to be marked
+                    (*it)->setRoot(newNodeCost > childCost);
                 }
             }
         }
@@ -176,7 +177,8 @@ void RRTPlanner::planLocalRRT(void)
     {
         delete localRRT->bestPath;
         localRRT->bestPath = localRRT->traceBackToRoot(&goalState);
-        localRRT->pathCost = localRRT->getAbsCost(localRRT->getNearest(&goalState));
+        localRRT->pathLength = vehicleModel.getDistanceCost(localRRT->bestPath);
+        localRRT->pathTime = vehicleModel.getTimeCost(localRRT->bestPath);
     }
 }
 
@@ -203,6 +205,8 @@ void RRTPlanner::planGlobalRRT(void)
     {
         delete globalRRT->bestPath;
         globalRRT->bestPath = globalRRT->traceBackToRoot(globalRRT->getRoot());
+        globalRRT->pathLength = vehicleModel.getDistanceCost(globalRRT->bestPath);
+        globalRRT->pathTime = vehicleModel.getTimeCost(globalRRT->bestPath);
     }
 }
 

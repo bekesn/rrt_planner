@@ -19,7 +19,8 @@ SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, const c
 
     this->init(&startState);
 
-    pathCost = 0;
+    pathLength = 0;
+    pathTime = 0;
 }
 
 SearchTree::~SearchTree()
@@ -246,7 +247,8 @@ void SearchTree::visualize(void)
 
     s << "Node count: " << nodeCount << "\n";
     s << "Rewire count: " << rewireCount << "\n";
-    s << "Path cost: " << pathCost << "\n";
+    s << "Path length: " << pathLength << " m\n";
+    s << "Path time: " << pathTime << " s\n";
 
     textInfo.text = s.str();
 
