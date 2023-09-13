@@ -91,7 +91,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if (((*it)->getState()->getDistToTarget(node->getState(), param) < (param->rewireRange)) && ((*it) != node))
+        if ((node->getState()->getDistToTarget((*it)->getState(), param) < (param->rewireRange)) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }

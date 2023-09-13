@@ -141,12 +141,12 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTO
 
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
-    numOfStates = (int) (ratio*distance/param->resolution);
+    numOfStates = (int) (ratio*distance/param->resolution) + 1;
 
-    for(i = 0; i < numOfStates; i++)
+    for(i = 0; i < numOfStates+1; i++)
     {
-        x = start->x() + dx * ratio * (i+1) / (float) numOfStates;
-        y = start->y() + dy * ratio * (i+1) / (float) numOfStates;
+        x = start->x() + dx * ratio * i / (float) numOfStates;
+        y = start->y() + dy * ratio * i / (float) numOfStates;
         path->push_back(SS_VECTOR(x, y, orientation));
     }
     return path;
