@@ -61,7 +61,7 @@ SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState, float minCost)
     SearchTreeNode* closest;
 
     // Initialize closest node and distance
-    minDist = tree->front()->getState()->distanceToTarget(toState, param);
+    minDist = tree->front()->getState()->getDistToTarget(toState, param);
     closest = tree->front();
 
     // Iterate through tree
@@ -69,7 +69,7 @@ SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState, float minCost)
     {
         if(getAbsCost(*it) >= minCost)
         {
-            dist = (*it)->getState()->distanceToTarget(toState, param);
+            dist = (*it)->getState()->getDistToTarget(toState, param);
             if (dist < minDist)
             {
                 minDist = dist;
@@ -91,7 +91,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if (((*it)->getState()->distanceToTarget(node->getState(), param) < (param->rewireRange)) && ((*it) != node))
+        if (((*it)->getState()->getDistToTarget(node->getState(), param) < (param->rewireRange)) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }
@@ -104,7 +104,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
 bool SearchTree::alreadyInTree(SS_VECTOR* state)
 {
     SS_VECTOR* closest = getNearest(state)->getState();
-    return (closest->distanceToTarget(state, param) < param->minDeviation) || (state->distanceToTarget(closest, param) < param->minDeviation);
+    return abs(closest->getDistOriented(state, param)) < param->minDeviation;
 }
 
 void SearchTree::visualize(void)

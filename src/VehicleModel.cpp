@@ -97,7 +97,7 @@ PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RR
     PATH_TYPE* path = new PATH_TYPE;
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
-    distance = start->distanceToTarget(goal, param);
+    distance = start->getDistEuclidean(goal);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
     numOfStates = (int) (ratio*distance/param->resolution);
@@ -119,8 +119,8 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTO
     PATH_TYPE* path = new PATH_TYPE;
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
-    distance = start->distanceToTarget(goal, param);
-    angleDiff = start->angleToTarget(goal);
+    distance = start->getDistEuclidean(goal);
+    angleDiff = start->getAngleToTarget(goal);
     if ((-maxAngle <= angleDiff ) && (angleDiff < maxAngle))
     {
         orientation = atan2((goal->y() - start->y()), (goal->x() - start->x()));
@@ -187,7 +187,7 @@ double VehicleModel::getDistanceCost(PATH_TYPE* trajectory, RRT_PARAMETERS* para
     for (int i = 1; i < size; i++)
     {
         currState = (*trajectory)[i];
-        length += prevState.distanceToTarget(&currState, param);
+        length += prevState.getDistToTarget(&currState, param);
         prevState = currState;
     }
     return length;

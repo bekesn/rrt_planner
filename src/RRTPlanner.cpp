@@ -129,7 +129,7 @@ bool RRTPlanner::rewire(SearchTree* rrt, SearchTreeNode* newNode)
         if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state
-            if (trajectory->back().distanceToTarget((*it)->getState(), rrt->param) < rrt->param->minDeviation)
+            if (trajectory->back().getDistOriented((*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
                 float segmentCost = vehicleModel.getDistanceCost(trajectory, rrt->param);
                 float childCost = rrt->getAbsCost(*it);
@@ -193,7 +193,7 @@ void RRTPlanner::planGlobalRRT(void)
             bool rewired = rewire(globalRRT, node);
             if(rewired) changed = true;
 
-            float goalDist = node->getState()->distanceToTarget(globalRRT->getRoot(), globalRRT->param);
+            float goalDist = node->getState()->getDistToTarget(globalRRT->getRoot(), globalRRT->param);
             if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
         iteration++;

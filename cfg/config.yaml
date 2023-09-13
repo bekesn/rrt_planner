@@ -14,7 +14,7 @@ LOCAL:
   resolution:         0.1           # interpolation steps in [m]
   rewireRange:        1             # Range in which connection is checked in [m]
   sampleRange:        4             # used for random sampling near the detected cones, range in [m]
-  simulationTimeStep: 0.2          # in [s]
+  simulationTimeStep: 0.1          # in [s]
   thetaWeight:        5000          # weight of orientation difference in distance calculation
 
 GLOBAL:
@@ -30,13 +30,13 @@ GLOBAL:
   resolution:         0.1           # interpolation steps in [m]
   rewireRange:        1             # Range in which connection is checked in [m]
   sampleRange:        10             # used for random sampling near the detected cones, range in [m]
-  simulationTimeStep: 0.2           # in [s]
+  simulationTimeStep: 0.1           # in [s]
   thetaWeight:        1000           # weight of orientation difference in distance calculation
 
 VEHICLE:
   costType:           "DISTANCE"    # can be "DISTANCE" , "TIME"
   maxDelta:           0.38          # maximum front axis steering angle in [rad]
-  simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+  simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]
   wheelBase:          1.54          # in [m]
 

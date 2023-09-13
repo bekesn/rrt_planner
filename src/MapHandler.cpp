@@ -187,7 +187,7 @@ void MapHandler::calculateGoalState()
         dist = dist/2.0;
 
         SS_VECTOR state = SS_VECTOR(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0);
-        double angleDiff = abs(currentState->angleToTarget(&state));
+        double angleDiff = abs(currentState->getAngleToTarget(&state));
         if ((dist > maxDist) && (angleDiff < 1) && (dist < mapParam->goalHorizon))
         {
             maxDist = dist;

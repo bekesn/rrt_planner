@@ -14,7 +14,7 @@ Control* Control::stanleyToTarget(SS_VECTOR* state, StateSpace2D* target)
 
 Control* Control::angleControl(SS_VECTOR* state, StateSpace2D* target)
 {
-    float angle = state->angleToTarget(target);
+    float angle = state->getAngleToTarget(target);
     Control* input = new Control();
     input->ddelta = (-controlParam->k * angle) - state->delta();
     input->ax = getRandomAccel();
