@@ -273,9 +273,28 @@ void SearchTree::init(const SS_VECTOR* startState)
     pathFound = false;
 }
 
-void init(const PATH_TYPE* startState)
+void SearchTree::init(PATH_TYPE* initPath)
 {
+    PATH_TYPE::iterator it;
+    int i = 0;
+    float cost;
+    PATH_TYPE segment;
+    segment.push_back(initPath->front());
 
+    // Initialize tree
+    init(&initPath->front());
+
+    // Add remaining states
+    SearchTreeNode* node = tree->front();
+    for (it = initPath->begin() + 1; it != initPath->end(); it++)
+    {
+        segment.push_back(*it);
+        cost = segment.cost(param);
+        node = addChild(node, *it, cost);
+
+        // Reset segment
+        segment.erase(segment.begin());
+    }
 }
 
 SS_VECTOR* SearchTree::getRoot() const
@@ -287,7 +306,7 @@ PATH_TYPE* SearchTree::traceBackToRoot(const SS_VECTOR* goalState) const
 {
     SearchTreeNode* closestNode = getNearest(goalState, param->minCost);
     if (closestNode == NULL) return NULL;
-    
+
     PATH_TYPE* path = new PATH_TYPE;
     closestNode->traceBackToRoot(path);
     return path;
@@ -307,7 +326,7 @@ bool SearchTree::maxNumOfNodesReached() const
 
 void SearchTree::rewire(SearchTreeNode* node, SearchTreeNode* newParent)
 {
-    node->getParent()->removeChild(node);
+    if(node->getParent() != NULL) node->getParent()->removeChild(node);
     node->changeParent(newParent);
     rewireCount++;
 }

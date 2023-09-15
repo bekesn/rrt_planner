@@ -36,11 +36,15 @@ void VehicleModel::velocityCallback(const geometry_msgs::TwistStamped::ConstPtr 
     currentPose = SS_VECTOR(currentPose.x(), currentPose.y(), currentPose.theta(), v, delta);
 }
 
-SS_VECTOR* VehicleModel::getCurrentPose()
+SS_VECTOR* VehicleModel::getCurrentPose(void)
 {
     return new SS_VECTOR(currentPose);
 }
 
+PATH_TYPE* VehicleModel::getActualPath(void) const
+{
+    return actualPath;
+}
 
 VEHICLE_PARAMETERS* VehicleModel::getParameters()
 {

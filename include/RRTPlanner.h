@@ -63,6 +63,10 @@ public:
     // RRT on fully discovered map
     void planGlobalRRT(void);
 
+    // Handle actual path and create the loop
+    // Returns true if loop is closed
+    bool handleActualPath(void);
+
     // Timer callback
     void timerCallback(const ros::WallTimerEvent &event);
 

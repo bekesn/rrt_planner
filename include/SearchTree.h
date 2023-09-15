@@ -62,7 +62,7 @@ public:
 
     // Delete tree and create new
     void init(const SS_VECTOR* startState);
-    void init(const PATH_TYPE* startState);
+    void init(PATH_TYPE* initPath);
 
     // Get root
     SS_VECTOR* getRoot() const;

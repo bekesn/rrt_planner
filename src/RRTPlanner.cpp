@@ -55,10 +55,9 @@ void RRTPlanner::stateMachine()
             break;
         case LOCALPLANNING:
             planLocalRRT();
-            if (mapHandler.isLoopClosed())
+            if (mapHandler.isLoopClosed() && handleActualPath())
             {
                 state = WAITFORGLOBAL;
-                globalRRT->init(vehicleModel.getCurrentPose());
             }
             break;
         case WAITFORGLOBAL:
@@ -102,7 +101,7 @@ SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
 
         if(!alreadyInTree)
         {
-            newNode = rrt->addChild(nearest, newState, trajectory->getDistanceCost());
+            newNode = rrt->addChild(nearest, newState, trajectory->cost(rrt->param));
         }
     }
     else
@@ -208,6 +207,54 @@ void RRTPlanner::planGlobalRRT(void)
         globalRRT->pathLength = globalRRT->bestPath->getDistanceCost();
         globalRRT->pathTime = globalRRT->bestPath->getTimeCost();
     }
+}
+
+bool RRTPlanner::handleActualPath(void)
+{
+    PATH_TYPE* actualPath = vehicleModel.getActualPath();
+    float fullCost = actualPath->cost(globalRRT->param);
+    if (fullCost < globalRRT->param->minCost) return false;
+
+    PATH_TYPE* loop = new PATH_TYPE;
+    SS_VECTOR currentPose = actualPath->back();
+    PATH_TYPE::iterator it;
+    bool isLoop = false;
+    float cost = 0;
+    PATH_TYPE segment;
+    segment.push_back(actualPath->front());
+
+    for(it = actualPath->begin(); it != actualPath->end(); it++)
+    {
+        float distStep = globalRRT->param->simulationTimeStep * currentPose.v();
+        if ((currentPose.getDistToTarget(&(*it), globalRRT->param) < distStep) &&
+            (cost < (fullCost - 3*globalRRT->param->minCost)))
+        {
+            isLoop = true;
+            ROS_INFO_STREAM("" << currentPose.getDistToTarget(&(*it), globalRRT->param) << " " << distStep);
+        }
+        if (isLoop)
+        {
+            loop->push_back(*it);
+        }
+
+        // Calculate cost
+        segment.push_back(*it);
+        cost += segment.cost(globalRRT->param);
+
+        // Reset segment
+        segment.erase(segment.begin());
+    }
+
+    if(isLoop)
+    {
+        globalRRT->init(loop);
+    }
+    else
+    {
+        delete loop;
+    }
+
+    return isLoop;
 }
 
 void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)

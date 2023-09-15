@@ -28,7 +28,10 @@ public:
     void velocityCallback(const geometry_msgs::TwistStamped::ConstPtr &msg);
 
     // Get vehicle pose
-    SS_VECTOR* getCurrentPose();
+    SS_VECTOR* getCurrentPose(void);
+
+    // Get actual path
+    PATH_TYPE* getActualPath(void) const;
 
     // Get parameters
     VEHICLE_PARAMETERS* getParameters();
