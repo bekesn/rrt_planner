@@ -8,8 +8,7 @@
 #include <tf/tf.h>
 #include <Eigen/Dense>
 #include <math.h>
-#include "Types.h"
-#include "StateSpaceSimulated.h"
+#include "Trajectory.h"
 
 class VehicleModel
 {
@@ -37,9 +36,6 @@ public:
     // Simulate advancing towards target
     PATH_TYPE* simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
 
-    // Cost function
-    double cost(PATH_TYPE* trajectory, RRT_PARAMETERS* param);
-
     // SIMULATION FUNCTIONS
     // Holonomic model
     PATH_TYPE* simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
@@ -49,13 +45,6 @@ public:
 
     // Simple kinematic bicycle model
     PATH_TYPE* simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
-
-    // COST FUNCTIONS
-    // Cost according to length of trajectory
-    double getDistanceCost(PATH_TYPE* trajectory);
-
-    // Cost according to elapsed time
-    double getTimeCost(PATH_TYPE* trajectory);
 
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order

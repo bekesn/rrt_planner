@@ -8,7 +8,7 @@ VehicleModel::VehicleModel()
 VehicleModel::VehicleModel(VEHICLE_PARAMETERS* par)
 {
     vehicleParam = par;
-    actualPath = new PATH_TYPE(0);
+    actualPath = new PATH_TYPE;
 }
 
 
@@ -71,25 +71,6 @@ PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goal
     }
 
     return trajectory;
-}
-
-double VehicleModel::cost(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
-{
-    double cost;
-    switch(vehicleParam->costType)
-    {
-        case DISTANCE:
-            cost = getDistanceCost(trajectory);
-            break;
-        case TIME:
-            cost = getTimeCost(trajectory);
-            break;
-        default:
-            throw std::invalid_argument("Wrong cost calculation type");
-            break;
-    }
-
-    return cost;
 }
 
 PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param)
@@ -176,47 +157,6 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
     }
 
     return path;
-}
-
-double VehicleModel::getDistanceCost(PATH_TYPE* trajectory)
-{
-    if(trajectory->size() < 2) return 0;
-    
-    SS_VECTOR prevState = (*trajectory)[0];
-    SS_VECTOR currState;
-    int size = trajectory->size();
-    double length = 0;
-    for (int i = 1; i < size; i++)
-    {
-        currState = (*trajectory)[i];
-        length += prevState.getDistEuclidean(&currState);
-        prevState = currState;
-    }
-    return length;
-}
-
-double VehicleModel::getTimeCost(PATH_TYPE* trajectory)
-{
-    if(trajectory->size() < 2) return 10000;
-    
-    SS_VECTOR prevState = (*trajectory)[0];
-    SS_VECTOR currState;
-    int size = trajectory->size();
-    double elapsed = 0;
-    for (int i = 1; i < size; i++)
-    {
-        currState = (*trajectory)[i];
-        if(prevState.v() > 0)
-        {
-            elapsed += prevState.getDistEuclidean(&currState) / prevState.v();
-        }
-        else
-        {
-            elapsed += 1000;
-        }
-        prevState = currState;
-    }
-    return elapsed;
 }
 
 SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float dt)

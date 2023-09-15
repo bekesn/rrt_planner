@@ -48,7 +48,7 @@ void SearchTreeNode::removeChild(SearchTreeNode* childNode)
     childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
 }
 
-SearchTreeNode* SearchTreeNode::getParent()
+SearchTreeNode* SearchTreeNode::getParent() const
 {
     return parentNode;
 }
@@ -56,9 +56,10 @@ SearchTreeNode* SearchTreeNode::getParent()
 void SearchTreeNode::changeParent(SearchTreeNode* newParent)
 {
     parentNode = newParent;
+    newParent->addChild(this);
 }
 
-std::vector<SearchTreeNode*> *SearchTreeNode::getChildren()
+std::vector<SearchTreeNode*> *SearchTreeNode::getChildren() const
 {
     return childNodes;
 }
@@ -68,7 +69,7 @@ SS_VECTOR* SearchTreeNode::getState()
     return &state;
 }
 
-float SearchTreeNode::getSegmentCost(void)
+float SearchTreeNode::getSegmentCost(void) const
 {
     return cost;
 }
@@ -78,13 +79,13 @@ void SearchTreeNode::changeSegmentCost(float newCostValue)
     cost = newCostValue;
 }
 
-void SearchTreeNode::addToAbsoluteCost(float* absCost)
+void SearchTreeNode::addToAbsoluteCost(float* absCost) const
 {
     *absCost += cost;
     if ((parentNode != NULL) && !isRoot) parentNode->addToAbsoluteCost(absCost);
 }
 
-void SearchTreeNode::traceBackToRoot(PATH_TYPE* stateVector)
+void SearchTreeNode::traceBackToRoot(PATH_TYPE* stateVector) const
 {
     // TODO: inserting at the beginning might slow down the process
     stateVector->insert(stateVector->begin(), state);

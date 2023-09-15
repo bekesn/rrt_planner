@@ -102,7 +102,7 @@ SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
 
         if(!alreadyInTree)
         {
-            newNode = rrt->addChild(nearest, newState, vehicleModel.getDistanceCost(trajectory));
+            newNode = rrt->addChild(nearest, newState, trajectory->getDistanceCost());
         }
     }
     else
@@ -131,7 +131,7 @@ bool RRTPlanner::rewire(SearchTree* rrt, SearchTreeNode* newNode)
             // Check if new path leads close to new state
             if (trajectory->back().getDistOriented((*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
-                float segmentCost = vehicleModel.getDistanceCost(trajectory);
+                float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
                 // Compare costs. If the childCost is significantly
                 if (((newNodeCost + segmentCost) < childCost) || ((newNodeCost - rrt->param->minCost) > childCost))
@@ -177,8 +177,8 @@ void RRTPlanner::planLocalRRT(void)
     {
         delete localRRT->bestPath;
         localRRT->bestPath = localRRT->traceBackToRoot(&goalState);
-        localRRT->pathLength = vehicleModel.getDistanceCost(localRRT->bestPath);
-        localRRT->pathTime = vehicleModel.getTimeCost(localRRT->bestPath);
+        localRRT->pathLength = localRRT->bestPath->getDistanceCost();
+        localRRT->pathTime = localRRT->bestPath->getTimeCost();
     }
 }
 
@@ -205,8 +205,8 @@ void RRTPlanner::planGlobalRRT(void)
     {
         delete globalRRT->bestPath;
         globalRRT->bestPath = globalRRT->traceBackToRoot(globalRRT->getRoot());
-        globalRRT->pathLength = vehicleModel.getDistanceCost(globalRRT->bestPath);
-        globalRRT->pathTime = vehicleModel.getTimeCost(globalRRT->bestPath);
+        globalRRT->pathLength = globalRRT->bestPath->getDistanceCost();
+        globalRRT->pathTime = globalRRT->bestPath->getTimeCost();
     }
 }
 
@@ -278,6 +278,16 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/collisionRange", &localRRT->param->collisionRange, 6.0f);
     loadParameter("/GLOBAL/collisionRange", &globalRRT->param->collisionRange, 6.0f);
 
+    // Choose distance calculation type
+    std::string costType;
+    loadParameter("/LOCAL/costType", &costType, "DISTANCE");
+    if (costType == "DISTANCE") localRRT->param->costType = DISTANCE;
+    else if (costType == "TIME") localRRT->param->costType = TIME;
+
+    loadParameter("/GLOBAL/costType", &costType, "DISTANCE");
+    if (costType == "DISTANCE") globalRRT->param->costType = DISTANCE;
+    else if (costType == "TIME") globalRRT->param->costType = TIME;
+
     loadParameter("/LOCAL/goalBias", &localRRT->param->goalBias, 0.2f);
     loadParameter("/GLOBAL/goalBias", &globalRRT->param->goalBias, 0.2f);
 
@@ -334,10 +344,4 @@ void RRTPlanner::loadParameters(void)
     else if (simType == "HOLONOMIC_CONSTRAINED") vehicleParam->simType = HOLONOMIC_CONSTRAINED;
     else if (simType == "BICYCLE_SIMPLE") vehicleParam->simType = BICYCLE_SIMPLE;
     else if (simType == "BICYCLE") vehicleParam->simType = BICYCLE;
-
-    // Choose distance calculation type
-    std::string costType;
-    loadParameter("/VEHICLE/costType", &costType, "DISTANCE");
-    if (costType == "DISTANCE") vehicleParam->costType = DISTANCE;
-    else if (costType == "TIME") vehicleParam->costType = TIME;
 }

@@ -7,15 +7,15 @@ SearchTree::SearchTree()
     tree = new std::vector<SearchTreeNode*>;
     loopClosingNodes = new std::vector<SearchTreeNode*>;
     name = new std::string;
-    bestPath = new PATH_TYPE(0);
+    bestPath = new PATH_TYPE;
 }
 
-SearchTree::SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID)
+SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID)
 {
     param = new RRT_PARAMETERS;
     loopClosingNodes = new std::vector<SearchTreeNode*>(0);
     name = new std::string(1, *ID);
-    bestPath = new PATH_TYPE(0);
+    bestPath = new PATH_TYPE;
 
     this->init(&startState);
 
@@ -54,7 +54,7 @@ void SearchTree::remove(SearchTreeNode* node)
 
 }
 
-SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState, float minCost)
+SearchTreeNode* SearchTree::getNearest(const SS_VECTOR* toState, float minCost) const
 {
     std::vector<SearchTreeNode*>::iterator it;
     double minDist;
@@ -84,7 +84,7 @@ SearchTreeNode* SearchTree::getNearest(SS_VECTOR* toState, float minCost)
     return closest;
 }
 
-std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
+std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node) const
 {
     std::vector<SearchTreeNode*>::iterator it;
     std::vector<SearchTreeNode*>* closeNodes = new std::vector<SearchTreeNode*>;
@@ -102,7 +102,7 @@ std::vector<SearchTreeNode*>* SearchTree::getNearby(SearchTreeNode* node)
 
 }
 
-bool SearchTree::alreadyInTree(SS_VECTOR* state)
+bool SearchTree::alreadyInTree(const SS_VECTOR* state) const
 {
     SS_VECTOR* closest = getNearest(state)->getState();
     return abs(closest->getDistOriented(state, param)) < param->minDeviation;
@@ -255,7 +255,7 @@ void SearchTree::visualize(void)
     markerArray.markers.emplace_back(textInfo);
 }
 
-void SearchTree::init(SS_VECTOR* startState)
+void SearchTree::init(const SS_VECTOR* startState)
 {
     if (tree != NULL){
         delete tree->front();
@@ -273,27 +273,34 @@ void SearchTree::init(SS_VECTOR* startState)
     pathFound = false;
 }
 
-SS_VECTOR* SearchTree::getRoot()
+void init(const PATH_TYPE* startState)
+{
+
+}
+
+SS_VECTOR* SearchTree::getRoot() const
 {
     return tree->front()->getState();
 }
 
-PATH_TYPE* SearchTree::traceBackToRoot(SS_VECTOR* goalState)
+PATH_TYPE* SearchTree::traceBackToRoot(const SS_VECTOR* goalState) const
 {
     SearchTreeNode* closestNode = getNearest(goalState, param->minCost);
+    if (closestNode == NULL) return NULL;
+    
     PATH_TYPE* path = new PATH_TYPE;
     closestNode->traceBackToRoot(path);
     return path;
 }
 
-float SearchTree::getAbsCost(SearchTreeNode* node)
+float SearchTree::getAbsCost(const SearchTreeNode* node) const
 {
     float absCost = 0;
     node->addToAbsoluteCost(&absCost);
     return absCost;
 }
 
-bool SearchTree::maxNumOfNodesReached()
+bool SearchTree::maxNumOfNodesReached() const
 {
     return (nodeCount == param->maxNumOfNodes);
 }

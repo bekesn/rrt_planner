@@ -2,7 +2,7 @@
 #define types_h
 
 #define SS_VECTOR   StateSpaceSimulated
-#define PATH_TYPE   std::vector<SS_VECTOR>
+#define PATH_TYPE   Trajectory//std::vector<SS_VECTOR>
 
 enum RRT_TYPE{
     LOCAL_RRT,
@@ -28,6 +28,7 @@ enum COST_TYPE{
 
 struct RRT_PARAMETERS{
     float collisionRange;
+    COST_TYPE costType;
     float goalBias;
     float goalRadius;
     int iterations;
@@ -46,7 +47,6 @@ struct RRT_PARAMETERS{
 struct VEHICLE_PARAMETERS{
     SIMULATION_TYPE simType;
     float maxDelta;
-    COST_TYPE costType;
     float track;
     float wheelBase;
 };

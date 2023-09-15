@@ -6,6 +6,7 @@
 #include <iterator>
 #include "Types.h"
 #include "StateSpaceSimulated.h"
+#include "Trajectory.h"
 
 class SearchTreeNode
 {
@@ -33,22 +34,22 @@ public:
     void removeChild(SearchTreeNode* childNode);
 
     // Get and change parent
-    SearchTreeNode* getParent();
+    SearchTreeNode* getParent() const;
     void changeParent(SearchTreeNode* newParent);
 
     // Get children
-    std::vector<SearchTreeNode*> *getChildren();
+    std::vector<SearchTreeNode*> *getChildren() const;
 
     // Get state
     SS_VECTOR* getState();
 
     // Cost
-    float getSegmentCost(void);
+    float getSegmentCost(void) const;
     void changeSegmentCost(float newCostValue);
-    void addToAbsoluteCost(float* absCost);
+    void addToAbsoluteCost(float* absCost) const;
 
     // Trace back to parent and add state
-    void traceBackToRoot(PATH_TYPE* stateVector);
+    void traceBackToRoot(PATH_TYPE* stateVector) const;
 
     // Set isRoot property
     void setRoot(bool isNodeRoot);

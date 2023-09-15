@@ -37,7 +37,7 @@ public:
 
     //Constructor
     SearchTree();
-    SearchTree(VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID);
+    SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID);
 
     //Destructor
     ~SearchTree();
@@ -49,31 +49,32 @@ public:
     void remove(SearchTreeNode* node);
 
     //Get nearest node
-    SearchTreeNode* getNearest(SS_VECTOR* state, float minCost = 0.0f);
+    SearchTreeNode* getNearest(const SS_VECTOR* state, float minCost = 0.0f) const;
 
     //Get nearby nodes
-    std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node);
+    std::vector<SearchTreeNode*>* getNearby(SearchTreeNode* node) const;
 
     // Decide whether almost similar state already exists
-    bool alreadyInTree(SS_VECTOR* state);
+    bool alreadyInTree(const SS_VECTOR* state) const;
 
     // Draw tree as lines
     void visualize(void);
 
     // Delete tree and create new
-    void init(SS_VECTOR* startState);
+    void init(const SS_VECTOR* startState);
+    void init(const PATH_TYPE* startState);
 
     // Get root
-    SS_VECTOR* getRoot();
+    SS_VECTOR* getRoot() const;
 
     // Traceback to root
-    PATH_TYPE* traceBackToRoot(SS_VECTOR* goalState);
+    PATH_TYPE* traceBackToRoot(const SS_VECTOR* goalState) const;
 
     // Get absolute cost to node
-    float getAbsCost(SearchTreeNode* node);
+    float getAbsCost(const SearchTreeNode* node) const;
 
     // Check wether number of nodes reached the maximum
-    bool maxNumOfNodesReached();
+    bool maxNumOfNodesReached() const;
 
     // Rewiring node from former parent to newParent node
     void rewire(SearchTreeNode* node, SearchTreeNode* newParent);

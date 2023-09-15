@@ -136,6 +136,9 @@ target_link_libraries(StateSpace2D ${catkin_LIBRARIES})
 add_library(StateSpaceSimulated src/StateSpaceSimulated.cpp)
 target_link_libraries(StateSpaceSimulated ${catkin_LIBRARIES})
 
+add_library(Trajectory src/Trajectory.cpp)
+target_link_libraries(Trajectory ${catkin_LIBRARIES})
+
 add_library(MapHandler src/MapHandler.cpp)
 target_link_libraries(MapHandler ${catkin_LIBRARIES})
 
@@ -163,6 +166,7 @@ add_executable(rrt_planner_node src/RRTPlanner.cpp)
 target_link_libraries(rrt_planner_node 
   StateSpace2D
   StateSpaceSimulated
+  Trajectory
   SearchTreeNode
   SearchTree
   MapHandler
