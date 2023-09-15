@@ -223,11 +223,12 @@ bool RRTPlanner::handleActualPath(void)
     PATH_TYPE segment;
     segment.push_back(actualPath->front());
 
-    for(it = actualPath->begin(); it != actualPath->end(); it++)
+    float distStep = globalRRT->param->simulationTimeStep * currentPose.v();
+
+    for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
-        float distStep = globalRRT->param->simulationTimeStep * currentPose.v();
         if ((currentPose.getDistToTarget(&(*it), globalRRT->param) < distStep) &&
-            (cost < (fullCost - 3*globalRRT->param->minCost)))
+            (cost < (fullCost - 3* distStep)))
         {
             isLoop = true;
             ROS_INFO_STREAM("" << currentPose.getDistToTarget(&(*it), globalRRT->param) << " " << distStep);

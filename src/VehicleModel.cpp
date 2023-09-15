@@ -143,6 +143,7 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
 {
     PATH_TYPE* path = new PATH_TYPE;
     SS_VECTOR state = *start;
+    path->push_back(state);
 
     // TODO kokany
     float dt = param->resolution/param->maxVelocity;

@@ -288,12 +288,18 @@ void SearchTree::init(PATH_TYPE* initPath)
     SearchTreeNode* node = tree->front();
     for (it = initPath->begin() + 1; it != initPath->end(); it++)
     {
-        segment.push_back(*it);
-        cost = segment.cost(param);
-        node = addChild(node, *it, cost);
+        if(!alreadyInTree(&(*it)))
+        {
+            // Calculate cost
+            segment.push_back(*it);
+            cost = segment.cost(param);
 
-        // Reset segment
-        segment.erase(segment.begin());
+            // Add state to tree
+            node = addChild(node, *it, cost);
+
+            // Reset segment
+            segment.erase(segment.begin());
+        }
     }
 }
 

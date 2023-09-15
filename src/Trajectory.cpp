@@ -30,7 +30,7 @@ double Trajectory::cost(const RRT_PARAMETERS* param) const
 
 double Trajectory::getDistanceCost(void) const
 {
-    if(this->size() < 2) return 0;
+    if(this->size() < 2) return 100;
     
     SS_VECTOR prevState = (*this)[0];
     SS_VECTOR currState;
@@ -47,7 +47,7 @@ double Trajectory::getDistanceCost(void) const
 
 double Trajectory::getTimeCost(void) const
 {
-    if(this->size() < 2) return 10000;
+    if(this->size() < 2) return 100;
     
     SS_VECTOR prevState = (*this)[0];
     SS_VECTOR currState;
@@ -62,7 +62,7 @@ double Trajectory::getTimeCost(void) const
         }
         else
         {
-            elapsed += 1000;
+            elapsed += 100;
         }
         prevState = currState;
     }
