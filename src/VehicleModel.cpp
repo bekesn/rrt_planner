@@ -8,6 +8,7 @@ VehicleModel::VehicleModel()
 VehicleModel::VehicleModel(VEHICLE_PARAMETERS* par)
 {
     vehicleParam = par;
+    actualPath = new PATH_TYPE(0);
 }
 
 
@@ -20,6 +21,7 @@ void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
     currentPose = SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw, currentPose.v(), currentPose.delta());
 
+    actualPath->push_back(currentPose);
 }
 
 
@@ -233,3 +235,33 @@ SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float 
     return ((*startState) + k);
 }
     
+void VehicleModel::visualize(visualization_msgs::MarkerArray* markerArray)
+{
+    geometry_msgs::Point coord;
+
+    visualization_msgs::Marker actualPathLine;
+        actualPathLine.header.frame_id = "map";
+        actualPathLine.header.stamp = ros::Time::now();
+        actualPathLine.ns = "vehicle_actual_path";
+        actualPathLine.action = visualization_msgs::Marker::ADD;
+        actualPathLine.pose.orientation.w = 1.0;
+        actualPathLine.id = 2;
+        actualPathLine.type = visualization_msgs::Marker::LINE_STRIP;
+        actualPathLine.scale.x = 0.05f;
+        actualPathLine.color.r = 0.5f;
+        actualPathLine.color.g = 0.0f;
+        actualPathLine.color.b = 0.5f;
+        actualPathLine.color.a = 1.0f;
+
+    PATH_TYPE::iterator pathIterator;
+    for (pathIterator = this->actualPath->begin(); pathIterator != this->actualPath->end(); pathIterator++)
+    {
+        
+        coord.x = (*pathIterator).x();
+        coord.y = (*pathIterator).y();
+        actualPathLine.points.push_back(coord);
+
+    }
+    
+    markerArray->markers.emplace_back(actualPathLine);
+}

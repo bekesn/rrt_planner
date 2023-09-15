@@ -228,6 +228,7 @@ void RRTPlanner::visualize(SearchTree* rrt)
     rrt->markerArray.markers.clear();
     rrt->visualize();
     mapHandler.visualizePoints(&rrt->markerArray);
+    vehicleModel.visualize(&rrt->markerArray); //TODO
     rrt->markerPublisher.publish(rrt->markerArray);
 }
 

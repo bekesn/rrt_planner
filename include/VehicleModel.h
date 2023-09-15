@@ -3,6 +3,8 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <tf/tf.h>
 #include <Eigen/Dense>
 #include <math.h>
@@ -12,6 +14,7 @@
 class VehicleModel
 {
     SS_VECTOR currentPose;
+    PATH_TYPE* actualPath;
 
     // Parameter struct
     VEHICLE_PARAMETERS* vehicleParam;
@@ -57,6 +60,9 @@ public:
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order
     SS_VECTOR RK4(SS_VECTOR* startState, Control* controlInput, float dt);
+
+    // Visualize actualPath
+    void visualize(visualization_msgs::MarkerArray* markerArray);
 };
 
 
