@@ -12,27 +12,25 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
     state = NOMAP;
 
-    // Init objects
+    // Init parameter structs
+    genParam = unique_ptr<GENERAL_PARAMETERS> (new GENERAL_PARAMETERS);
+    unique_ptr<VEHICLE_PARAMETERS> vehicleParam = unique_ptr<VEHICLE_PARAMETERS> (new VEHICLE_PARAMETERS);
+    unique_ptr<MAP_PARAMETERS> mapParam = unique_ptr<MAP_PARAMETERS> (new MAP_PARAMETERS);
+    unique_ptr<CONTROL_PARAMETERS> controlParam = unique_ptr<CONTROL_PARAMETERS> (new CONTROL_PARAMETERS);
+
+    // Init objects with zero parameters
     localRRT = unique_ptr<SearchTree>(new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), LOCAL_RRT));
     globalRRT = unique_ptr<SearchTree>(new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), GLOBAL_RRT));
 
-    vehicleParam = new VEHICLE_PARAMETERS;
-    mapParam = new MAP_PARAMETERS;
-    genParam = new GENERAL_PARAMETERS;
-    controlParam = new CONTROL_PARAMETERS;
-
-    vehicleModel = VehicleModel(vehicleParam);
-    mapHandler = MapHandler(mapParam, &vehicleModel);
-
+    vehicleModel = VehicleModel(move(vehicleParam));
+    mapHandler = MapHandler(move(mapParam), &vehicleModel);
+    Control::setParameters(move(controlParam));
 
     // Load ROS parameters
     loadParameters();
 
-    // Set parameters
-    Control::setParam(controlParam);
-
     // Subscribe to map
-    ROS_INFO_STREAM("[RRT_PLANNER] Node started.");
+    ROS_INFO_STREAM("" << nodeName << " Node started.");
     mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
     poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &vehicleModel);
     SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &mapHandler);
@@ -291,108 +289,108 @@ int main(int argc, char** argv)
 }
 
 
-void RRTPlanner::loadParameter(const std::string& topic, float* parameter, const float defaultValue)
+void RRTPlanner::loadParameter(const string& topic, float& parameter, const float defaultValue)
 {
-    if (!ros::param::get(topic, *parameter))
+    if (!ros::param::get(topic, parameter))
     {
-        *parameter = defaultValue;
+        parameter = defaultValue;
         ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
     }
-    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(*parameter)); 
+    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(parameter)); 
 }
 
-void RRTPlanner::loadParameter(const std::string& topic, int* parameter, const int defaultValue)
+void RRTPlanner::loadParameter(const string& topic, int& parameter, const int defaultValue)
 {
-    if (!ros::param::get(topic, *parameter))
+    if (!ros::param::get(topic, parameter))
     {
-        *parameter = defaultValue;
+        parameter = defaultValue;
         ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
     }
-    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(*parameter)); 
+    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(parameter)); 
 }
 
-void RRTPlanner::loadParameter(const std::string& topic, std::string* parameter, const std::string defaultValue)
+void RRTPlanner::loadParameter(const string& topic, string& parameter, const string defaultValue)
 {
-    if (!ros::param::get(topic, *parameter))
+    if (!ros::param::get(topic, parameter))
     {
-        *parameter = defaultValue;
+        parameter = defaultValue;
         ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
     }
-    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  *parameter);     
+    ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  parameter);     
 }
 
 void RRTPlanner::loadParameters(void)
 {
     ROS_INFO_STREAM(nodeName << " LOADING PARAMETERS");
-    loadParameter("/GENERAL/timerPeriod", &genParam->timerPeriod, 0.1f);
+    loadParameter("/GENERAL/timerPeriod", genParam->timerPeriod, 0.1f);
 
-    loadParameter("/LOCAL/collisionRange", &localRRT->param->collisionRange, 6.0f);
-    loadParameter("/GLOBAL/collisionRange", &globalRRT->param->collisionRange, 6.0f);
+    loadParameter("/LOCAL/collisionRange", localRRT->param->collisionRange, 6.0f);
+    loadParameter("/GLOBAL/collisionRange", globalRRT->param->collisionRange, 6.0f);
 
     // Choose distance calculation type
     std::string costType;
-    loadParameter("/LOCAL/costType", &costType, "DISTANCE");
+    loadParameter("/LOCAL/costType", costType, "DISTANCE");
     if (costType == "DISTANCE") localRRT->param->costType = DISTANCE;
     else if (costType == "TIME") localRRT->param->costType = TIME;
 
-    loadParameter("/GLOBAL/costType", &costType, "DISTANCE");
+    loadParameter("/GLOBAL/costType", costType, "DISTANCE");
     if (costType == "DISTANCE") globalRRT->param->costType = DISTANCE;
     else if (costType == "TIME") globalRRT->param->costType = TIME;
 
-    loadParameter("/LOCAL/goalBias", &localRRT->param->goalBias, 0.2f);
-    loadParameter("/GLOBAL/goalBias", &globalRRT->param->goalBias, 0.2f);
+    loadParameter("/LOCAL/goalBias", localRRT->param->goalBias, 0.2f);
+    loadParameter("/GLOBAL/goalBias", globalRRT->param->goalBias, 0.2f);
 
-    loadParameter("/LOCAL/goalRadius", &localRRT->param->goalRadius, 1.0f);
-    loadParameter("/GLOBAL/goalRadius", &globalRRT->param->goalRadius, 1.0f);
+    loadParameter("/LOCAL/goalRadius", localRRT->param->goalRadius, 1.0f);
+    loadParameter("/GLOBAL/goalRadius", globalRRT->param->goalRadius, 1.0f);
 
-    loadParameter("/LOCAL/iterations", &localRRT->param->iterations, 500);
-    loadParameter("/GLOBAL/iterations", &globalRRT->param->iterations, 500);
+    loadParameter("/LOCAL/iterations", localRRT->param->iterations, 500);
+    loadParameter("/GLOBAL/iterations", globalRRT->param->iterations, 500);
 
-    loadParameter("/LOCAL/maxConeDist", &localRRT->param->maxConeDist, 6.0f);
-    loadParameter("/GLOBAL/maxConeDist", &globalRRT->param->maxConeDist, 6.0f);
+    loadParameter("/LOCAL/maxConeDist", localRRT->param->maxConeDist, 6.0f);
+    loadParameter("/GLOBAL/maxConeDist", globalRRT->param->maxConeDist, 6.0f);
 
-    loadParameter("/LOCAL/maxNumOfNodes", &localRRT->param->maxNumOfNodes, 1000);
-    loadParameter("/GLOBAL/maxNumOfNodes", &globalRRT->param->maxNumOfNodes, 1000);
+    loadParameter("/LOCAL/maxNumOfNodes", localRRT->param->maxNumOfNodes, 1000);
+    loadParameter("/GLOBAL/maxNumOfNodes", globalRRT->param->maxNumOfNodes, 1000);
 
-    loadParameter("/LOCAL/maxVelocity", &localRRT->param->maxVelocity, 10.0f);
-    loadParameter("/GLOBAL/maxVelocity", &globalRRT->param->maxVelocity, 10.0f);
+    loadParameter("/LOCAL/maxVelocity", localRRT->param->maxVelocity, 10.0f);
+    loadParameter("/GLOBAL/maxVelocity", globalRRT->param->maxVelocity, 10.0f);
 
-    loadParameter("/LOCAL/minCost", &localRRT->param->minCost, 0.0f);
-    loadParameter("/GLOBAL/minCost", &globalRRT->param->minCost, 3.0f);
+    loadParameter("/LOCAL/minCost", localRRT->param->minCost, 0.0f);
+    loadParameter("/GLOBAL/minCost", globalRRT->param->minCost, 3.0f);
 
-    loadParameter("/LOCAL/minDeviation", &localRRT->param->minDeviation, 0.05f);
-    loadParameter("/GLOBAL/minDeviation", &globalRRT->param->minDeviation, 0.05f);
+    loadParameter("/LOCAL/minDeviation", localRRT->param->minDeviation, 0.05f);
+    loadParameter("/GLOBAL/minDeviation", globalRRT->param->minDeviation, 0.05f);
 
-    loadParameter("/LOCAL/resolution", &localRRT->param->resolution, 0.05f);
-    loadParameter("/GLOBAL/resolution", &globalRRT->param->resolution, 0.05f);
+    loadParameter("/LOCAL/resolution", localRRT->param->resolution, 0.05f);
+    loadParameter("/GLOBAL/resolution", globalRRT->param->resolution, 0.05f);
 
-    loadParameter("/LOCAL/rewireRange", &localRRT->param->rewireRange, 1.0f);
-    loadParameter("/GLOBAL/rewireRange", &globalRRT->param->rewireRange, 1.0f);
+    loadParameter("/LOCAL/rewireRange", localRRT->param->rewireRange, 1.0f);
+    loadParameter("/GLOBAL/rewireRange", globalRRT->param->rewireRange, 1.0f);
 
-    loadParameter("/LOCAL/sampleRange", &localRRT->param->sampleRange, 3);
-    loadParameter("/GLOBAL/sampleRange", &globalRRT->param->sampleRange, 3);
+    loadParameter("/LOCAL/sampleRange", localRRT->param->sampleRange, 3);
+    loadParameter("/GLOBAL/sampleRange", globalRRT->param->sampleRange, 3);
 
-    loadParameter("/LOCAL/simulationTimeStep", &localRRT->param->simulationTimeStep, 0.1f);
-    loadParameter("/GLOBAL/simulationTimeStep", &globalRRT->param->simulationTimeStep, 0.1f);
+    loadParameter("/LOCAL/simulationTimeStep", localRRT->param->simulationTimeStep, 0.1f);
+    loadParameter("/GLOBAL/simulationTimeStep", globalRRT->param->simulationTimeStep, 0.1f);
 
-    loadParameter("/LOCAL/thetaWeight", &localRRT->param->thetaWeight, 0.1f);
-    loadParameter("/GLOBAL/thetaWeight", &globalRRT->param->thetaWeight, 0.1f);
+    loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 0.1f);
+    loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 0.1f);
 
-    loadParameter("/VEHICLE/maxDelta", &vehicleParam->maxDelta, 0.38f);
-    loadParameter("/VEHICLE/track", &vehicleParam->track, 1.2f);
-    loadParameter("/VEHICLE/wheelBase", &vehicleParam->wheelBase, 1.54f); 
+    loadParameter("/VEHICLE/maxDelta", vehicleModel.getParameters()->maxDelta, 0.38f);
+    loadParameter("/VEHICLE/track", vehicleModel.getParameters()->track, 1.2f);
+    loadParameter("/VEHICLE/wheelBase", vehicleModel.getParameters()->wheelBase, 1.54f); 
 
-    loadParameter("/MAP/goalHorizon", &mapParam->goalHorizon, 15.0f);
+    loadParameter("/MAP/goalHorizon", mapHandler.getParameters()->goalHorizon, 15.0f);
 
-    loadParameter("/CONTROL/k", &controlParam->k, 15.0f);
-    loadParameter("/CONTROL/maxdDelta", &controlParam->maxdDelta, 0.1f);
-    loadParameter("/CONTROL/maxLongAccel", &controlParam->maxLongAccel, 5.0f);
+    loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
+    loadParameter("/CONTROL/maxdDelta", Control::getParameters()->maxdDelta, 0.1f);
+    loadParameter("/CONTROL/maxLongAccel", Control::getParameters()->maxLongAccel, 5.0f);
 
     // Choose simulation type
     std::string simType;
-    loadParameter("/VEHICLE/simType", &simType, "HOLONOMIC");
-    if (simType == "HOLONOMIC") vehicleParam->simType = HOLONOMIC;
-    else if (simType == "HOLONOMIC_CONSTRAINED") vehicleParam->simType = HOLONOMIC_CONSTRAINED;
-    else if (simType == "BICYCLE_SIMPLE") vehicleParam->simType = BICYCLE_SIMPLE;
-    else if (simType == "BICYCLE") vehicleParam->simType = BICYCLE;
+    loadParameter("/VEHICLE/simType", simType, "HOLONOMIC");
+    if (simType == "HOLONOMIC") vehicleModel.getParameters()->simType = HOLONOMIC;
+    else if (simType == "HOLONOMIC_CONSTRAINED") vehicleModel.getParameters()->simType = HOLONOMIC_CONSTRAINED;
+    else if (simType == "BICYCLE_SIMPLE") vehicleModel.getParameters()->simType = BICYCLE_SIMPLE;
+    else if (simType == "BICYCLE") vehicleModel.getParameters()->simType = BICYCLE;
 }

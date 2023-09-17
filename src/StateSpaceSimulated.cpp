@@ -28,7 +28,7 @@ StateSpaceSimulated::StateSpaceSimulated(const StateSpaceSimulated &original)
     delta_ = original.delta_;
 }
 
-StateSpaceSimulated* StateSpaceSimulated::derivative(const Control* controlInput, const VEHICLE_PARAMETERS* param) const 
+StateSpaceSimulated* StateSpaceSimulated::derivative(const Control* controlInput, const unique_ptr<VEHICLE_PARAMETERS>& param) const 
 {
     float x, y, theta, v, delta;
 
@@ -41,7 +41,7 @@ StateSpaceSimulated* StateSpaceSimulated::derivative(const Control* controlInput
     return new StateSpaceSimulated(x, y, theta, v, delta);
 }
 
-void StateSpaceSimulated::limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const VEHICLE_PARAMETERS* vehicleParam)
+void StateSpaceSimulated::limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
     // Limit v
     if(v_ > rrtParam->maxVelocity) v_ = rrtParam->maxVelocity;

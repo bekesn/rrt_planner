@@ -8,7 +8,7 @@ class StateSpaceSimulated;
 
 class Control
 {
-    inline static CONTROL_PARAMETERS* controlParam;
+    static unique_ptr<CONTROL_PARAMETERS> controlParam;
 
 public:
 
@@ -19,21 +19,24 @@ public:
     Control();
 
     // Return Control object for controlling the vehicle
-    static Control* stanleyToTarget(SS_VECTOR* state, StateSpace2D* target);
-    static Control* angleControl(SS_VECTOR* state, StateSpace2D* target);
+    static Control* stanleyToTarget(const SS_VECTOR* state, const StateSpace2D* target);
+    static Control* angleControl(const SS_VECTOR* state, const StateSpace2D* target);
 
     // Get random acceleration value
     static double getRandomAccel(void);
 
     // Set control parameters
-    static void setParam(CONTROL_PARAMETERS* param);
+    static void setParameters(const unique_ptr<CONTROL_PARAMETERS> param);
+
+    // Get control parameters
+    static unique_ptr<CONTROL_PARAMETERS>& getParameters(void);
 
     // Limit input
     void limitValues(void);
     
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(CEREAL_NVP(ax), CEREAL_NVP(ddelta), CEREAL_NVP(MYaw));}   
+    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(controlParam)), CEREAL_NVP(ax), CEREAL_NVP(ddelta), CEREAL_NVP(MYaw));}   
 };
 
 #endif // CONTROL_H

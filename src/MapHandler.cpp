@@ -9,9 +9,9 @@ MapHandler::MapHandler(void)
 
 }
 
-MapHandler::MapHandler(MAP_PARAMETERS* param, VehicleModel* vm) : MapHandler()
+MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, VehicleModel* vm) : MapHandler()
 {
-    mapParam = param;
+    mapParam = move(param);
     vehicleModel = vm;
 }
 
@@ -144,6 +144,11 @@ SS_VECTOR* MapHandler::getRandomState(shared_ptr<PATH_TYPE> path, unique_ptr<RRT
     }
 
     return randState;
+}
+
+unique_ptr<MAP_PARAMETERS>& MapHandler::getParameters(void)
+{
+    return mapParam;
 }
 
 void MapHandler::calculateGoalState()

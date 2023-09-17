@@ -5,9 +5,9 @@ VehicleModel::VehicleModel()
     
 }
 
-VehicleModel::VehicleModel(VEHICLE_PARAMETERS* par)
+VehicleModel::VehicleModel(unique_ptr<VEHICLE_PARAMETERS> par)
 {
-    vehicleParam = par;
+    vehicleParam = move(par);
     actualPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 }
 
@@ -46,7 +46,7 @@ shared_ptr<PATH_TYPE> VehicleModel::getActualPath(void) const
     return actualPath;
 }
 
-VEHICLE_PARAMETERS* VehicleModel::getParameters()
+unique_ptr<VEHICLE_PARAMETERS>& VehicleModel::getParameters()
 {
     return vehicleParam;
 }

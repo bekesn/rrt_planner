@@ -16,11 +16,11 @@ class VehicleModel
     shared_ptr<PATH_TYPE> actualPath;
 
     // Parameter struct
-    VEHICLE_PARAMETERS* vehicleParam;
+    unique_ptr<VEHICLE_PARAMETERS> vehicleParam;
 
 public:
     VehicleModel();
-    VehicleModel(VEHICLE_PARAMETERS* par);
+    VehicleModel(unique_ptr<VEHICLE_PARAMETERS> par);
     //~VehicleModel();
 
     // Update vehicle pose and velocity
@@ -34,7 +34,7 @@ public:
     shared_ptr<PATH_TYPE> getActualPath(void) const;
 
     // Get parameters
-    VEHICLE_PARAMETERS* getParameters();
+    unique_ptr<VEHICLE_PARAMETERS>& getParameters();
 
     // Simulate advancing towards target
     shared_ptr<PATH_TYPE> simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param);
@@ -58,7 +58,7 @@ public:
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(currentPose, actualPath, vehicleParam);}
+    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(vehicleParam)), CEREAL_NVP(currentPose), CEREAL_NVP(actualPath));}
 };
 
 

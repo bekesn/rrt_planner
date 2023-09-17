@@ -1,18 +1,19 @@
 #include "Control.h"
 #include "StateSpaceSimulated.h"
 
+unique_ptr<CONTROL_PARAMETERS> Control::controlParam;
 
 Control::Control()
 {
 
 }
 
-Control* Control::stanleyToTarget(SS_VECTOR* state, StateSpace2D* target)
+Control* Control::stanleyToTarget(const SS_VECTOR* state, const StateSpace2D* target)
 {
 
 }
 
-Control* Control::angleControl(SS_VECTOR* state, StateSpace2D* target)
+Control* Control::angleControl(const SS_VECTOR* state, const StateSpace2D* target)
 {
     float angle = state->getAngleToTarget(target);
     Control* input = new Control();
@@ -24,9 +25,14 @@ Control* Control::angleControl(SS_VECTOR* state, StateSpace2D* target)
     return input;
 }
 
-void Control::setParam(CONTROL_PARAMETERS* param)
+void Control::setParameters(unique_ptr<CONTROL_PARAMETERS> param)
 {
-    controlParam = param;
+    controlParam = move(param);
+}
+
+unique_ptr<CONTROL_PARAMETERS>& Control::getParameters(void)
+{
+    return controlParam;
 }
 
 double Control::getRandomAccel(void)

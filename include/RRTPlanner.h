@@ -12,6 +12,7 @@
 
 class RRTPlanner
 {
+    // ROS objects
     ros::Subscriber mapSubscriber;
     ros::Subscriber poseSubscriber;
     ros::Subscriber SLAMStatusSubscriber;
@@ -20,13 +21,12 @@ class RRTPlanner
 
     ros::WallTimer timer;
 
+    // General parameters
+    unique_ptr<GENERAL_PARAMETERS> genParam;
+
     // Objects
     MapHandler mapHandler;
     VehicleModel vehicleModel;
-    VEHICLE_PARAMETERS* vehicleParam;
-    MAP_PARAMETERS* mapParam;
-    GENERAL_PARAMETERS* genParam;
-    CONTROL_PARAMETERS* controlParam;
 
     unique_ptr<SearchTree> localRRT;
     unique_ptr<SearchTree> globalRRT;
@@ -46,9 +46,9 @@ public:
     //~RRTPlanner();
 
     // load ROS parameters
-    void loadParameter(const std::string& topic, float* parameter, const float defaultValue);
-    void loadParameter(const std::string& topic, int* parameter, const int defaultValue);
-    void loadParameter(const std::string& topic, std::string* parameter, const std::string defaultValue);
+    void loadParameter(const string& topic, float& parameter, const float defaultValue);
+    void loadParameter(const string& topic, int& parameter, const int defaultValue);
+    void loadParameter(const string& topic, string& parameter, const string defaultValue);
     void loadParameters(void);
 
     // State machine of planner

@@ -19,11 +19,11 @@ private:
     bool mapReceived;
     bool loopClosed;
 
-    MAP_PARAMETERS* mapParam;
+    unique_ptr<MAP_PARAMETERS> mapParam;
 
 public:
     MapHandler(void);
-    MapHandler(MAP_PARAMETERS* param, VehicleModel* vehicleModel);
+    MapHandler(unique_ptr<MAP_PARAMETERS> param, VehicleModel* vehicleModel);
     //~MapHandler();
     
     // Check for offcourse
@@ -34,6 +34,9 @@ public:
 
     // Get random state
     SS_VECTOR* getRandomState(shared_ptr<PATH_TYPE> path, unique_ptr<RRT_PARAMETERS>& param);
+
+    // Get parameters
+    unique_ptr<MAP_PARAMETERS>& getParameters(void);
 
     // Calculate and get goal state
     void calculateGoalState();
@@ -60,7 +63,8 @@ public:
     // Archive function for cereal
     // Map is not archived
     template<class Archive>
-    void serialize(Archive & archive){archive(cereal::defer(vehicleModel), goalState, mapReceived, loopClosed, mapParam);}
+    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(mapParam)),cereal::defer(CEREAL_NVP(vehicleModel)),
+                                        CEREAL_NVP(goalState), CEREAL_NVP(mapReceived), CEREAL_NVP(loopClosed));}
 
 };
 
