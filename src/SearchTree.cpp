@@ -170,8 +170,8 @@ void SearchTree::visualize(void)
         graphEdge.color.a = 1.0f;
 
     std::vector<SearchTreeNode*>::iterator treeIterator;
-    std::vector<SearchTreeNode*>::iterator childIterator;
-    std::vector<SearchTreeNode*> *children;
+    vector<unique_ptr<SearchTreeNode>>::iterator childIterator;
+    std::vector<unique_ptr<SearchTreeNode>> *children;
 
     for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
     {

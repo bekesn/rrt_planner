@@ -9,12 +9,15 @@
 #include "Trajectory.h"
 #include <cereal/cereal.hpp> // for defer
 #include <cereal/types/vector.hpp>
+#include <cereal/types/memory.hpp>
+
+using namespace std;
 
 class SearchTreeNode
 {
 private:
     SearchTreeNode* parentNode;
-    std::vector<SearchTreeNode *> *childNodes;
+    vector<unique_ptr<SearchTreeNode>> *childNodes;
     SS_VECTOR state;
     float cost;
     bool isRoot;
@@ -40,7 +43,7 @@ public:
     void changeParent(SearchTreeNode* newParent);
 
     // Get children
-    std::vector<SearchTreeNode*> *getChildren() const;
+    vector<unique_ptr<SearchTreeNode>> *getChildren() const;
 
     // Get state
     SS_VECTOR* getState();
@@ -58,7 +61,7 @@ public:
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(cereal::defer(parentNode), cereal::defer(childNodes), state, cost, isRoot);}
+    void serialize(Archive & archive){archive(*childNodes, state, cost, isRoot);}
 
 };
 

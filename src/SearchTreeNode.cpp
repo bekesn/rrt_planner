@@ -2,7 +2,7 @@
 
 SearchTreeNode::SearchTreeNode()
 {
-    childNodes = new std::vector<SearchTreeNode*>(0);
+    childNodes = new vector<unique_ptr<SearchTreeNode>>;
     isRoot = false;
 }
 
@@ -11,8 +11,8 @@ SearchTreeNode::SearchTreeNode(const SearchTreeNode &original)
 {
     parentNode = original.parentNode;
     //childNodes = original.childNodes;
-    childNodes = new std::vector<SearchTreeNode*>;
-    copy(original.childNodes->begin(), original.childNodes->end(), back_inserter(*childNodes));
+    childNodes = new vector<unique_ptr<SearchTreeNode>>;
+    move(original.childNodes->begin(), original.childNodes->end(), back_inserter(*childNodes));
     state = original.state;
     cost = original.cost;
     isRoot = original.isRoot;
@@ -22,30 +22,32 @@ SearchTreeNode::SearchTreeNode(SearchTreeNode* parent, SS_VECTOR stateSpace, dou
 {
     parentNode = parent;
     state = stateSpace;
-    childNodes = new std::vector<SearchTreeNode*>(0);
+    childNodes = new vector<unique_ptr<SearchTreeNode>>;
     cost = nodeCost;
     isRoot = false;
 }
 
 SearchTreeNode::~SearchTreeNode()
 {
-    std::vector<SearchTreeNode*>::iterator it;
-    for (it = childNodes->begin(); it != childNodes->end(); it++)
+    vector<unique_ptr<SearchTreeNode>>::iterator it;
+    /*for (it = childNodes->begin(); it != childNodes->end(); it++)
     {
-        delete *it;
-    }
-    delete childNodes;
+        delete (*it).get();
+    }*/
+    //delete childNodes;
 }
 
 
 void SearchTreeNode::addChild(SearchTreeNode* childNode)
 {
-    childNodes->push_back(childNode);
+    childNodes->push_back(unique_ptr<SearchTreeNode>(childNode));
 }
 
 void SearchTreeNode::removeChild(SearchTreeNode* childNode)
 {
-    childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
+    //childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
+    childNodes->erase(remove_if(childNodes->begin(), childNodes->end(),
+                        [childNode](unique_ptr<SearchTreeNode>& unique){return unique.get() == childNode;}));
 }
 
 SearchTreeNode* SearchTreeNode::getParent() const
@@ -59,7 +61,7 @@ void SearchTreeNode::changeParent(SearchTreeNode* newParent)
     newParent->addChild(this);
 }
 
-std::vector<SearchTreeNode*> *SearchTreeNode::getChildren() const
+vector<unique_ptr<SearchTreeNode>>* SearchTreeNode::getChildren() const
 {
     return childNodes;
 }

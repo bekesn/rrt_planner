@@ -179,6 +179,17 @@ void RRTPlanner::planLocalRRT(void)
         localRRT->pathLength = localRRT->bestPath->getDistanceCost();
         localRRT->pathTime = localRRT->bestPath->getTimeCost();
     }
+
+    static bool isSaved = false;
+    if(!isSaved)
+    {
+        {
+            std::ofstream f( "tree.xml" );
+            cereal::XMLOutputArchive archive( f );
+            archive( (*localRRT) );
+        }
+        isSaved = true;
+    }
 }
 
 void RRTPlanner::planGlobalRRT(void)

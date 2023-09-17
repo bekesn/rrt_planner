@@ -81,8 +81,8 @@ public:
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(tree, loopClosingNodes, type, param, 
-                    nodeCount, rewireCount, pathLength, pathTime, pathClosed, pathFound, bestPath);}
+    void serialize(Archive & archive){archive(*(tree->front()), type, *param, 
+                    nodeCount, rewireCount, pathLength, pathTime, pathClosed, pathFound, *bestPath);}
 };
 
 
