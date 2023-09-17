@@ -45,6 +45,8 @@ public:
     float y(void) const;
     float theta(void) const;
     
+    template<class Archive>
+    void serialize(Archive & archive){archive(x_, y_, theta_);}   
 };
 
 #endif //STATESPACE2D_H

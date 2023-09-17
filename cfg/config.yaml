@@ -16,7 +16,7 @@ LOCAL:
   rewireRange:        1             # Range in which connection is checked in [m]
   sampleRange:        4             # used for random sampling near the detected cones, range in [m]
   simulationTimeStep: 0.2           # in [s]
-  thetaWeight:        500           # weight of orientation difference in distance calculation
+  thetaWeight:        5000          # weight of orientation difference in distance calculation
 
 GLOBAL:
   collisionRange:     6             # cones in this range will be checked for collision - in [m]
@@ -37,7 +37,7 @@ GLOBAL:
 
 VEHICLE:
   maxDelta:           0.38          # maximum front axis steering angle in [rad]
-  simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+  simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]
   wheelBase:          1.54          # in [m]
 

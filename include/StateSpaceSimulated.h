@@ -3,6 +3,7 @@
 
 #include "StateSpace2D.h"
 #include "Control.h"
+#include <cereal/types/base_class.hpp>
 
 class StateSpaceSimulated : public StateSpace2D
 {
@@ -28,6 +29,9 @@ public:
     // Access variables
     float v(void) const ;
     float delta(void) const ;
+
+    template<class Archive>
+    void serialize(Archive & archive){archive(cereal::base_class<StateSpace2D> ( this ), v_, delta_);}
 
 };
 

@@ -283,7 +283,15 @@ void RRTPlanner::visualize(SearchTree* rrt)
 
 int main(int argc, char** argv)
 {
+    StateSpaceSimulated sss = StateSpaceSimulated(10,2,1,2,3);
+    {
+        std::ofstream f( "out.xml" );
+        cereal::XMLOutputArchive archive( f );
+        archive( sss );
+    }
+
     RRTPlanner planner(argc, argv);
+
     return 0;
 }
 

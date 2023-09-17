@@ -7,6 +7,8 @@
 #include "SearchTree.h"
 #include "frt_custom_msgs/Landmark.h"
 #include <visualization_msgs/Marker.h>
+#include <cereal/archives/xml.hpp>
+#include <fstream>
 
 class RRTPlanner
 {

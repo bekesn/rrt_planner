@@ -164,7 +164,7 @@ void SearchTree::visualize(void)
         graphEdge.pose.orientation.w = 1.0;
         graphEdge.id = 1;
         graphEdge.type = visualization_msgs::Marker::LINE_LIST;
-        graphEdge.scale.x = 0.1f;
+        graphEdge.scale.x = 0.05f;
         graphEdge.color.r = 1.0f;
         graphEdge.color.g = 0.65f;
         graphEdge.color.b = 0.0f;
@@ -203,7 +203,7 @@ void SearchTree::visualize(void)
             bestPathLine.pose.orientation.w = 1.0;
             bestPathLine.id = 2;
             bestPathLine.type = visualization_msgs::Marker::LINE_STRIP;
-            bestPathLine.scale.x = 0.3f;
+            bestPathLine.scale.x = 0.15f;
             bestPathLine.color.r = 0.0f;
             bestPathLine.color.g = 0.5f;
             bestPathLine.color.b = 1.0f;
