@@ -30,6 +30,10 @@ public:
 
     // Limit input
     void limitValues(void);
+    
+    // Archive function for cereal
+    template<class Archive>
+    void serialize(Archive & archive){archive(CEREAL_NVP(ax), CEREAL_NVP(ddelta), CEREAL_NVP(MYaw));}   
 };
 
 #endif // CONTROL_H

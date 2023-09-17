@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "StateSpaceSimulated.h"
 #include <vector>
+#include <cereal/types/vector.hpp>
 
 class Trajectory : public std::vector<SS_VECTOR>
 {

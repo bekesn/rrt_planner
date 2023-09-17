@@ -7,6 +7,8 @@
 #include "Types.h"
 #include "StateSpaceSimulated.h"
 #include "Trajectory.h"
+#include <cereal/cereal.hpp> // for defer
+#include <cereal/types/vector.hpp>
 
 class SearchTreeNode
 {
@@ -53,6 +55,10 @@ public:
 
     // Set isRoot property
     void setRoot(bool isNodeRoot);
+
+    // Archive function for cereal
+    template<class Archive>
+    void serialize(Archive & archive){archive(cereal::defer(parentNode), cereal::defer(childNodes), state, cost, isRoot);}
 
 };
 

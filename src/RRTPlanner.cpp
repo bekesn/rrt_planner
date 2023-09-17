@@ -13,8 +13,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     state = NOMAP;
 
     // Init objects
-    localRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), "local");
-    globalRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), "global");
+    localRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), LOCAL_RRT);
+    globalRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), GLOBAL_RRT);
 
     vehicleParam = new VEHICLE_PARAMETERS;
     mapParam = new MAP_PARAMETERS;
@@ -283,13 +283,6 @@ void RRTPlanner::visualize(SearchTree* rrt)
 
 int main(int argc, char** argv)
 {
-    StateSpaceSimulated sss = StateSpaceSimulated(10,2,1,2,3);
-    {
-        std::ofstream f( "out.xml" );
-        cereal::XMLOutputArchive archive( f );
-        archive( sss );
-    }
-
     RRTPlanner planner(argc, argv);
 
     return 0;

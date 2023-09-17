@@ -30,8 +30,9 @@ public:
     float v(void) const ;
     float delta(void) const ;
 
+    // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(cereal::base_class<StateSpace2D> ( this ), v_, delta_);}
+    void serialize(Archive & archive){archive(cereal::base_class<StateSpace2D> ( this ), CEREAL_NVP(v_), CEREAL_NVP(delta_));}
 
 };
 

@@ -15,7 +15,7 @@ private:
     std::vector<SearchTreeNode*> *tree;
     std::vector<SearchTreeNode*> *loopClosingNodes;
 
-    std::string* name;
+    RRT_TYPE type;
 
 public:
 
@@ -37,7 +37,7 @@ public:
 
     //Constructor
     SearchTree();
-    SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID);
+    SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, RRT_TYPE rrtType);
 
     //Destructor
     ~SearchTree();
@@ -79,6 +79,10 @@ public:
     // Rewiring node from former parent to newParent node
     void rewire(SearchTreeNode* node, SearchTreeNode* newParent);
 
+    // Archive function for cereal
+    template<class Archive>
+    void serialize(Archive & archive){archive(tree, loopClosingNodes, type, param, 
+                    nodeCount, rewireCount, pathLength, pathTime, pathClosed, pathFound, bestPath);}
 };
 
 

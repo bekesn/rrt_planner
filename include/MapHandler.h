@@ -7,6 +7,7 @@
 #include "frt_custom_msgs/Map.h"
 #include "frt_custom_msgs/Landmark.h"
 #include "frt_custom_msgs/SlamStatus.h"
+#include <cereal/cereal.hpp> // for defer
 
 class MapHandler
 {
@@ -55,6 +56,11 @@ public:
 
     // Return if loop is closed in SLAM
     bool isLoopClosed(void);
+
+    // Archive function for cereal
+    // Map is not archived
+    template<class Archive>
+    void serialize(Archive & archive){archive(cereal::defer(vehicleModel), goalState, mapReceived, loopClosed, mapParam);}
 
 };
 

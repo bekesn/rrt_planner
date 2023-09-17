@@ -4,6 +4,7 @@
 #include <math.h>
 #include <geometry_msgs/Pose2D.h>
 #include "Types.h"
+#include <cereal/archives/xml.hpp>
 
 
 class StateSpace2D
@@ -45,8 +46,9 @@ public:
     float y(void) const;
     float theta(void) const;
     
+    // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(x_, y_, theta_);}   
+    void serialize(Archive & archive){archive(CEREAL_NVP(x_), CEREAL_NVP(y_), CEREAL_NVP(theta_));}   
 };
 
 #endif //STATESPACE2D_H

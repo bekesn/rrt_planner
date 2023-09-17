@@ -55,6 +55,10 @@ public:
 
     // Visualize actualPath
     void visualize(visualization_msgs::MarkerArray* markerArray);
+
+    // Archive function for cereal
+    template<class Archive>
+    void serialize(Archive & archive){archive(currentPose, actualPath, vehicleParam);}
 };
 
 

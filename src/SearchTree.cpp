@@ -6,15 +6,15 @@ SearchTree::SearchTree()
     param = new RRT_PARAMETERS;
     tree = new std::vector<SearchTreeNode*>;
     loopClosingNodes = new std::vector<SearchTreeNode*>;
-    name = new std::string;
+    type = LOCAL_RRT;
     bestPath = new PATH_TYPE;
 }
 
-SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, const char* ID)
+SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, RRT_TYPE rrtType)
 {
     param = new RRT_PARAMETERS;
     loopClosingNodes = new std::vector<SearchTreeNode*>(0);
-    name = new std::string(1, *ID);
+    type = rrtType;
     bestPath = new PATH_TYPE;
 
     this->init(&startState);
@@ -29,7 +29,6 @@ SearchTree::~SearchTree()
     delete tree;
     delete bestPath;
     delete loopClosingNodes;
-    delete name;
     delete param;
 }
 
