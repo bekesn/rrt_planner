@@ -2,66 +2,60 @@
 
 SearchTreeNode::SearchTreeNode()
 {
-    childNodes = new vector<unique_ptr<SearchTreeNode>>;
+    parentNode = shared_ptr<SearchTreeNode> (new SearchTreeNode);
+    cost = 0;
     isRoot = false;
+    childNodes = shared_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
 }
 
 
 SearchTreeNode::SearchTreeNode(const SearchTreeNode &original)
 {
     parentNode = original.parentNode;
-    //childNodes = original.childNodes;
-    childNodes = new vector<unique_ptr<SearchTreeNode>>;
-    move(original.childNodes->begin(), original.childNodes->end(), back_inserter(*childNodes));
+    childNodes = original.childNodes;
+    //copy(original.childNodes->begin(), original.childNodes->end(), back_inserter(*childNodes));
     state = original.state;
     cost = original.cost;
     isRoot = original.isRoot;
 }
 
-SearchTreeNode::SearchTreeNode(SearchTreeNode* parent, SS_VECTOR stateSpace, double nodeCost)
+SearchTreeNode::SearchTreeNode(shared_ptr<SearchTreeNode> parent, SS_VECTOR stateSpace, double nodeCost)
 {
     parentNode = parent;
     state = stateSpace;
-    childNodes = new vector<unique_ptr<SearchTreeNode>>;
     cost = nodeCost;
     isRoot = false;
+    childNodes = shared_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
 }
 
 SearchTreeNode::~SearchTreeNode()
 {
-    vector<unique_ptr<SearchTreeNode>>::iterator it;
-    /*for (it = childNodes->begin(); it != childNodes->end(); it++)
-    {
-        delete (*it).get();
-    }*/
-    //delete childNodes;
+
 }
 
 
-void SearchTreeNode::addChild(SearchTreeNode* childNode)
+void SearchTreeNode::addChild(shared_ptr<SearchTreeNode> childNode)
 {
-    childNodes->push_back(unique_ptr<SearchTreeNode>(childNode));
+    childNodes->push_back(childNode);
 }
 
-void SearchTreeNode::removeChild(SearchTreeNode* childNode)
+void SearchTreeNode::removeChild(shared_ptr<SearchTreeNode> childNode)
 {
-    //childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
-    childNodes->erase(remove_if(childNodes->begin(), childNodes->end(),
-                        [childNode](unique_ptr<SearchTreeNode>& unique){return unique.get() == childNode;}));
+    childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
 }
 
-SearchTreeNode* SearchTreeNode::getParent() const
+shared_ptr<SearchTreeNode> SearchTreeNode::getParent() const
 {
     return parentNode;
 }
 
-void SearchTreeNode::changeParent(SearchTreeNode* newParent)
+void SearchTreeNode::changeParent(shared_ptr<SearchTreeNode> newParent, shared_ptr<SearchTreeNode>& selfPtr)
 {
     parentNode = newParent;
-    newParent->addChild(this);
+    newParent->addChild(selfPtr);
 }
 
-vector<unique_ptr<SearchTreeNode>>* SearchTreeNode::getChildren() const
+shared_ptr<vector<shared_ptr<SearchTreeNode>>> SearchTreeNode::getChildren() const
 {
     return childNodes;
 }

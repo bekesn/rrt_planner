@@ -28,8 +28,8 @@ class RRTPlanner
     GENERAL_PARAMETERS* genParam;
     CONTROL_PARAMETERS* controlParam;
 
-    SearchTree* localRRT;
-    SearchTree* globalRRT;
+    unique_ptr<SearchTree> localRRT;
+    unique_ptr<SearchTree> globalRRT;
 
     enum PlannerState{
         NOMAP,
@@ -55,9 +55,9 @@ public:
     void stateMachine(void);
     
     // Extend searchtree by a new node
-    SearchTreeNode* extend(SearchTree* rrt);
+    shared_ptr<SearchTreeNode> extend(unique_ptr<SearchTree>& rrt);
 
-    bool rewire(SearchTree* rrt, SearchTreeNode* newNode);
+    bool rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode);
 
     // RRT on partially discovered map
     void planLocalRRT(void);
@@ -73,7 +73,7 @@ public:
     void timerCallback(const ros::WallTimerEvent &event);
 
     // Visualize markers
-    void visualize(SearchTree* rrt);
+    void visualize(unique_ptr<SearchTree>& rrt);
 
 };
 

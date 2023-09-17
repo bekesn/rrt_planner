@@ -37,7 +37,7 @@ GLOBAL:
 
 VEHICLE:
   maxDelta:           0.38          # maximum front axis steering angle in [rad]
-  simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+  simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]
   wheelBase:          1.54          # in [m]
 

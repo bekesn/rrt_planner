@@ -16,8 +16,8 @@ using namespace std;
 class SearchTreeNode
 {
 private:
-    SearchTreeNode* parentNode;
-    vector<unique_ptr<SearchTreeNode>> *childNodes;
+    shared_ptr<SearchTreeNode> parentNode;
+    shared_ptr<vector<shared_ptr<SearchTreeNode>>> childNodes;
     SS_VECTOR state;
     float cost;
     bool isRoot;
@@ -27,23 +27,23 @@ public:
     // Constructor
     SearchTreeNode();
     SearchTreeNode(const SearchTreeNode &original);
-    SearchTreeNode(SearchTreeNode* parent, SS_VECTOR stateSpace, double nodeCost);
+    SearchTreeNode(shared_ptr<SearchTreeNode> parent, SS_VECTOR stateSpace, double nodeCost);
 
     // Destructor
     ~SearchTreeNode();
 
     // Add child node
-    void addChild(SearchTreeNode* childNode);
+    void addChild(shared_ptr<SearchTreeNode> childNode);
 
     // Remove child node
-    void removeChild(SearchTreeNode* childNode);
+    void removeChild(shared_ptr<SearchTreeNode> childNode);
 
     // Get and change parent
-    SearchTreeNode* getParent() const;
-    void changeParent(SearchTreeNode* newParent);
+    shared_ptr<SearchTreeNode> getParent() const;
+    void changeParent(shared_ptr<SearchTreeNode> newParent, shared_ptr<SearchTreeNode>& selfPtr);
 
     // Get children
-    vector<unique_ptr<SearchTreeNode>> *getChildren() const;
+    shared_ptr<vector<shared_ptr<SearchTreeNode>>> getChildren() const;
 
     // Get state
     SS_VECTOR* getState();
@@ -61,7 +61,7 @@ public:
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(*childNodes, state, cost, isRoot);}
+    void serialize(Archive & archive){archive(cereal::defer(childNodes), cereal::defer(parentNode), state, cost, isRoot);}
 
 };
 

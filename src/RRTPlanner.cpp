@@ -13,8 +13,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     state = NOMAP;
 
     // Init objects
-    localRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), LOCAL_RRT);
-    globalRRT = new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), GLOBAL_RRT);
+    localRRT = unique_ptr<SearchTree>(new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), LOCAL_RRT));
+    globalRRT = unique_ptr<SearchTree>(new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), GLOBAL_RRT));
 
     vehicleParam = new VEHICLE_PARAMETERS;
     mapParam = new MAP_PARAMETERS;
@@ -72,9 +72,9 @@ void RRTPlanner::stateMachine()
 }
 
 
-SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
+shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
 {
-    SearchTreeNode* newNode;
+    shared_ptr<SearchTreeNode> newNode;
     bool offCourse, alreadyInTree;
     SS_VECTOR* randState;
     SS_VECTOR newState;
@@ -84,7 +84,7 @@ SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
     randState = mapHandler.getRandomState(rrt->bestPath, rrt->param);
 
     // Get nearest node
-    SearchTreeNode* nearest = rrt->getNearest(randState);
+    shared_ptr<SearchTreeNode> nearest = rrt->getNearest(randState);
 
     // Simulate movement towards new state
     trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState, rrt->param);
@@ -114,11 +114,11 @@ SearchTreeNode* RRTPlanner::extend(SearchTree* rrt)
     return newNode;
 }
 
-bool RRTPlanner::rewire(SearchTree* rrt, SearchTreeNode* newNode)
+bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode)
 {
     PATH_TYPE* trajectory;
-    std::vector<SearchTreeNode*>* nearbyNodes = rrt->getNearby(newNode);
-    std::vector<SearchTreeNode*>::iterator it;
+    shared_ptr<vector<shared_ptr<SearchTreeNode>>> nearbyNodes = rrt->getNearby(newNode);
+    vector<shared_ptr<SearchTreeNode>>::iterator it;
     float newNodeCost = rrt->getAbsCost(newNode);
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
@@ -146,8 +146,6 @@ bool RRTPlanner::rewire(SearchTree* rrt, SearchTreeNode* newNode)
         }
         delete trajectory;
     }
-    delete nearbyNodes;
-
     return false;
 }
 
@@ -162,7 +160,7 @@ void RRTPlanner::planLocalRRT(void)
     // TODO
     while((!localRRT->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
     {
-        SearchTreeNode * node = extend(localRRT);
+        shared_ptr<SearchTreeNode> node = extend(localRRT);
         if (node != NULL)
         {   
             rewire(localRRT, node);
@@ -186,7 +184,9 @@ void RRTPlanner::planLocalRRT(void)
         {
             std::ofstream f( "tree.xml" );
             cereal::XMLOutputArchive archive( f );
+
             archive( (*localRRT) );
+            archive.serializeDeferments();
         }
         isSaved = true;
     }
@@ -199,7 +199,7 @@ void RRTPlanner::planGlobalRRT(void)
     SS_VECTOR goalState = mapHandler.getGoalState();
     while((!globalRRT->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
     {
-        SearchTreeNode * node = extend(globalRRT);
+        shared_ptr<SearchTreeNode> node = extend(globalRRT);
         if (node != NULL)
         {   
             bool rewired = rewire(globalRRT, node);
@@ -242,7 +242,6 @@ bool RRTPlanner::handleActualPath(void)
             (cost < (fullCost - 3* distStep)))
         {
             isLoop = true;
-            ROS_INFO_STREAM("" << currentPose.getDistToTarget(&(*it), globalRRT->param) << " " << distStep);
         }
         if (isLoop)
         {
@@ -282,7 +281,7 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
     }
 }
 
-void RRTPlanner::visualize(SearchTree* rrt)
+void RRTPlanner::visualize(unique_ptr<SearchTree>& rrt)
 {
     rrt->markerArray.markers.clear();
     rrt->visualize();
