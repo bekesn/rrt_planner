@@ -78,7 +78,7 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     bool offCourse, alreadyInTree;
     SS_VECTOR* randState;
     SS_VECTOR newState;
-    PATH_TYPE* trajectory;
+    shared_ptr<PATH_TYPE> trajectory;
 
     // Get random state
     randState = mapHandler.getRandomState(rrt->bestPath, rrt->param);
@@ -109,14 +109,13 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
         newNode = NULL;
     }
     delete randState;
-    delete trajectory;
 
     return newNode;
 }
 
 bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode)
 {
-    PATH_TYPE* trajectory;
+    shared_ptr<PATH_TYPE> trajectory;
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> nearbyNodes = rrt->getNearby(newNode);
     vector<shared_ptr<SearchTreeNode>>::iterator it;
     float newNodeCost = rrt->getAbsCost(newNode);
@@ -144,7 +143,6 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
                 }
             }
         }
-        delete trajectory;
     }
     return false;
 }
@@ -172,7 +170,6 @@ void RRTPlanner::planLocalRRT(void)
 
     if (localRRT->pathFound)
     {
-        delete localRRT->bestPath;
         localRRT->bestPath = localRRT->traceBackToRoot(&goalState);
         localRRT->pathLength = localRRT->bestPath->getDistanceCost();
         localRRT->pathTime = localRRT->bestPath->getTimeCost();
@@ -213,7 +210,6 @@ void RRTPlanner::planGlobalRRT(void)
 
     if (globalRRT->pathFound)
     {
-        delete globalRRT->bestPath;
         globalRRT->bestPath = globalRRT->traceBackToRoot(globalRRT->getRoot());
         globalRRT->pathLength = globalRRT->bestPath->getDistanceCost();
         globalRRT->pathTime = globalRRT->bestPath->getTimeCost();
@@ -222,11 +218,11 @@ void RRTPlanner::planGlobalRRT(void)
 
 bool RRTPlanner::handleActualPath(void)
 {
-    PATH_TYPE* actualPath = vehicleModel.getActualPath();
+    shared_ptr<PATH_TYPE> actualPath = vehicleModel.getActualPath();
     float fullCost = actualPath->cost(globalRRT->param);
     if (fullCost < globalRRT->param->minCost) return false;
 
-    PATH_TYPE* loop = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> loop = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     SS_VECTOR currentPose = actualPath->back();
     PATH_TYPE::iterator it;
     bool isLoop = false;
@@ -259,10 +255,6 @@ bool RRTPlanner::handleActualPath(void)
     if(isLoop)
     {
         globalRRT->init(loop);
-    }
-    else
-    {
-        delete loop;
     }
 
     return isLoop;

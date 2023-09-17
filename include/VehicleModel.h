@@ -13,7 +13,7 @@
 class VehicleModel
 {
     SS_VECTOR currentPose;
-    PATH_TYPE* actualPath;
+    shared_ptr<PATH_TYPE> actualPath;
 
     // Parameter struct
     VEHICLE_PARAMETERS* vehicleParam;
@@ -31,23 +31,23 @@ public:
     SS_VECTOR* getCurrentPose(void);
 
     // Get actual path
-    PATH_TYPE* getActualPath(void) const;
+    shared_ptr<PATH_TYPE> getActualPath(void) const;
 
     // Get parameters
     VEHICLE_PARAMETERS* getParameters();
 
     // Simulate advancing towards target
-    PATH_TYPE* simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
+    shared_ptr<PATH_TYPE> simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param);
 
     // SIMULATION FUNCTIONS
     // Holonomic model
-    PATH_TYPE* simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
+    shared_ptr<PATH_TYPE> simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param);
 
     // Holonomic model with constraints
-    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle = 0.5f);
+    shared_ptr<PATH_TYPE> simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param, float maxAngle = 0.5f);
 
     // Simple kinematic bicycle model
-    PATH_TYPE* simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
+    shared_ptr<PATH_TYPE> simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param);
 
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order

@@ -7,6 +7,9 @@
 #include <cereal/archives/xml.hpp>
 
 
+using namespace std;
+
+
 class StateSpace2D
 {
 protected:
@@ -21,11 +24,11 @@ public:
     //~StateSpace2D();
 
     // Calculate distance to target, taking into account the orientation
-    float getDistToTarget(const StateSpace2D* target, const RRT_PARAMETERS* param) const;
+    float getDistToTarget(const StateSpace2D* target, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Calculate distance between states, taking into account the orientation
-    static float getDistOriented(const StateSpace2D* state1, const StateSpace2D* state2, const RRT_PARAMETERS* param);
-    float getDistOriented(const StateSpace2D* otherState, const RRT_PARAMETERS* param) const;
+    static float getDistOriented(const StateSpace2D* state1, const StateSpace2D* state2, const unique_ptr<RRT_PARAMETERS>& param);
+    float getDistOriented(const StateSpace2D* otherState, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Euclidean distance
     static float getDistEuclidean(const std::vector<float> state1, const std::vector<float> state2);

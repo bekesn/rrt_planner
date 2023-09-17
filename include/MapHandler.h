@@ -27,13 +27,13 @@ public:
     //~MapHandler();
     
     // Check for offcourse
-    bool isOffCourse(PATH_TYPE* path, RRT_PARAMETERS* param);
+    bool isOffCourse(shared_ptr<PATH_TYPE> path, unique_ptr<RRT_PARAMETERS>& param);
 
     // Check for collision with lines
-    bool isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, RRT_PARAMETERS* param);
+    bool isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, unique_ptr<RRT_PARAMETERS>& param);
 
     // Get random state
-    SS_VECTOR* getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param);
+    SS_VECTOR* getRandomState(shared_ptr<PATH_TYPE> path, unique_ptr<RRT_PARAMETERS>& param);
 
     // Calculate and get goal state
     void calculateGoalState();

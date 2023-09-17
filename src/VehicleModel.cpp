@@ -8,7 +8,7 @@ VehicleModel::VehicleModel()
 VehicleModel::VehicleModel(VEHICLE_PARAMETERS* par)
 {
     vehicleParam = par;
-    actualPath = new PATH_TYPE;
+    actualPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 }
 
 
@@ -41,7 +41,7 @@ SS_VECTOR* VehicleModel::getCurrentPose(void)
     return new SS_VECTOR(currentPose);
 }
 
-PATH_TYPE* VehicleModel::getActualPath(void) const
+shared_ptr<PATH_TYPE> VehicleModel::getActualPath(void) const
 {
     return actualPath;
 }
@@ -51,9 +51,9 @@ VEHICLE_PARAMETERS* VehicleModel::getParameters()
     return vehicleParam;
 }
 
-PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goalState, RRT_PARAMETERS* param)
+shared_ptr<PATH_TYPE> VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goalState, unique_ptr<RRT_PARAMETERS>& param)
 {
-    PATH_TYPE* trajectory;
+    shared_ptr<PATH_TYPE> trajectory;
 
     switch(vehicleParam->simType)
     {
@@ -77,11 +77,11 @@ PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goal
     return trajectory;
 }
 
-PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param)
+shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param)
 {
     float distance, ratio, x, y;
     int i, numOfStates;
-    PATH_TYPE* path = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
     distance = start->getDistEuclidean(goal);
@@ -98,12 +98,12 @@ PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RR
     return path;
 }
 
-PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle)
+shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param, float maxAngle)
 {
 
     float distance, angleDiff, ratio, x, y, orientation, dx, dy;
     int i, numOfStates;
-    PATH_TYPE* path = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
     distance = start->getDistEuclidean(goal);
@@ -139,9 +139,9 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTO
     return path;
 }
 
-PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param)
+shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, unique_ptr<RRT_PARAMETERS>& param)
 {
-    PATH_TYPE* path = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     SS_VECTOR state = *start;
     path->push_back(state);
 

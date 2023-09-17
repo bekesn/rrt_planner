@@ -21,7 +21,7 @@ StateSpace2D::StateSpace2D(const StateSpace2D &original)
     theta_ = original.theta_;
 }
 
-float StateSpace2D::getDistToTarget(const StateSpace2D* target, const RRT_PARAMETERS* param) const
+float StateSpace2D::getDistToTarget(const StateSpace2D* target, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     float dx = target->x_ - x_;
     float dy = target->y_ - y_;
@@ -29,7 +29,7 @@ float StateSpace2D::getDistToTarget(const StateSpace2D* target, const RRT_PARAME
     return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight);
 }
 
-float StateSpace2D::getDistOriented(const StateSpace2D* state1, const StateSpace2D* state2, const RRT_PARAMETERS* param)
+float StateSpace2D::getDistOriented(const StateSpace2D* state1, const StateSpace2D* state2, const unique_ptr<RRT_PARAMETERS>& param)
 {
     float dx = state1->x_ - state2->x_;
     float dy = state1->y_ - state2->y_;
@@ -37,7 +37,7 @@ float StateSpace2D::getDistOriented(const StateSpace2D* state1, const StateSpace
     return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight);
 }
 
-float StateSpace2D::getDistOriented(const StateSpace2D* otherState, const RRT_PARAMETERS* param) const
+float StateSpace2D::getDistOriented(const StateSpace2D* otherState, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     return StateSpace2D::getDistOriented(this, otherState, param);
 }

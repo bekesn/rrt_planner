@@ -3,18 +3,18 @@
 
 SearchTree::SearchTree()
 {
-    param = new RRT_PARAMETERS;
+    param = unique_ptr<RRT_PARAMETERS> (new RRT_PARAMETERS);
     type = LOCAL_RRT;
-    bestPath = new PATH_TYPE;
+    bestPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     tree = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
     loopClosingNodes = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
 }
 
 SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, RRT_TYPE rrtType)
 {
-    param = new RRT_PARAMETERS;
+    param = unique_ptr<RRT_PARAMETERS> (new RRT_PARAMETERS);
     type = rrtType;
-    bestPath = new PATH_TYPE;
+    bestPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     tree = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
     loopClosingNodes = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
 
@@ -26,8 +26,7 @@ SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, R
 
 SearchTree::~SearchTree()
 {
-    delete bestPath;
-    delete param;
+
 }
 
 shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> parentNode, SS_VECTOR state, double nodeCost)
@@ -265,7 +264,7 @@ void SearchTree::init(const SS_VECTOR* startState)
     pathFound = false;
 }
 
-void SearchTree::init(PATH_TYPE* initPath)
+void SearchTree::init(shared_ptr<PATH_TYPE> initPath)
 {
     PATH_TYPE::iterator it;
     int i = 0;
@@ -300,12 +299,12 @@ SS_VECTOR* SearchTree::getRoot() const
     return tree->front()->getState();
 }
 
-PATH_TYPE* SearchTree::traceBackToRoot(const SS_VECTOR* goalState) const
+shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const SS_VECTOR* goalState) const
 {
     shared_ptr<SearchTreeNode> closestNode = getNearest(goalState, param->minCost);
     if (closestNode == NULL) return NULL;
 
-    PATH_TYPE* path = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     closestNode->traceBackToRoot(path);
     return path;
 }

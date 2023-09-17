@@ -20,7 +20,7 @@ private:
 public:
 
     // Parameter struct
-    RRT_PARAMETERS* param;
+    unique_ptr<RRT_PARAMETERS> param;
 
     int nodeCount;
     int rewireCount;
@@ -28,7 +28,7 @@ public:
     float pathTime;
     bool pathClosed;
     bool pathFound;
-    PATH_TYPE* bestPath;
+    shared_ptr<PATH_TYPE> bestPath;
 
     ros::Publisher markerPublisher;
     visualization_msgs::MarkerArray markerArray;
@@ -63,13 +63,13 @@ public:
 
     // Delete tree and create new
     void init(const SS_VECTOR* startState);
-    void init(PATH_TYPE* initPath);
+    void init(shared_ptr<PATH_TYPE> initPath);
 
     // Get root
     SS_VECTOR* getRoot() const;
 
     // Traceback to root
-    PATH_TYPE* traceBackToRoot(const SS_VECTOR* goalState) const;
+    shared_ptr<PATH_TYPE> traceBackToRoot(const SS_VECTOR* goalState) const;
 
     // Get absolute cost to node
     float getAbsCost(const shared_ptr<SearchTreeNode>& node) const;
@@ -82,9 +82,9 @@ public:
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(CEREAL_NVP(tree), CEREAL_NVP(loopClosingNodes), CEREAL_NVP(type), *param, 
+    void serialize(Archive & archive){archive(CEREAL_NVP(tree), CEREAL_NVP(loopClosingNodes), CEREAL_NVP(type), CEREAL_NVP(param), 
                     CEREAL_NVP(nodeCount), CEREAL_NVP(rewireCount), CEREAL_NVP(pathLength), CEREAL_NVP(pathTime),
-                    CEREAL_NVP(pathClosed), CEREAL_NVP(pathFound), *bestPath);}
+                    CEREAL_NVP(pathClosed), CEREAL_NVP(pathFound), CEREAL_NVP(bestPath));}
 };
 
 

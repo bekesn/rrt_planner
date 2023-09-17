@@ -15,7 +15,7 @@ MapHandler::MapHandler(MAP_PARAMETERS* param, VehicleModel* vm) : MapHandler()
     vehicleModel = vm;
 }
 
-bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
+bool MapHandler::isOffCourse(shared_ptr<PATH_TYPE> trajectory, unique_ptr<RRT_PARAMETERS>& param)
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -78,7 +78,7 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
     return isOC;
 }
 
-bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, RRT_PARAMETERS* param)
+bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, unique_ptr<RRT_PARAMETERS>& param)
 {
     double dx, dy, dx2, dy2, dist, projected, coneDist;
     int size = cones->size();
@@ -110,7 +110,7 @@ bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_m
     return isOnTrackEdge;
 }
 
-SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
+SS_VECTOR* MapHandler::getRandomState(shared_ptr<PATH_TYPE> path, unique_ptr<RRT_PARAMETERS>& param)
 {
     SS_VECTOR* randState;
     double x, y, theta;

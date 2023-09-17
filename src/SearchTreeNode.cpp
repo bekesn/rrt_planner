@@ -81,7 +81,7 @@ void SearchTreeNode::addToAbsoluteCost(float* absCost) const
     if ((parentNode != NULL) && !isRoot) parentNode->addToAbsoluteCost(absCost);
 }
 
-void SearchTreeNode::traceBackToRoot(PATH_TYPE* stateVector) const
+void SearchTreeNode::traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const
 {
     // TODO: inserting at the beginning might slow down the process
     stateVector->insert(stateVector->begin(), state);

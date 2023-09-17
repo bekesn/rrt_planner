@@ -11,8 +11,6 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/memory.hpp>
 
-using namespace std;
-
 class SearchTreeNode
 {
 private:
@@ -54,14 +52,15 @@ public:
     void addToAbsoluteCost(float* absCost) const;
 
     // Trace back to parent and add state
-    void traceBackToRoot(PATH_TYPE* stateVector) const;
+    void traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const;
 
     // Set isRoot property
     void setRoot(bool isNodeRoot);
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(cereal::defer(childNodes), cereal::defer(parentNode), state, cost, isRoot);}
+    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(childNodes)),
+                    cereal::defer(CEREAL_NVP(parentNode)), CEREAL_NVP(state), CEREAL_NVP(cost), CEREAL_NVP(isRoot));}
 
 };
 

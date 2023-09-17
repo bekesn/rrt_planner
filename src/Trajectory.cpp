@@ -9,7 +9,7 @@ Trajectory::~Trajectory()
 {
 }
 
-double Trajectory::cost(const RRT_PARAMETERS* param) const
+double Trajectory::cost(const unique_ptr<RRT_PARAMETERS>& param) const
 {
     double cost;
     switch(param->costType)
