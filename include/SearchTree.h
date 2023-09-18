@@ -37,39 +37,39 @@ public:
 
     //Constructor
     SearchTree();
-    SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, RRT_TYPE rrtType);
+    SearchTree(shared_ptr<SS_VECTOR> startState, RRT_TYPE rrtType);
 
     //Destructor
     ~SearchTree();
 
     // Add child node
     // Return pointer to newly inserted node
-    shared_ptr<SearchTreeNode> addChild(shared_ptr<SearchTreeNode> parentNode, SS_VECTOR state, double nodeCost);
+    shared_ptr<SearchTreeNode> addChild(shared_ptr<SearchTreeNode> parentNode, shared_ptr<SS_VECTOR> state, double nodeCost);
 
     //Remove node
     void remove(shared_ptr<SearchTreeNode> node);
 
     //Get nearest node
-    shared_ptr<SearchTreeNode> getNearest(const SS_VECTOR* state, float minCost = 0.0f) const;
+    shared_ptr<SearchTreeNode> getNearest(const shared_ptr<SS_VECTOR>& state, float minCost = 0.0f) const;
 
     //Get nearby nodes
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> getNearby(shared_ptr<SearchTreeNode> node) const;
 
     // Decide whether almost similar state already exists
-    bool alreadyInTree(const SS_VECTOR* state) const;
+    bool alreadyInTree(const shared_ptr<SS_VECTOR>& state) const;
 
     // Draw tree as lines
     void visualize(void);
 
     // Delete tree and create new
-    void init(const SS_VECTOR* startState);
+    void init(const shared_ptr<SS_VECTOR>& startState);
     void init(shared_ptr<PATH_TYPE> initPath);
 
     // Get root
-    SS_VECTOR* getRoot() const;
+    shared_ptr<SS_VECTOR> getRoot() const;
 
     // Traceback to root
-    shared_ptr<PATH_TYPE> traceBackToRoot(const SS_VECTOR* goalState) const;
+    shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SS_VECTOR>& goalState) const;
 
     // Get absolute cost to node
     float getAbsCost(const shared_ptr<SearchTreeNode>& node) const;

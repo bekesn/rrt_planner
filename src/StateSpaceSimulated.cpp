@@ -6,7 +6,7 @@ StateSpaceSimulated::StateSpaceSimulated()
     x_ = 0;
     y_ = 0;
     theta_ = 0;
-    v_ = 0;
+    v_ = 1;
     delta_ = 0;
 }
 
@@ -28,7 +28,7 @@ StateSpaceSimulated::StateSpaceSimulated(const StateSpaceSimulated &original)
     delta_ = original.delta_;
 }
 
-StateSpaceSimulated* StateSpaceSimulated::derivative(const Control* controlInput, const unique_ptr<VEHICLE_PARAMETERS>& param) const 
+shared_ptr<StateSpaceSimulated> StateSpaceSimulated::derivative(const shared_ptr<Control>& controlInput, const unique_ptr<VEHICLE_PARAMETERS>& param) const 
 {
     float x, y, theta, v, delta;
 
@@ -38,7 +38,7 @@ StateSpaceSimulated* StateSpaceSimulated::derivative(const Control* controlInput
     v = controlInput->ax;
     delta = controlInput->ddelta;
     
-    return new StateSpaceSimulated(x, y, theta, v, delta);
+    return shared_ptr<StateSpaceSimulated>(new StateSpaceSimulated(x, y, theta, v, delta));
 }
 
 void StateSpaceSimulated::limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)

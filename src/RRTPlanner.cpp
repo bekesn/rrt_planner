@@ -19,11 +19,11 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     unique_ptr<CONTROL_PARAMETERS> controlParam = unique_ptr<CONTROL_PARAMETERS> (new CONTROL_PARAMETERS);
 
     // Init objects with zero parameters
-    localRRT = unique_ptr<SearchTree>(new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), LOCAL_RRT));
-    globalRRT = unique_ptr<SearchTree>(new SearchTree(&vehicleModel, SS_VECTOR(0.0, 0.0, 0.0), GLOBAL_RRT));
+    vehicleModel = make_shared<VehicleModel> (VehicleModel(move(vehicleParam)));
+    mapHandler = make_shared<MapHandler> (MapHandler(move(mapParam), vehicleModel));
+    localRRT = unique_ptr<SearchTree>(new SearchTree(make_shared<SS_VECTOR> (SS_VECTOR()), LOCAL_RRT));
+    globalRRT = unique_ptr<SearchTree>(new SearchTree(make_shared<SS_VECTOR> (SS_VECTOR()), GLOBAL_RRT));
 
-    vehicleModel = VehicleModel(move(vehicleParam));
-    mapHandler = MapHandler(move(mapParam), &vehicleModel);
     Control::setParameters(move(controlParam));
 
     // Load ROS parameters
@@ -31,10 +31,10 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 
     // Subscribe to map
     ROS_INFO_STREAM("" << nodeName << " Node started.");
-    mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &mapHandler);
-    poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &vehicleModel);
-    SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &mapHandler);
-    odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &VehicleModel::velocityCallback, &vehicleModel);
+    mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &(*(mapHandler.get())));
+    poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &(*(vehicleModel)));
+    SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &(*(mapHandler.get())));
+    odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &VehicleModel::velocityCallback, &(*(vehicleModel)));
     localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
     globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
 
@@ -49,11 +49,11 @@ void RRTPlanner::stateMachine()
     switch(state)
     {
         case NOMAP:
-            if (mapHandler.hasMap()) state = LOCALPLANNING;
+            if (mapHandler->hasMap()) state = LOCALPLANNING;
             break;
         case LOCALPLANNING:
             planLocalRRT();
-            if (mapHandler.isLoopClosed() && handleActualPath())
+            if (mapHandler->isLoopClosed() && handleActualPath())
             {
                 state = WAITFORGLOBAL;
             }
@@ -74,28 +74,28 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
 {
     shared_ptr<SearchTreeNode> newNode;
     bool offCourse, alreadyInTree;
-    SS_VECTOR* randState;
-    SS_VECTOR newState;
+    shared_ptr<SS_VECTOR> randState;
+    shared_ptr<SS_VECTOR> newState;
     shared_ptr<PATH_TYPE> trajectory;
 
     // Get random state
-    randState = mapHandler.getRandomState(rrt->bestPath, rrt->param);
+    randState = mapHandler->getRandomState(rrt->bestPath, rrt->param);
 
     // Get nearest node
     shared_ptr<SearchTreeNode> nearest = rrt->getNearest(randState);
 
     // Simulate movement towards new state
-    trajectory = vehicleModel.simulateToTarget(nearest->getState(), randState, rrt->param);
+    trajectory = vehicleModel->simulateToTarget(nearest->getState(), randState, rrt->param);
 
     // Check for offCourse
-    offCourse = mapHandler.isOffCourse(trajectory, rrt->param);
+    offCourse = mapHandler->isOffCourse(trajectory, rrt->param);
 
     // Add node
     if ((!offCourse) && (trajectory->size() > 0))
     {
         // Check if new node would be duplicate
-        newState = trajectory->back();
-        alreadyInTree = rrt->alreadyInTree(&newState);
+        newState = make_shared<SS_VECTOR> (trajectory->back());
+        alreadyInTree = rrt->alreadyInTree(newState);
 
         if(!alreadyInTree)
         {
@@ -106,7 +106,6 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     {
         newNode = NULL;
     }
-    delete randState;
 
     return newNode;
 }
@@ -121,11 +120,11 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
-        trajectory = vehicleModel.simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param);
+        trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param);
         if (trajectory->size() > 0)
         {
             // Check if new path leads close to new state
-            if (trajectory->back().getDistOriented((*it)->getState(), rrt->param) < rrt->param->minDeviation)
+            if (trajectory->back().getDistOriented(*(*it)->getState(), rrt->param) < rrt->param->minDeviation)
             {
                 float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
@@ -147,11 +146,11 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
 
 void RRTPlanner::planLocalRRT(void)
 {
-    SS_VECTOR* pose = vehicleModel.getCurrentPose();
+    shared_ptr<SS_VECTOR> pose = vehicleModel->getCurrentPose();
     localRRT->init(pose);
     localRRT->pathFound = false;
     int iteration = 0;
-    SS_VECTOR goalState = mapHandler.getGoalState();
+    shared_ptr<SS_VECTOR> goalState = mapHandler->getGoalState();
 
     // TODO
     while((!localRRT->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
@@ -160,7 +159,7 @@ void RRTPlanner::planLocalRRT(void)
         if (node != NULL)
         {   
             rewire(localRRT, node);
-            float goalDist = node->getState()->getDistEuclidean(&goalState);
+            float goalDist = node->getState()->getDistEuclidean(*goalState);
             if(goalDist < localRRT->param->goalRadius) localRRT->pathFound = true;
         }
         iteration++;
@@ -168,7 +167,7 @@ void RRTPlanner::planLocalRRT(void)
 
     if (localRRT->pathFound)
     {
-        localRRT->bestPath = localRRT->traceBackToRoot(&goalState);
+        localRRT->bestPath = localRRT->traceBackToRoot(goalState);
         localRRT->pathLength = localRRT->bestPath->getDistanceCost();
         localRRT->pathTime = localRRT->bestPath->getTimeCost();
     }
@@ -191,7 +190,7 @@ void RRTPlanner::planGlobalRRT(void)
 {
     int iteration = 0;
     bool changed = false;
-    SS_VECTOR goalState = mapHandler.getGoalState();
+    shared_ptr<SS_VECTOR> goalState = mapHandler->getGoalState();
     while((!globalRRT->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
     {
         shared_ptr<SearchTreeNode> node = extend(globalRRT);
@@ -200,7 +199,7 @@ void RRTPlanner::planGlobalRRT(void)
             bool rewired = rewire(globalRRT, node);
             if(rewired) changed = true;
 
-            float goalDist = node->getState()->getDistToTarget(globalRRT->getRoot(), globalRRT->param);
+            float goalDist = node->getState()->getDistToTarget(*globalRRT->getRoot(), globalRRT->param);
             if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
         iteration++;
@@ -216,7 +215,7 @@ void RRTPlanner::planGlobalRRT(void)
 
 bool RRTPlanner::handleActualPath(void)
 {
-    shared_ptr<PATH_TYPE> actualPath = vehicleModel.getActualPath();
+    shared_ptr<PATH_TYPE> actualPath = vehicleModel->getActualPath();
     float fullCost = actualPath->cost(globalRRT->param);
     if (fullCost < globalRRT->param->minCost) return false;
 
@@ -232,7 +231,7 @@ bool RRTPlanner::handleActualPath(void)
 
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
-        if ((currentPose.getDistToTarget(&(*it), globalRRT->param) < distStep) &&
+        if ((currentPose.getDistToTarget((*it), globalRRT->param) < distStep) &&
             (cost < (fullCost - 3* distStep)))
         {
             isLoop = true;
@@ -275,8 +274,8 @@ void RRTPlanner::visualize(unique_ptr<SearchTree>& rrt)
 {
     rrt->markerArray.markers.clear();
     rrt->visualize();
-    mapHandler.visualizePoints(&rrt->markerArray);
-    vehicleModel.visualize(&rrt->markerArray); //TODO
+    mapHandler->visualizePoints(&rrt->markerArray);
+    vehicleModel->visualize(&rrt->markerArray); //TODO
     rrt->markerPublisher.publish(rrt->markerArray);
 }
 
@@ -376,11 +375,11 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 0.1f);
     loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 0.1f);
 
-    loadParameter("/VEHICLE/maxDelta", vehicleModel.getParameters()->maxDelta, 0.38f);
-    loadParameter("/VEHICLE/track", vehicleModel.getParameters()->track, 1.2f);
-    loadParameter("/VEHICLE/wheelBase", vehicleModel.getParameters()->wheelBase, 1.54f); 
+    loadParameter("/VEHICLE/maxDelta", vehicleModel->getParameters()->maxDelta, 0.38f);
+    loadParameter("/VEHICLE/track", vehicleModel->getParameters()->track, 1.2f);
+    loadParameter("/VEHICLE/wheelBase", vehicleModel->getParameters()->wheelBase, 1.54f); 
 
-    loadParameter("/MAP/goalHorizon", mapHandler.getParameters()->goalHorizon, 15.0f);
+    loadParameter("/MAP/goalHorizon", mapHandler->getParameters()->goalHorizon, 15.0f);
 
     loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
     loadParameter("/CONTROL/maxdDelta", Control::getParameters()->maxdDelta, 0.1f);
@@ -389,8 +388,8 @@ void RRTPlanner::loadParameters(void)
     // Choose simulation type
     std::string simType;
     loadParameter("/VEHICLE/simType", simType, "HOLONOMIC");
-    if (simType == "HOLONOMIC") vehicleModel.getParameters()->simType = HOLONOMIC;
-    else if (simType == "HOLONOMIC_CONSTRAINED") vehicleModel.getParameters()->simType = HOLONOMIC_CONSTRAINED;
-    else if (simType == "BICYCLE_SIMPLE") vehicleModel.getParameters()->simType = BICYCLE_SIMPLE;
-    else if (simType == "BICYCLE") vehicleModel.getParameters()->simType = BICYCLE;
+    if (simType == "HOLONOMIC") vehicleModel->getParameters()->simType = HOLONOMIC;
+    else if (simType == "HOLONOMIC_CONSTRAINED") vehicleModel->getParameters()->simType = HOLONOMIC_CONSTRAINED;
+    else if (simType == "BICYCLE_SIMPLE") vehicleModel->getParameters()->simType = BICYCLE_SIMPLE;
+    else if (simType == "BICYCLE") vehicleModel->getParameters()->simType = BICYCLE;
 }

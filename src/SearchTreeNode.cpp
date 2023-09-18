@@ -19,7 +19,7 @@ SearchTreeNode::SearchTreeNode(const SearchTreeNode &original)
     isRoot = original.isRoot;
 }
 
-SearchTreeNode::SearchTreeNode(shared_ptr<SearchTreeNode> parent, SS_VECTOR stateSpace, double nodeCost)
+SearchTreeNode::SearchTreeNode(shared_ptr<SearchTreeNode> parent, shared_ptr<SS_VECTOR> stateSpace, double nodeCost)
 {
     parentNode = parent;
     state = stateSpace;
@@ -60,9 +60,9 @@ shared_ptr<vector<shared_ptr<SearchTreeNode>>> SearchTreeNode::getChildren() con
     return childNodes;
 }
 
-SS_VECTOR* SearchTreeNode::getState()
+shared_ptr<SS_VECTOR> SearchTreeNode::getState()
 {
-    return &state;
+    return state;
 }
 
 float SearchTreeNode::getSegmentCost(void) const
@@ -84,7 +84,7 @@ void SearchTreeNode::addToAbsoluteCost(float* absCost) const
 void SearchTreeNode::traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const
 {
     // TODO: inserting at the beginning might slow down the process
-    stateVector->insert(stateVector->begin(), state);
+    stateVector->insert(stateVector->begin(), *state);
     if ((parentNode != NULL) && !isRoot) parentNode->traceBackToRoot(stateVector);
 }
 

@@ -8,16 +8,16 @@ Control::Control()
 
 }
 
-Control* Control::stanleyToTarget(const SS_VECTOR* state, const StateSpace2D* target)
+shared_ptr<Control> Control::stanleyToTarget(const SS_VECTOR& state, const StateSpace2D& target)
 {
 
 }
 
-Control* Control::angleControl(const SS_VECTOR* state, const StateSpace2D* target)
+shared_ptr<Control> Control::angleControl(const SS_VECTOR& state, const StateSpace2D& target)
 {
-    float angle = state->getAngleToTarget(target);
-    Control* input = new Control();
-    input->ddelta = (-controlParam->k * angle) - state->delta();
+    float angle = state.getAngleToTarget(target);
+    shared_ptr<Control> input = shared_ptr<Control> (new Control());
+    input->ddelta = (-controlParam->k * angle) - state.delta();
     input->ax = getRandomAccel();
     input->MYaw = 0;
 

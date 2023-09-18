@@ -14,8 +14,8 @@ class MapHandler
 private:
     
     std::vector<frt_custom_msgs::Landmark*> map;
-    VehicleModel* vehicleModel;
-    SS_VECTOR goalState;
+    shared_ptr<VehicleModel> vehicleModel;
+    shared_ptr<SS_VECTOR> goalState;
     bool mapReceived;
     bool loopClosed;
 
@@ -23,24 +23,24 @@ private:
 
 public:
     MapHandler(void);
-    MapHandler(unique_ptr<MAP_PARAMETERS> param, VehicleModel* vehicleModel);
+    MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<VehicleModel> vehicleModel);
     //~MapHandler();
     
     // Check for offcourse
-    bool isOffCourse(shared_ptr<PATH_TYPE> path, unique_ptr<RRT_PARAMETERS>& param);
+    bool isOffCourse(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Check for collision with lines
-    bool isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, unique_ptr<RRT_PARAMETERS>& param);
+    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Get random state
-    SS_VECTOR* getRandomState(shared_ptr<PATH_TYPE> path, unique_ptr<RRT_PARAMETERS>& param);
+    shared_ptr<SS_VECTOR> getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Get parameters
     unique_ptr<MAP_PARAMETERS>& getParameters(void);
 
     // Calculate and get goal state
-    void calculateGoalState();
-    SS_VECTOR getGoalState();
+    void calculateGoalState(void);
+    shared_ptr<SS_VECTOR> getGoalState(void);
 
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
@@ -49,16 +49,16 @@ public:
     void SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg);
 
     // Visualize significant points
-    void visualizePoints(visualization_msgs::MarkerArray* mArray);
+    void visualizePoints(visualization_msgs::MarkerArray* mArray) const;
 
     // Get closest cone by color
-    frt_custom_msgs::Landmark* getClosestLandmark(frt_custom_msgs::Landmark* landmark, frt_custom_msgs::Landmark::_color_type color);
+    frt_custom_msgs::Landmark* getClosestLandmark(const frt_custom_msgs::Landmark* landmark, const frt_custom_msgs::Landmark::_color_type color) const;
 
     // Return if map arrived
-    bool hasMap(void);
+    bool hasMap(void) const;
 
     // Return if loop is closed in SLAM
-    bool isLoopClosed(void);
+    bool isLoopClosed(void) const;
 
     // Archive function for cereal
     // Map is not archived

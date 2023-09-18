@@ -19,8 +19,8 @@ public:
     Control();
 
     // Return Control object for controlling the vehicle
-    static Control* stanleyToTarget(const SS_VECTOR* state, const StateSpace2D* target);
-    static Control* angleControl(const SS_VECTOR* state, const StateSpace2D* target);
+    static shared_ptr<Control> stanleyToTarget(const SS_VECTOR& state, const StateSpace2D& target);
+    static shared_ptr<Control> angleControl(const SS_VECTOR& state, const StateSpace2D& target);
 
     // Get random acceleration value
     static double getRandomAccel(void);

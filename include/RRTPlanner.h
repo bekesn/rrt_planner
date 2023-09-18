@@ -25,8 +25,8 @@ class RRTPlanner
     unique_ptr<GENERAL_PARAMETERS> genParam;
 
     // Objects
-    MapHandler mapHandler;
-    VehicleModel vehicleModel;
+    shared_ptr<MapHandler> mapHandler;
+    shared_ptr<VehicleModel> vehicleModel;
 
     unique_ptr<SearchTree> localRRT;
     unique_ptr<SearchTree> globalRRT;

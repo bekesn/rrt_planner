@@ -10,7 +10,7 @@ SearchTree::SearchTree()
     loopClosingNodes = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
 }
 
-SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, RRT_TYPE rrtType)
+SearchTree::SearchTree(shared_ptr<SS_VECTOR> startState, RRT_TYPE rrtType)
 {
     param = unique_ptr<RRT_PARAMETERS> (new RRT_PARAMETERS);
     type = rrtType;
@@ -18,7 +18,7 @@ SearchTree::SearchTree(const VehicleModel* vehicleModel, SS_VECTOR startState, R
     tree = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
     loopClosingNodes = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
 
-    this->init(&startState);
+    this->init(startState);
 
     pathLength = 0;
     pathTime = 0;
@@ -29,11 +29,11 @@ SearchTree::~SearchTree()
 
 }
 
-shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> parentNode, SS_VECTOR state, double nodeCost)
+shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> parentNode, shared_ptr<SS_VECTOR> state, double nodeCost)
 {
     if (!maxNumOfNodesReached())
     {
-        tree->push_back(shared_ptr<SearchTreeNode>(new SearchTreeNode(parentNode, state, nodeCost)));
+        tree->push_back(make_shared<SearchTreeNode>(SearchTreeNode(parentNode, state, nodeCost)));
         parentNode->addChild(tree->back());
         nodeCount++;
         return tree->back();
@@ -50,7 +50,7 @@ void SearchTree::remove(shared_ptr<SearchTreeNode> node)
 
 }
 
-shared_ptr<SearchTreeNode> SearchTree::getNearest(const SS_VECTOR* toState, float minCost) const
+shared_ptr<SearchTreeNode> SearchTree::getNearest(const shared_ptr<SS_VECTOR>& toState, float minCost) const
 {
     std::vector<shared_ptr<SearchTreeNode>>::iterator it;
     double minDist;
@@ -58,7 +58,7 @@ shared_ptr<SearchTreeNode> SearchTree::getNearest(const SS_VECTOR* toState, floa
     shared_ptr<SearchTreeNode> closest;
 
     // Initialize closest node and distance
-    minDist = tree->front()->getState()->getDistToTarget(toState, param);
+    minDist = tree->front()->getState()->getDistToTarget(*toState, param);
     closest = tree->front();
 
     // Iterate through tree
@@ -66,7 +66,7 @@ shared_ptr<SearchTreeNode> SearchTree::getNearest(const SS_VECTOR* toState, floa
     {
         if(getAbsCost(*it) >= minCost)
         {
-            dist = (*it)->getState()->getDistToTarget(toState, param);
+            dist = (*it)->getState()->getDistToTarget(*toState, param);
             if (dist < minDist)
             {
                 minDist = dist;
@@ -88,7 +88,7 @@ shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> SearchTree::getNearby(shared
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if ((node->getState()->getDistToTarget((*it)->getState(), param) < (param->rewireRange)) && ((*it) != node))
+        if ((node->getState()->getDistToTarget(*(*it)->getState(), param) < (param->rewireRange)) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }
@@ -98,10 +98,10 @@ shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> SearchTree::getNearby(shared
 
 }
 
-bool SearchTree::alreadyInTree(const SS_VECTOR* state) const
+bool SearchTree::alreadyInTree(const shared_ptr<SS_VECTOR>& state) const
 {
-    SS_VECTOR* closest = getNearest(state)->getState();
-    return abs(closest->getDistOriented(state, param)) < param->minDeviation;
+    shared_ptr<SS_VECTOR> closest = getNearest(state)->getState();
+    return abs(closest->getDistOriented(*state, param)) < param->minDeviation;
 }
 
 void SearchTree::visualize(void)
@@ -251,11 +251,11 @@ void SearchTree::visualize(void)
     markerArray.markers.emplace_back(textInfo);
 }
 
-void SearchTree::init(const SS_VECTOR* startState)
+void SearchTree::init(const shared_ptr<SS_VECTOR>& startState)
 {
     tree->clear();
     loopClosingNodes->clear();
-    tree->push_back(shared_ptr<SearchTreeNode>(new SearchTreeNode(NULL, *startState, 0)));
+    tree->push_back(make_shared<SearchTreeNode> (SearchTreeNode(NULL, startState, 0)));
 
     // Initialize status variables
     nodeCount = 1;
@@ -273,20 +273,20 @@ void SearchTree::init(shared_ptr<PATH_TYPE> initPath)
     segment.push_back(initPath->front());
 
     // Initialize tree
-    init(&initPath->front());
+    init(make_shared<SS_VECTOR> (initPath->front()));
 
     // Add remaining states
     shared_ptr<SearchTreeNode> node = tree->front();
     for (it = initPath->begin() + 1; it != initPath->end(); it++)
     {
-        if(!alreadyInTree(&(*it)))
+        if(!alreadyInTree(make_shared<SS_VECTOR> (*it)))
         {
             // Calculate cost
             segment.push_back(*it);
             cost = segment.cost(param);
 
             // Add state to tree
-            node = addChild(node, *it, cost);
+            node = addChild(node, make_shared<SS_VECTOR> (*it), cost);
 
             // Reset segment
             segment.erase(segment.begin());
@@ -294,12 +294,12 @@ void SearchTree::init(shared_ptr<PATH_TYPE> initPath)
     }
 }
 
-SS_VECTOR* SearchTree::getRoot() const
+shared_ptr<SS_VECTOR> SearchTree::getRoot() const
 {
     return tree->front()->getState();
 }
 
-shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const SS_VECTOR* goalState) const
+shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const shared_ptr<SS_VECTOR>& goalState) const
 {
     shared_ptr<SearchTreeNode> closestNode = getNearest(goalState, param->minCost);
     if (closestNode == NULL) return NULL;

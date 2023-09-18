@@ -16,7 +16,7 @@ class SearchTreeNode
 private:
     shared_ptr<SearchTreeNode> parentNode;
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> childNodes;
-    SS_VECTOR state;
+    shared_ptr<SS_VECTOR> state;
     float cost;
     bool isRoot;
 
@@ -25,7 +25,7 @@ public:
     // Constructor
     SearchTreeNode();
     SearchTreeNode(const SearchTreeNode &original);
-    SearchTreeNode(shared_ptr<SearchTreeNode> parent, SS_VECTOR stateSpace, double nodeCost);
+    SearchTreeNode(shared_ptr<SearchTreeNode> parent, shared_ptr<SS_VECTOR> stateSpace, double nodeCost);
 
     // Destructor
     ~SearchTreeNode();
@@ -44,7 +44,7 @@ public:
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> getChildren() const;
 
     // Get state
-    SS_VECTOR* getState();
+    shared_ptr<SS_VECTOR> getState();
 
     // Cost
     float getSegmentCost(void) const;
