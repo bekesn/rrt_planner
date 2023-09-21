@@ -6,7 +6,7 @@
 #include <vector>
 #include <cereal/types/vector.hpp>
 
-class Trajectory : public std::vector<SS_VECTOR>
+class Trajectory : public vector<SS_VECTOR>
 {
     
 public:
@@ -15,7 +15,7 @@ public:
 
     // COST FUNCTIONS
     // Cost function
-    double cost(const RRT_PARAMETERS* param) const;
+    double cost(const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Cost according to length of trajectory
     double getDistanceCost(void) const;

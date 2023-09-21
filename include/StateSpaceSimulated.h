@@ -16,10 +16,10 @@ public:
     //~StateSpace();
 
     // Calculate derivative of statespace vector
-    StateSpaceSimulated* derivative(const Control* controlInput, const VEHICLE_PARAMETERS* param) const;
+    shared_ptr<StateSpaceSimulated> derivative(const shared_ptr<Control>& controlInput, const unique_ptr<VEHICLE_PARAMETERS>& param) const;
 
     // Limit constrained state variables
-    void limitVariables(const RRT_PARAMETERS* rrtParam, const VEHICLE_PARAMETERS* vehicleParam);
+    void limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
     
     // Override operators
     StateSpaceSimulated operator+ (const StateSpaceSimulated & otherState) const;

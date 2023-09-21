@@ -3,19 +3,19 @@
 MapHandler::MapHandler(void)
 {
     // Initialize values
-    vehicleModel = NULL;
+    vehicleModel = make_shared<VehicleModel>();
     mapReceived = false;
-    goalState = SS_VECTOR();
+    goalState = make_shared<SS_VECTOR>();
 
 }
 
-MapHandler::MapHandler(MAP_PARAMETERS* param, VehicleModel* vm) : MapHandler()
+MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<VehicleModel> vm) : MapHandler()
 {
-    mapParam = param;
+    mapParam = move(param);
     vehicleModel = vm;
 }
 
-bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
+bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -29,7 +29,7 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
     // Collect nearby cones with the same color
     for (auto & cone : map)
     {
-        double dist = trajectory->front().getDistEuclidean({(float) cone->x, (float) cone->y, 0});
+        double dist = trajectory->front().getDistEuclidean((StateSpace2D){(float) cone->x, (float) cone->y, 0});
         if (dist < param->collisionRange)
         {
             switch (cone->color)
@@ -65,7 +65,7 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
     isOC = false;
     for (it = trajectory->begin(); it != trajectory->end(); it++)
     {
-         if(isOnTrackEdge(&(*it), closeBlueLandmarks, param) || isOnTrackEdge(&(*it), closeYellowLandmarks, param))
+         if(isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeBlueLandmarks, param) || isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeYellowLandmarks, param))
          {
             isOC = true;
             break;
@@ -78,7 +78,7 @@ bool MapHandler::isOffCourse(PATH_TYPE* trajectory, RRT_PARAMETERS* param)
     return isOC;
 }
 
-bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_msgs::Landmark*>* cones, RRT_PARAMETERS* param)
+bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     double dx, dy, dx2, dy2, dist, projected, coneDist;
     int size = cones->size();
@@ -110,9 +110,9 @@ bool MapHandler::isOnTrackEdge(SS_VECTOR* vehicleState, std::vector<frt_custom_m
     return isOnTrackEdge;
 }
 
-SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
+shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    SS_VECTOR* randState;
+    shared_ptr<SS_VECTOR> randState;
     double x, y, theta;
     int numOfCones = map.size();
 
@@ -126,7 +126,7 @@ SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
         y  = (*path)[nodeID].y() + (rand()%((int) (200*range))) / 100.0 - range;
         theta = (rand() % ((int) (2000*M_PI))) / 1000.0 - M_PI;
 
-        randState = new SS_VECTOR(x, y, theta);
+        randState = make_shared<SS_VECTOR> (SS_VECTOR(x, y, theta));
     }
     else if ((((rand()%1000)/1000.0) > param->goalBias) && (numOfCones != 0)) 
     {
@@ -136,21 +136,26 @@ SS_VECTOR* MapHandler::getRandomState(PATH_TYPE* path, RRT_PARAMETERS* param)
         y = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
         theta = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
-        randState = new SS_VECTOR(x, y, theta);
+        randState = make_shared<SS_VECTOR> (SS_VECTOR(x, y, theta));
     }
     else
     {
-        randState = new SS_VECTOR(getGoalState());
+        randState = goalState;
     }
 
     return randState;
+}
+
+unique_ptr<MAP_PARAMETERS>& MapHandler::getParameters(void)
+{
+    return mapParam;
 }
 
 void MapHandler::calculateGoalState()
 {
     std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
     float maxDist = 0;
-    StateSpace2D* currentState = vehicleModel->getCurrentPose();
+    shared_ptr<StateSpace2D> currentState = vehicleModel->getCurrentPose();
     
 
 
@@ -187,11 +192,11 @@ void MapHandler::calculateGoalState()
         dist = dist/2.0;
 
         SS_VECTOR state = SS_VECTOR(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0);
-        double angleDiff = abs(currentState->getAngleToTarget(&state));
+        double angleDiff = abs(currentState->getAngleToTarget(state));
         if ((dist > maxDist) && (angleDiff < 1) && (dist < mapParam->goalHorizon))
         {
             maxDist = dist;
-            goalState = state;         
+            goalState = make_shared<SS_VECTOR> (state);         
         }
 
         delete pair;
@@ -199,7 +204,7 @@ void MapHandler::calculateGoalState()
 
 }
 
-SS_VECTOR MapHandler::getGoalState()
+shared_ptr<SS_VECTOR> MapHandler::getGoalState(void)
 {
     return goalState;
 }
@@ -236,7 +241,7 @@ void MapHandler::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)
     loopClosed = msg.loop_closed;
 }
 
-void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray)
+void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray) const
 {
     if(!mapReceived);
 
@@ -257,14 +262,14 @@ void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray)
         goal.color.a = 1.0f;
 
     geometry_msgs::Point coord;
-    coord.x = goalState.x();
-    coord.y = goalState.y();
+    coord.x = goalState->x();
+    coord.y = goalState->y();
     goal.points.push_back(coord);
 
     mArray->markers.emplace_back(goal);
 }
 
-frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landmark* selectedLandmark, frt_custom_msgs::Landmark::_color_type color)
+frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(const frt_custom_msgs::Landmark* selectedLandmark, const frt_custom_msgs::Landmark::_color_type color) const
 {
     float minDist = 100.0;
     float dist;
@@ -297,12 +302,12 @@ frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(frt_custom_msgs::Landm
     return closestLandmark;
 }
 
-bool MapHandler::hasMap(void)
+bool MapHandler::hasMap(void) const
 {
     return mapReceived;
 }
 
-bool MapHandler::isLoopClosed(void)
+bool MapHandler::isLoopClosed(void) const
 {
     return loopClosed;
 }

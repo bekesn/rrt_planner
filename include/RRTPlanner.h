@@ -12,6 +12,7 @@
 
 class RRTPlanner
 {
+    // ROS objects
     ros::Subscriber mapSubscriber;
     ros::Subscriber poseSubscriber;
     ros::Subscriber SLAMStatusSubscriber;
@@ -20,16 +21,15 @@ class RRTPlanner
 
     ros::WallTimer timer;
 
-    // Objects
-    MapHandler mapHandler;
-    VehicleModel vehicleModel;
-    VEHICLE_PARAMETERS* vehicleParam;
-    MAP_PARAMETERS* mapParam;
-    GENERAL_PARAMETERS* genParam;
-    CONTROL_PARAMETERS* controlParam;
+    // General parameters
+    unique_ptr<GENERAL_PARAMETERS> genParam;
 
-    SearchTree* localRRT;
-    SearchTree* globalRRT;
+    // Objects
+    shared_ptr<MapHandler> mapHandler;
+    shared_ptr<VehicleModel> vehicleModel;
+
+    unique_ptr<SearchTree> localRRT;
+    unique_ptr<SearchTree> globalRRT;
 
     enum PlannerState{
         NOMAP,
@@ -46,18 +46,18 @@ public:
     //~RRTPlanner();
 
     // load ROS parameters
-    void loadParameter(const std::string& topic, float* parameter, const float defaultValue);
-    void loadParameter(const std::string& topic, int* parameter, const int defaultValue);
-    void loadParameter(const std::string& topic, std::string* parameter, const std::string defaultValue);
+    void loadParameter(const string& topic, float& parameter, const float defaultValue);
+    void loadParameter(const string& topic, int& parameter, const int defaultValue);
+    void loadParameter(const string& topic, string& parameter, const string defaultValue);
     void loadParameters(void);
 
     // State machine of planner
     void stateMachine(void);
     
     // Extend searchtree by a new node
-    SearchTreeNode* extend(SearchTree* rrt);
+    shared_ptr<SearchTreeNode> extend(unique_ptr<SearchTree>& rrt);
 
-    bool rewire(SearchTree* rrt, SearchTreeNode* newNode);
+    bool rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode);
 
     // RRT on partially discovered map
     void planLocalRRT(void);
@@ -73,7 +73,7 @@ public:
     void timerCallback(const ros::WallTimerEvent &event);
 
     // Visualize markers
-    void visualize(SearchTree* rrt);
+    void visualize(unique_ptr<SearchTree>& rrt);
 
 };
 

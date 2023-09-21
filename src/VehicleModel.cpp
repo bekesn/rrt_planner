@@ -2,13 +2,15 @@
 
 VehicleModel::VehicleModel()
 {
-    
+    actualPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
+    currentPose = shared_ptr<SS_VECTOR> (new SS_VECTOR());
 }
 
-VehicleModel::VehicleModel(VEHICLE_PARAMETERS* par)
+VehicleModel::VehicleModel(unique_ptr<VEHICLE_PARAMETERS> par)
 {
-    vehicleParam = par;
-    actualPath = new PATH_TYPE;
+    vehicleParam = move(par);
+    actualPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
+    currentPose = shared_ptr<SS_VECTOR> (new SS_VECTOR());
 }
 
 
@@ -19,9 +21,10 @@ void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
 
-    currentPose = SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw, currentPose.v(), currentPose.delta());
+    currentPose = 
+    currentPose = shared_ptr<SS_VECTOR> (new SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw, currentPose->v(), currentPose->delta()));
 
-    actualPath->push_back(currentPose);
+    actualPath->push_back(*currentPose);
 }
 
 
@@ -33,27 +36,27 @@ void VehicleModel::velocityCallback(const geometry_msgs::TwistStamped::ConstPtr 
     float yawRate = msg->twist.angular.z;
     float delta = atan(vehicleParam->wheelBase * yawRate / v);
 
-    currentPose = SS_VECTOR(currentPose.x(), currentPose.y(), currentPose.theta(), v, delta);
+    currentPose = shared_ptr<SS_VECTOR> (new SS_VECTOR(currentPose->x(), currentPose->y(), currentPose->theta(), v, delta));
 }
 
-SS_VECTOR* VehicleModel::getCurrentPose(void)
+shared_ptr<SS_VECTOR> VehicleModel::getCurrentPose(void)
 {
-    return new SS_VECTOR(currentPose);
+    return currentPose;
 }
 
-PATH_TYPE* VehicleModel::getActualPath(void) const
+shared_ptr<PATH_TYPE> VehicleModel::getActualPath(void) const
 {
     return actualPath;
 }
 
-VEHICLE_PARAMETERS* VehicleModel::getParameters()
+unique_ptr<VEHICLE_PARAMETERS>& VehicleModel::getParameters()
 {
     return vehicleParam;
 }
 
-PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goalState, RRT_PARAMETERS* param)
+shared_ptr<PATH_TYPE> VehicleModel::simulateToTarget(const shared_ptr<SS_VECTOR>& startState, const shared_ptr<SS_VECTOR>& goalState, const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    PATH_TYPE* trajectory;
+    shared_ptr<PATH_TYPE> trajectory;
 
     switch(vehicleParam->simType)
     {
@@ -77,14 +80,14 @@ PATH_TYPE* VehicleModel::simulateToTarget(SS_VECTOR* startState, SS_VECTOR* goal
     return trajectory;
 }
 
-PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param)
+shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     float distance, ratio, x, y;
     int i, numOfStates;
-    PATH_TYPE* path = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
-    distance = start->getDistEuclidean(goal);
+    distance = start->getDistEuclidean(*goal);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
     numOfStates = (int) (ratio*distance/param->resolution);
@@ -98,16 +101,16 @@ PATH_TYPE* VehicleModel::simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RR
     return path;
 }
 
-PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle)
+shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal, const unique_ptr<RRT_PARAMETERS>& param, float maxAngle) const
 {
 
     float distance, angleDiff, ratio, x, y, orientation, dx, dy;
     int i, numOfStates;
-    PATH_TYPE* path = new PATH_TYPE;
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
-    distance = start->getDistEuclidean(goal);
-    angleDiff = start->getAngleToTarget(goal);
+    distance = start->getDistEuclidean(*goal);
+    angleDiff = start->getAngleToTarget(*goal);
     if ((-maxAngle <= angleDiff ) && (angleDiff < maxAngle))
     {
         orientation = atan2((goal->y() - start->y()), (goal->x() - start->x()));
@@ -139,11 +142,11 @@ PATH_TYPE* VehicleModel::simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTO
     return path;
 }
 
-PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param)
+shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal, const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    PATH_TYPE* path = new PATH_TYPE;
-    SS_VECTOR state = *start;
-    path->push_back(state);
+    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
+    shared_ptr<SS_VECTOR> state = start;
+    path->push_back(*state);
 
     // TODO kokany
     float dt = param->resolution/param->maxVelocity;
@@ -151,20 +154,18 @@ PATH_TYPE* VehicleModel::simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal
 
     while (t <= param->simulationTimeStep)
     {
-        Control* controlInput = Control::angleControl(&state, goal);
+        shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
         //if(controlInput->ddelta > 0) ROS_INFO_STREAM("" << controlInput->ddelta);
-        state = RK4(&state, controlInput, dt);
-        state.limitVariables(param, vehicleParam);
-        path->push_back(state);
+        state = RK4(state, controlInput, dt);
+        state->limitVariables(param, vehicleParam);
+        path->push_back(*state);
         t += dt;
-
-        delete controlInput;
     }
 
     return path;
 }
 
-SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float dt)
+shared_ptr<SS_VECTOR> VehicleModel::RK4(const shared_ptr<SS_VECTOR>& startState, const shared_ptr<Control>& controlInput, float dt) const
 {
     // TODO leakage
     SS_VECTOR k1, k2, k3, k4, k;
@@ -177,10 +178,10 @@ SS_VECTOR VehicleModel::RK4(SS_VECTOR* startState, Control* controlInput, float 
     k4 = *(k4.derivative(controlInput, vehicleParam)) * dt;
     k = (k1 + k2*2 + k3*2 + k4) * (1.0f/6.0f);
 
-    return ((*startState) + k);
+    return make_shared<SS_VECTOR>((*startState) + k);
 }
     
-void VehicleModel::visualize(visualization_msgs::MarkerArray* markerArray)
+void VehicleModel::visualize(visualization_msgs::MarkerArray* markerArray) const
 {
     geometry_msgs::Point coord;
 

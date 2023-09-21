@@ -12,15 +12,15 @@
 
 class VehicleModel
 {
-    SS_VECTOR currentPose;
-    PATH_TYPE* actualPath;
+    shared_ptr<SS_VECTOR> currentPose;
+    shared_ptr<PATH_TYPE> actualPath;
 
     // Parameter struct
-    VEHICLE_PARAMETERS* vehicleParam;
+    unique_ptr<VEHICLE_PARAMETERS> vehicleParam;
 
 public:
     VehicleModel();
-    VehicleModel(VEHICLE_PARAMETERS* par);
+    VehicleModel(unique_ptr<VEHICLE_PARAMETERS> par);
     //~VehicleModel();
 
     // Update vehicle pose and velocity
@@ -28,37 +28,41 @@ public:
     void velocityCallback(const geometry_msgs::TwistStamped::ConstPtr &msg);
 
     // Get vehicle pose
-    SS_VECTOR* getCurrentPose(void);
+    shared_ptr<SS_VECTOR> getCurrentPose(void);
 
     // Get actual path
-    PATH_TYPE* getActualPath(void) const;
+    shared_ptr<PATH_TYPE> getActualPath(void) const;
 
     // Get parameters
-    VEHICLE_PARAMETERS* getParameters();
+    unique_ptr<VEHICLE_PARAMETERS>& getParameters();
 
     // Simulate advancing towards target
-    PATH_TYPE* simulateToTarget(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
+    shared_ptr<PATH_TYPE> simulateToTarget(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+                                           const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // SIMULATION FUNCTIONS
     // Holonomic model
-    PATH_TYPE* simulateHolonomic(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
+    shared_ptr<PATH_TYPE> simulateHolonomic(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+                                            const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Holonomic model with constraints
-    PATH_TYPE* simulateHolonomicConstrained(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param, float maxAngle = 0.5f);
+    shared_ptr<PATH_TYPE> simulateHolonomicConstrained(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+                                                       const unique_ptr<RRT_PARAMETERS>& param, float maxAngle = 0.5f) const;
 
     // Simple kinematic bicycle model
-    PATH_TYPE* simulateBicycleSimple(SS_VECTOR* start, SS_VECTOR* goal, RRT_PARAMETERS* param);
+    shared_ptr<PATH_TYPE> simulateBicycleSimple(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+                                                const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order
-    SS_VECTOR RK4(SS_VECTOR* startState, Control* controlInput, float dt);
+    shared_ptr<SS_VECTOR> RK4(const shared_ptr<SS_VECTOR>& startState, const shared_ptr<Control>& controlInput, float dt) const;
 
     // Visualize actualPath
-    void visualize(visualization_msgs::MarkerArray* markerArray);
+    void visualize(visualization_msgs::MarkerArray* markerArray) const;
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(currentPose, actualPath, vehicleParam);}
+    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(vehicleParam)), CEREAL_NVP(currentPose), CEREAL_NVP(actualPath));}
 };
 
 

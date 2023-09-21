@@ -9,7 +9,7 @@ Trajectory::~Trajectory()
 {
 }
 
-double Trajectory::cost(const RRT_PARAMETERS* param) const
+double Trajectory::cost(const unique_ptr<RRT_PARAMETERS>& param) const
 {
     double cost;
     switch(param->costType)
@@ -39,7 +39,7 @@ double Trajectory::getDistanceCost(void) const
     for (int i = 1; i < size; i++)
     {
         currState = (*this)[i];
-        length += prevState.getDistEuclidean(&currState);
+        length += prevState.getDistEuclidean(currState);
         prevState = currState;
     }
     return length;
@@ -58,7 +58,7 @@ double Trajectory::getTimeCost(void) const
         currState = (*this)[i];
         if(prevState.v() > 0)
         {
-            elapsed += prevState.getDistEuclidean(&currState) / prevState.v();
+            elapsed += prevState.getDistEuclidean(currState) / prevState.v();
         }
         else
         {
