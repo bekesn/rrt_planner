@@ -33,13 +33,6 @@ class RRTPlanner
     unique_ptr<SearchTree> localRRT;
     unique_ptr<SearchTree> globalRRT;
 
-    enum PlannerState{
-        NOMAP,
-        LOCALPLANNING,
-        WAITFORGLOBAL,
-        GLOBALPLANNING
-    };
-
     PlannerState state;
 
 

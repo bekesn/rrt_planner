@@ -51,7 +51,7 @@ void RRTPlanner::stateMachine()
     switch(state)
     {
         case NOMAP:
-            if (mapHandler->hasMap()) state = LOCALPLANNING;
+            if (mapHandler->getState() != EMPTY) state = LOCALPLANNING;
             break;
         case LOCALPLANNING:
             planLocalRRT();
