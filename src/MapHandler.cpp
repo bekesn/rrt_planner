@@ -5,6 +5,8 @@ MapHandler::MapHandler(void)
     // Initialize values
     vehicleModel = make_shared<VehicleModel>();
     mapReceived = false;
+    blueTrackBoundaryReceived = false;
+    yellowTrackBoundaryReceived = false;
     goalState = make_shared<SS_VECTOR>();
 
 }
@@ -211,16 +213,32 @@ shared_ptr<SS_VECTOR> MapHandler::getGoalState(void)
 
 void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 {
+    mapReceived = updateLandmarkVector(msg, map);
+    calculateGoalState();
+}
+
+void MapHandler::blueTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+{
+    blueTrackBoundaryReceived =  updateLandmarkVector(msg, blueTrackBoundary);
+}
+
+void MapHandler::yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+{
+    yellowTrackBoundaryReceived =  updateLandmarkVector(msg, yellowTrackBoundary);
+}
+
+bool MapHandler::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<frt_custom_msgs::Landmark*> & vec)
+{
     if (msg->map.empty())
     {
-        return;
+        return false;
     }
 
-    for (int i = 0; i < map.size(); i++) 
+    for (int i = 0; i < vec.size(); i++) 
     {
-        delete  map[i];
+        delete  vec[i];
     }
-    map.clear();
+    vec.clear();
 
 
     for (frt_custom_msgs::Landmark landmark: msg->map) 
@@ -229,11 +247,10 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
         newLandmark->x = landmark.x;
         newLandmark->y = landmark.y;
         newLandmark->color = landmark.color;
-        this->map.push_back(newLandmark);
+        vec.push_back(newLandmark);
     }
 
-    mapReceived = true;
-    calculateGoalState();
+    return true;
 }
 
 void MapHandler::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)

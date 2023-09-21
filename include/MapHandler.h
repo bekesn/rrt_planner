@@ -13,10 +13,14 @@ class MapHandler
 {
 private:
     
-    std::vector<frt_custom_msgs::Landmark*> map;
+    vector<frt_custom_msgs::Landmark*> map;
+    vector<frt_custom_msgs::Landmark*> blueTrackBoundary;
+    vector<frt_custom_msgs::Landmark*> yellowTrackBoundary;
     shared_ptr<VehicleModel> vehicleModel;
     shared_ptr<SS_VECTOR> goalState;
     bool mapReceived;
+    bool blueTrackBoundaryReceived;
+    bool yellowTrackBoundaryReceived;
     bool loopClosed;
 
     unique_ptr<MAP_PARAMETERS> mapParam;
@@ -44,6 +48,15 @@ public:
 
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+
+    // Update blue boundary (from path planner)
+    void blueTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+
+    // Update yellow boundary (from path planner)
+    void yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+
+    // Update given Landmark vector
+    static bool updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<frt_custom_msgs::Landmark*> &vec);
 
     // Update SLAM status
     void SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg);

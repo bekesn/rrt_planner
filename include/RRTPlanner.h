@@ -14,6 +14,8 @@ class RRTPlanner
 {
     // ROS objects
     ros::Subscriber mapSubscriber;
+    ros::Subscriber blueTrackBoundarySubscriber;
+    ros::Subscriber yellowTrackBoundarySubscriber;
     ros::Subscriber poseSubscriber;
     ros::Subscriber SLAMStatusSubscriber;
     ros::Subscriber odometrySubscriber;
