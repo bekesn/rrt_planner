@@ -41,27 +41,25 @@ enum MapHandlerState{
 };
 
 struct RRT_PARAMETERS{
-    float collisionRange;
     COST_TYPE costType;
     float goalBias;
     float goalRadius;
     int iterations;
-    float maxConeDist;
     int maxNumOfNodes;
     float minCost;
     float minDeviation;
     float sampleRange;
     float maxVelocity;
     float resolution;
-    float rewireRange;
+    float rewireTime;
     float simulationTimeStep;
     float thetaWeight;
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(collisionRange, costType, goalBias, goalRadius,
-                    iterations, maxConeDist, maxNumOfNodes, minCost, minDeviation, sampleRange, 
-                    maxVelocity, resolution, rewireRange, simulationTimeStep, thetaWeight);}
+    void serialize(Archive & archive){archive(costType, goalBias, goalRadius,
+                    iterations, maxNumOfNodes, minCost, minDeviation, sampleRange, 
+                    maxVelocity, resolution, rewireTime, simulationTimeStep, thetaWeight);}
 };
 
 struct VEHICLE_PARAMETERS{
@@ -76,11 +74,13 @@ struct VEHICLE_PARAMETERS{
 };
 
 struct MAP_PARAMETERS{
+    float collisionRange;
     float goalHorizon;
+    float maxConeDist;
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(goalHorizon);}
+    void serialize(Archive & archive){archive(collisionRange, goalHorizon, maxConeDist);}
 };
 
 struct CONTROL_PARAMETERS{

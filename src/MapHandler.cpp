@@ -18,23 +18,23 @@ MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<Vehicl
     vehicleModel = vm;
 }
 
-bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
+bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
 {
     switch (state)
     {
-        case EMPTY:
-            return false;
-            break;
         case NOBOUNDARIES:
-            return isOffCourseNoBoundary(trajectory, param);
+            return isOffCourseNoBoundary(trajectory);
             break;
         case BOUNDARIESGIVEN:
-            return isOffCourseWithBoundary(trajectory, param);
+            return isOffCourseWithBoundary(trajectory);
+            break;
+        default:
+            return false;
             break;
     }
 }
 
-bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
+bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory) const
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -49,7 +49,7 @@ bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory, 
     for (auto & cone : map)
     {
         double dist = trajectory->front().getDistEuclidean((StateSpace2D){(float) cone->x, (float) cone->y, 0});
-        if (dist < param->collisionRange)
+        if (dist < mapParam->collisionRange)
         {
             switch (cone->color)
             {
@@ -84,7 +84,7 @@ bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory, 
     isOC = false;
     for (it = trajectory->begin(); it != trajectory->end(); it++)
     {
-         if(isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeBlueLandmarks, param) || isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeYellowLandmarks, param))
+         if(isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeBlueLandmarks) || isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeYellowLandmarks))
          {
             isOC = true;
             break;
@@ -97,7 +97,7 @@ bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory, 
     return isOC;
 }
 
-bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
+bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory) const
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -115,7 +115,7 @@ bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory
 
         for(int i = 1; i < size; i++)
         {
-            isOnEdge = isOnTrackEdge(vehicleState, blueTrackBoundary[i-1], blueTrackBoundary[i], param); 
+            isOnEdge = isOnTrackEdge(vehicleState, blueTrackBoundary[i-1], blueTrackBoundary[i]); 
             if (isOnEdge) 
             {
                 isOC = true;
@@ -127,7 +127,7 @@ bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory
 
         for(int i = 1; i < size; i++)
         {
-            isOnEdge = isOnTrackEdge(vehicleState, yellowTrackBoundary[i-1], yellowTrackBoundary[i], param); 
+            isOnEdge = isOnTrackEdge(vehicleState, yellowTrackBoundary[i-1], yellowTrackBoundary[i]); 
             if (isOnEdge) 
             {
                 isOC = true;
@@ -141,7 +141,7 @@ bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory
     return isOC;
 }
 
-bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones, const unique_ptr<RRT_PARAMETERS>& param) const
+bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones) const
 {
     int size = cones->size();
     bool isOnEdge = false;
@@ -150,14 +150,14 @@ bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const 
     {
         for(int j = i+1; j < size; j++)
         {
-            isOnEdge = isOnTrackEdge(vehicleState, ((*cones)[i]), ((*cones)[j]), param); 
+            isOnEdge = isOnTrackEdge(vehicleState, ((*cones)[i]), ((*cones)[j])); 
             if (isOnEdge) break;
         }
     }
     return isOnEdge;
 }
 
-bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2 , const unique_ptr<RRT_PARAMETERS>& param) const
+bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2) const
 {
     float dx, dy, dx2, dy2, dist, projected, coneDist;
     float maxDist = vehicleModel->getParameters()->track / 2;
@@ -168,7 +168,7 @@ bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const 
     dx2 = cone2->x - vehicleState->x();
     dy2 = cone2->y - vehicleState->y();
     coneDist = sqrt(dx*dx + dy*dy);
-    if(coneDist < param->maxConeDist)
+    if(coneDist < mapParam->maxConeDist)
     {
         dist = abs(dx * dy2 - dx2 * dy) / coneDist;
         projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;

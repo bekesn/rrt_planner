@@ -84,11 +84,12 @@ shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> SearchTree::getNearby(shared
 {
     vector<shared_ptr<SearchTreeNode>>::iterator it;
     auto closeNodes = shared_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
+    shared_ptr<SS_VECTOR> state = node->getState();
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if ((node->getState()->getDistToTarget(*(*it)->getState(), param) < (param->rewireRange)) && ((*it) != node))
+        if ((state->getDistToTarget(*(*it)->getState(), param) < (param->rewireTime * param->simulationTimeStep * state->v())) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }

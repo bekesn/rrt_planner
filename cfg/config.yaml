@@ -2,47 +2,45 @@ GENERAL:
   timerPeriod:        0.1           # period of path planning task in [s]
 
 LOCAL:
-  collisionRange:     6             # cones in this range will be checked for collision - in [m]
   costType:           "TIME"        # can be "DISTANCE" , "TIME"
   goalBias:           0.2   
-  goalRadius:         4             # acceptance range in [m]
+  goalRadius:         4.0           # acceptance range in [m]
   iterations:         500           # iterations for planning
-  maxConeDist:        6             # maximal distance between consecutive cones in [m]
   maxNumOfNodes:      600           # limits number of nodes in searchtree
   maxVelocity:        10            # in [m/s]
   minCost:            0.0           # cost threshold used to filter nodes when tracing back the path to root
-  minDeviation:       1.0           # minimum difference between states
+  minDeviation:       1.0           # minimum distance between states in [m]
   resolution:         0.1           # interpolation steps in [m]
-  rewireRange:        1             # Range in which connection is checked in [m]
-  sampleRange:        4             # used for random sampling near the detected cones, range in [m]
-  simulationTimeStep: 0.2           # in [s]
+  rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
+  sampleRange:        4.0           # used for random sampling near the detected cones, range in [m]
+  simulationTimeStep: 0.5           # in [s]
   thetaWeight:        5000          # weight of orientation difference in distance calculation
 
 GLOBAL:
-  collisionRange:     6             # cones in this range will be checked for collision - in [m]
   costType:           "TIME"        # can be "DISTANCE" , "TIME"
-  goalBias:           0.1   
+  goalBias:           0.0   
   goalRadius:         3.0           # acceptance range in [m]
   iterations:         50            # iterations for planning
-  maxConeDist:        6             # maximal distance between consecutive cones in [m]
   maxNumOfNodes:      9000          # limits number of nodes in searchtree
   maxVelocity:        10            # in [m/s]
   minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
-  minDeviation:       1.0           # minimum difference between states
+  minDeviation:       1.0           # minimum distance between states in [m]
   resolution:         0.1           # interpolation steps in [m]
-  rewireRange:        1             # Range in which connection is checked in [m]
-  sampleRange:        10             # used for random sampling near the detected cones, range in [m]
-  simulationTimeStep: 0.2           # in [s]
-  thetaWeight:        100           # weight of orientation difference in distance calculation
+  rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
+  sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
+  simulationTimeStep: 0.5           # in [s]
+  thetaWeight:        1000          # weight of orientation difference in distance calculation
 
 VEHICLE:
   maxDelta:           0.38          # maximum front axis steering angle in [rad]
-  simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+  simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
   track:              1.2           # in [m]
   wheelBase:          1.54          # in [m]
 
 MAP:
+  collisionRange:     6             # cones in this range will be checked for collision - in [m]
   goalHorizon:        10            # maximal distance for local goal state in [m]
+  maxConeDist:        6             # maximal distance between consecutive cones in [m]
 
 CONTROL:
   k:                  10
