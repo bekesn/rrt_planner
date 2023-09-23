@@ -32,21 +32,21 @@ public:
     //~MapHandler();
     
     // Check for offcourse
-    bool isOffCourse(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
+    bool isOffCourse(const shared_ptr<PATH_TYPE>& path) const;
 
     // Check for offcourse if boundaries are not given
     // Should not be called directly
-    bool isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
+    bool isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& path) const;
 
     // Check for offcourse if boundaries not given
     // Should not be called directly
-    bool isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
+    bool isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& path) const;
 
     // Check for collision with lines
-    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones, const unique_ptr<RRT_PARAMETERS>& param) const;
+    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones) const;
 
     // Check for collision with 1 line
-    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2 , const unique_ptr<RRT_PARAMETERS>& param) const;
+    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2) const;
 
     // Get random state
     shared_ptr<SS_VECTOR> getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;

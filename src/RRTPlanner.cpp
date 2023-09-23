@@ -90,7 +90,7 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     trajectory = vehicleModel->simulateToTarget(nearest->getState(), randState, rrt->param);
 
     // Check for offCourse
-    offCourse = mapHandler->isOffCourse(trajectory, rrt->param);
+    offCourse = mapHandler->isOffCourse(trajectory);
 
     // Add node
     if ((!offCourse) && (trajectory->size() > 0))
@@ -325,9 +325,6 @@ void RRTPlanner::loadParameters(void)
     ROS_INFO_STREAM(nodeName << " LOADING PARAMETERS");
     loadParameter("/GENERAL/timerPeriod", genParam->timerPeriod, 0.1f);
 
-    loadParameter("/LOCAL/collisionRange", localRRT->param->collisionRange, 6.0f);
-    loadParameter("/GLOBAL/collisionRange", globalRRT->param->collisionRange, 6.0f);
-
     // Choose distance calculation type
     std::string costType;
     loadParameter("/LOCAL/costType", costType, "DISTANCE");
@@ -347,9 +344,6 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/iterations", localRRT->param->iterations, 500);
     loadParameter("/GLOBAL/iterations", globalRRT->param->iterations, 500);
 
-    loadParameter("/LOCAL/maxConeDist", localRRT->param->maxConeDist, 6.0f);
-    loadParameter("/GLOBAL/maxConeDist", globalRRT->param->maxConeDist, 6.0f);
-
     loadParameter("/LOCAL/maxNumOfNodes", localRRT->param->maxNumOfNodes, 1000);
     loadParameter("/GLOBAL/maxNumOfNodes", globalRRT->param->maxNumOfNodes, 1000);
 
@@ -365,23 +359,25 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/resolution", localRRT->param->resolution, 0.05f);
     loadParameter("/GLOBAL/resolution", globalRRT->param->resolution, 0.05f);
 
-    loadParameter("/LOCAL/rewireRange", localRRT->param->rewireRange, 1.0f);
-    loadParameter("/GLOBAL/rewireRange", globalRRT->param->rewireRange, 1.0f);
+    loadParameter("/LOCAL/rewireTime", localRRT->param->rewireTime, 3.0f);
+    loadParameter("/GLOBAL/rewireTime", globalRRT->param->rewireTime, 3.0f);
 
     loadParameter("/LOCAL/sampleRange", localRRT->param->sampleRange, 3);
     loadParameter("/GLOBAL/sampleRange", globalRRT->param->sampleRange, 3);
 
-    loadParameter("/LOCAL/simulationTimeStep", localRRT->param->simulationTimeStep, 0.1f);
-    loadParameter("/GLOBAL/simulationTimeStep", globalRRT->param->simulationTimeStep, 0.1f);
+    loadParameter("/LOCAL/simulationTimeStep", localRRT->param->simulationTimeStep, 0.2f);
+    loadParameter("/GLOBAL/simulationTimeStep", globalRRT->param->simulationTimeStep, 0.2f);
 
-    loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 0.1f);
-    loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 0.1f);
+    loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 1000.0f);
+    loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 1000.0f);
 
     loadParameter("/VEHICLE/maxDelta", vehicleModel->getParameters()->maxDelta, 0.38f);
     loadParameter("/VEHICLE/track", vehicleModel->getParameters()->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", vehicleModel->getParameters()->wheelBase, 1.54f); 
 
+    loadParameter("/MAP/collisionRange", mapHandler->getParameters()->collisionRange, 6.0f);
     loadParameter("/MAP/goalHorizon", mapHandler->getParameters()->goalHorizon, 15.0f);
+    loadParameter("/GLOBAL/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
 
     loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
     loadParameter("/CONTROL/maxdDelta", Control::getParameters()->maxdDelta, 0.1f);

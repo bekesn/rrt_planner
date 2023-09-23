@@ -21,7 +21,6 @@ void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
 
-    currentPose = 
     currentPose = shared_ptr<SS_VECTOR> (new SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw, currentPose->v(), currentPose->delta()));
 
     actualPath->push_back(*currentPose);
@@ -90,9 +89,9 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR
     distance = start->getDistEuclidean(*goal);
     ratio = maxConndist / distance;
     if (ratio > 1) ratio = 1;
-    numOfStates = (int) (ratio*distance/param->resolution);
+    numOfStates = (int) (ratio*distance/param->resolution) + 1;
 
-    for(i = 0; i < numOfStates; i++)
+    for(i = 0; i < numOfStates + 1; i++)
     {
         x = start->x() + (goal->x() - start->x()) * ratio * (i+1) / (float) numOfStates;
         y = start->y() + (goal->y() - start->y()) * ratio * (i+1) / (float) numOfStates;
@@ -146,13 +145,14 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
 {
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     shared_ptr<SS_VECTOR> state = start;
+    state->limitVariables(param, vehicleParam);
     path->push_back(*state);
 
     // TODO kokany
-    float dt = param->resolution/param->maxVelocity;
+    float dt = param->resolution / state->v();
     float t = 0;
 
-    while (t <= param->simulationTimeStep)
+    do
     {
         shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
         //if(controlInput->ddelta > 0) ROS_INFO_STREAM("" << controlInput->ddelta);
@@ -160,7 +160,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
         state->limitVariables(param, vehicleParam);
         path->push_back(*state);
         t += dt;
-    }
+    } while (t <= param->simulationTimeStep);
 
     return path;
 }
