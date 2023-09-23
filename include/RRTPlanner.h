@@ -14,6 +14,8 @@ class RRTPlanner
 {
     // ROS objects
     ros::Subscriber mapSubscriber;
+    ros::Subscriber blueTrackBoundarySubscriber;
+    ros::Subscriber yellowTrackBoundarySubscriber;
     ros::Subscriber poseSubscriber;
     ros::Subscriber SLAMStatusSubscriber;
     ros::Subscriber odometrySubscriber;
@@ -30,13 +32,6 @@ class RRTPlanner
 
     unique_ptr<SearchTree> localRRT;
     unique_ptr<SearchTree> globalRRT;
-
-    enum PlannerState{
-        NOMAP,
-        LOCALPLANNING,
-        WAITFORGLOBAL,
-        GLOBALPLANNING
-    };
 
     PlannerState state;
 

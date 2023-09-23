@@ -5,7 +5,10 @@ MapHandler::MapHandler(void)
     // Initialize values
     vehicleModel = make_shared<VehicleModel>();
     mapReceived = false;
+    blueTrackBoundaryReceived = false;
+    yellowTrackBoundaryReceived = false;
     goalState = make_shared<SS_VECTOR>();
+    state = EMPTY;
 
 }
 
@@ -16,6 +19,22 @@ MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<Vehicl
 }
 
 bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
+{
+    switch (state)
+    {
+        case EMPTY:
+            return false;
+            break;
+        case NOBOUNDARIES:
+            return isOffCourseNoBoundary(trajectory, param);
+            break;
+        case BOUNDARIESGIVEN:
+            return isOffCourseWithBoundary(trajectory, param);
+            break;
+    }
+}
+
+bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     // Filter empty trajectory
     if (trajectory->size() == 0) return false;
@@ -78,33 +97,85 @@ bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory, const uniq
     return isOC;
 }
 
+bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory, const unique_ptr<RRT_PARAMETERS>& param) const
+{
+    // Filter empty trajectory
+    if (trajectory->size() == 0) return false;
+
+    //ROS_INFO_STREAM("cones: " << map.size());
+    bool isOC;
+    PATH_TYPE::iterator it;
+
+    isOC = false;
+    for (it = trajectory->begin(); it != trajectory->end(); it++)
+    {   
+        bool isOnEdge = false;
+        shared_ptr<SS_VECTOR> vehicleState = make_shared<SS_VECTOR>(*it);
+        int size = blueTrackBoundary.size();
+
+        for(int i = 1; i < size; i++)
+        {
+            isOnEdge = isOnTrackEdge(vehicleState, blueTrackBoundary[i-1], blueTrackBoundary[i], param); 
+            if (isOnEdge) 
+            {
+                isOC = true;
+                break;
+            }
+        }
+
+        size = yellowTrackBoundary.size();
+
+        for(int i = 1; i < size; i++)
+        {
+            isOnEdge = isOnTrackEdge(vehicleState, yellowTrackBoundary[i-1], yellowTrackBoundary[i], param); 
+            if (isOnEdge) 
+            {
+                isOC = true;
+                break;
+            }
+        }
+
+        if (isOC) break;
+    }
+
+    return isOC;
+}
+
 bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones, const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    double dx, dy, dx2, dy2, dist, projected, coneDist;
     int size = cones->size();
-    float maxDist = vehicleModel->getParameters()->track / 2;
-    bool isOnTrackEdge = false;
+    bool isOnEdge = false;
 
     for(int i = 0; i < size; i++)
     {
         for(int j = i+1; j < size; j++)
         {
-            dx = (*cones)[i]->x - (*cones)[j]->x;
-            dy = (*cones)[i]->y - (*cones)[j]->y;
-            dx2 = (*cones)[j]->x - vehicleState->x();
-            dy2 = (*cones)[j]->y - vehicleState->y();
-            coneDist = sqrt(dx*dx + dy*dy);
-            if(coneDist < param->maxConeDist)
-            {
-                dist = abs(dx * dy2 - dx2 * dy) / coneDist;
-                projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;
-                //ROS_INFO_STREAM("dist: " << dist << "   coneDist: " << coneDist << "   proj: " << projected << "   d: " << sqrt(dx2*dx2 + dy2*dy2));
-                if((dist < maxDist) && (projected >= 0) && (projected <= coneDist))
-                {
-                    isOnTrackEdge = true;
-                    break;
-                }
-            }
+            isOnEdge = isOnTrackEdge(vehicleState, ((*cones)[i]), ((*cones)[j]), param); 
+            if (isOnEdge) break;
+        }
+    }
+    return isOnEdge;
+}
+
+bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2 , const unique_ptr<RRT_PARAMETERS>& param) const
+{
+    float dx, dy, dx2, dy2, dist, projected, coneDist;
+    float maxDist = vehicleModel->getParameters()->track / 2;
+    bool isOnTrackEdge = false;
+
+    dx = cone1->x - cone2->x;
+    dy = cone1->y - cone2->y;
+    dx2 = cone2->x - vehicleState->x();
+    dy2 = cone2->y - vehicleState->y();
+    coneDist = sqrt(dx*dx + dy*dy);
+    if(coneDist < param->maxConeDist)
+    {
+        dist = abs(dx * dy2 - dx2 * dy) / coneDist;
+        projected = (dx * (-dx2) + dy * (-dy2)) / coneDist;
+        //ROS_INFO_STREAM("dist: " << dist << "   coneDist: " << coneDist << "   proj: " << projected << "   d: " << sqrt(dx2*dx2 + dy2*dy2));
+        if((dist < maxDist) && (projected >= 0.0f) && (projected <= coneDist))
+        {
+            isOnTrackEdge = true;
         }
     }
     return isOnTrackEdge;
@@ -156,8 +227,6 @@ void MapHandler::calculateGoalState()
     std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
     float maxDist = 0;
     shared_ptr<StateSpace2D> currentState = vehicleModel->getCurrentPose();
-    
-
 
     // Create close blue-yellow pairs
     for (auto & landmark : map)
@@ -211,16 +280,54 @@ shared_ptr<SS_VECTOR> MapHandler::getGoalState(void)
 
 void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 {
+    mapReceived = updateLandmarkVector(msg, map);
+
+    switch(state)
+    {
+        case EMPTY:
+            if (yellowTrackBoundaryReceived && blueTrackBoundaryReceived)
+            {
+                state = BOUNDARIESGIVEN;
+                calculateGoalState();
+            }
+            else if (mapReceived)
+            {
+                state = NOBOUNDARIES;
+                calculateGoalState();
+            }
+            break;
+        case NOBOUNDARIES:
+            calculateGoalState();
+            if (yellowTrackBoundaryReceived && blueTrackBoundaryReceived) state = BOUNDARIESGIVEN;
+            break;
+        case BOUNDARIESGIVEN:
+            calculateGoalState(); //TODO temporary solution
+            break;
+    }
+}
+
+void MapHandler::blueTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+{
+    blueTrackBoundaryReceived =  updateLandmarkVector(msg, blueTrackBoundary);
+}
+
+void MapHandler::yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+{
+    yellowTrackBoundaryReceived =  updateLandmarkVector(msg, yellowTrackBoundary);
+}
+
+bool MapHandler::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<frt_custom_msgs::Landmark*> & vec)
+{
     if (msg->map.empty())
     {
-        return;
+        return false;
     }
 
-    for (int i = 0; i < map.size(); i++) 
+    for (int i = 0; i < vec.size(); i++) 
     {
-        delete  map[i];
+        delete  vec[i];
     }
-    map.clear();
+    vec.clear();
 
 
     for (frt_custom_msgs::Landmark landmark: msg->map) 
@@ -229,11 +336,10 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
         newLandmark->x = landmark.x;
         newLandmark->y = landmark.y;
         newLandmark->color = landmark.color;
-        this->map.push_back(newLandmark);
+        vec.push_back(newLandmark);
     }
 
-    mapReceived = true;
-    calculateGoalState();
+    return true;
 }
 
 void MapHandler::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)
@@ -302,9 +408,9 @@ frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(const frt_custom_msgs:
     return closestLandmark;
 }
 
-bool MapHandler::hasMap(void) const
+MapHandlerState MapHandler::getState(void) const
 {
-    return mapReceived;
+    return state;
 }
 
 bool MapHandler::isLoopClosed(void) const

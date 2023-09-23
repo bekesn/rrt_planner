@@ -13,11 +13,16 @@ class MapHandler
 {
 private:
     
-    std::vector<frt_custom_msgs::Landmark*> map;
+    vector<frt_custom_msgs::Landmark*> map;
+    vector<frt_custom_msgs::Landmark*> blueTrackBoundary;
+    vector<frt_custom_msgs::Landmark*> yellowTrackBoundary;
     shared_ptr<VehicleModel> vehicleModel;
     shared_ptr<SS_VECTOR> goalState;
     bool mapReceived;
+    bool blueTrackBoundaryReceived;
+    bool yellowTrackBoundaryReceived;
     bool loopClosed;
+    MapHandlerState state;
 
     unique_ptr<MAP_PARAMETERS> mapParam;
 
@@ -29,8 +34,19 @@ public:
     // Check for offcourse
     bool isOffCourse(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
 
+    // Check for offcourse if boundaries are not given
+    // Should not be called directly
+    bool isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
+
+    // Check for offcourse if boundaries not given
+    // Should not be called directly
+    bool isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
+
     // Check for collision with lines
     bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones, const unique_ptr<RRT_PARAMETERS>& param) const;
+
+    // Check for collision with 1 line
+    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2 , const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Get random state
     shared_ptr<SS_VECTOR> getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
@@ -45,6 +61,15 @@ public:
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);
 
+    // Update blue boundary (from path planner)
+    void blueTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+
+    // Update yellow boundary (from path planner)
+    void yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg);
+
+    // Update given Landmark vector
+    static bool updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<frt_custom_msgs::Landmark*> &vec);
+
     // Update SLAM status
     void SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg);
 
@@ -55,7 +80,7 @@ public:
     frt_custom_msgs::Landmark* getClosestLandmark(const frt_custom_msgs::Landmark* landmark, const frt_custom_msgs::Landmark::_color_type color) const;
 
     // Return if map arrived
-    bool hasMap(void) const;
+    MapHandlerState getState(void) const;
 
     // Return if loop is closed in SLAM
     bool isLoopClosed(void) const;

@@ -32,6 +32,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     // Subscribe to map
     ROS_INFO_STREAM("" << nodeName << " Node started.");
     mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &(*(mapHandler.get())));
+    blueTrackBoundarySubscriber = nh.subscribe("/blueTrackBoundary", 1, &MapHandler::blueTrackBoundaryCallback, &(*(mapHandler.get())));
+    yellowTrackBoundarySubscriber = nh.subscribe("/yellowTrackBoundary", 1, &MapHandler::yellowTrackBoundaryCallback, &(*(mapHandler.get())));
     poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &(*(vehicleModel)));
     SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &(*(mapHandler.get())));
     odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &VehicleModel::velocityCallback, &(*(vehicleModel)));
@@ -49,7 +51,7 @@ void RRTPlanner::stateMachine()
     switch(state)
     {
         case NOMAP:
-            if (mapHandler->hasMap()) state = LOCALPLANNING;
+            if (mapHandler->getState() != EMPTY) state = LOCALPLANNING;
             break;
         case LOCALPLANNING:
             planLocalRRT();

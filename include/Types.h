@@ -26,6 +26,20 @@ enum COST_TYPE{
     DISTANCE
 };
 
+
+enum PlannerState{
+    NOMAP,
+    LOCALPLANNING,
+    WAITFORGLOBAL,
+    GLOBALPLANNING
+};
+
+enum MapHandlerState{
+    EMPTY,
+    NOBOUNDARIES,
+    BOUNDARIESGIVEN
+};
+
 struct RRT_PARAMETERS{
     float collisionRange;
     COST_TYPE costType;
