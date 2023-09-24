@@ -12,23 +12,23 @@
 class SearchTree
 {
 private:
-    shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> tree;
-    shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> loopClosingNodes;
+    shared_ptr<vector<shared_ptr<SearchTreeNode>>> tree;
 
     RRT_TYPE type;
 
-public:
-
-    // Parameter struct
-    unique_ptr<RRT_PARAMETERS> param;
-
+    float pathCost;
     int nodeCount;
     int rewireCount;
     float pathLength;
     float pathTime;
-    bool pathClosed;
-    bool pathFound;
     shared_ptr<PATH_TYPE> bestPath;
+
+public:
+    bool pathFound;
+
+    // Parameter struct
+    unique_ptr<RRT_PARAMETERS> param;
+
 
     ros::Publisher markerPublisher;
     visualization_msgs::MarkerArray markerArray;
@@ -68,11 +68,28 @@ public:
     // Get root
     shared_ptr<SS_VECTOR> getRoot() const;
 
-    // Traceback to root
+    // Traceback to root from given state
+    // Gets closest node to given state and returns with trajectory from root to node
     shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SS_VECTOR>& goalState) const;
+
+    // Traceback to root from given node
+    // Returns with trajectory from root to node
+    shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SearchTreeNode>& node) const;
+
+    // Update best path which ends at given node
+    void updatePath(shared_ptr<SearchTreeNode>& endNode);
+
+    // Create closing segment to define best loop
+    // Investigates if a real loop is defined
+    // Investigates if cost is decreased compared to the previous cost
+    // Return whether the best loop was changed
+    bool closeLoop(const shared_ptr<SearchTreeNode>& startNode, const shared_ptr<SearchTreeNode>& endNode);
 
     // Get absolute cost to node
     float getAbsCost(const shared_ptr<SearchTreeNode>& node) const;
+
+    // Get best path
+    shared_ptr<PATH_TYPE> getBestPath(void);
 
     // Check wether number of nodes reached the maximum
     bool maxNumOfNodesReached() const;
@@ -82,9 +99,9 @@ public:
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(CEREAL_NVP(tree), CEREAL_NVP(loopClosingNodes), CEREAL_NVP(type), CEREAL_NVP(param), 
+    void serialize(Archive & archive){archive(CEREAL_NVP(tree), CEREAL_NVP(pathCost), CEREAL_NVP(type), CEREAL_NVP(param), 
                     CEREAL_NVP(nodeCount), CEREAL_NVP(rewireCount), CEREAL_NVP(pathLength), CEREAL_NVP(pathTime),
-                    CEREAL_NVP(pathClosed), CEREAL_NVP(pathFound), CEREAL_NVP(bestPath));}
+                    CEREAL_NVP(pathFound), CEREAL_NVP(bestPath));}
 };
 
 

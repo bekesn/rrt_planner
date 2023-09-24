@@ -18,7 +18,6 @@ private:
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> childNodes;
     shared_ptr<SS_VECTOR> state;
     float cost;
-    bool isRoot;
 
 public:
 
@@ -54,13 +53,10 @@ public:
     // Trace back to parent and add state
     void traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const;
 
-    // Set isRoot property
-    void setRoot(bool isNodeRoot);
-
     // Archive function for cereal
     template<class Archive>
     void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(childNodes)),
-                    cereal::defer(CEREAL_NVP(parentNode)), CEREAL_NVP(state), CEREAL_NVP(cost), CEREAL_NVP(isRoot));}
+                    cereal::defer(CEREAL_NVP(parentNode)), CEREAL_NVP(state), CEREAL_NVP(cost));}
 
 };
 

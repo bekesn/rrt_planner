@@ -23,7 +23,7 @@ void VehicleModel::poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
     currentPose = shared_ptr<SS_VECTOR> (new SS_VECTOR(msg->pose.position.x, msg->pose.position.y, yaw, currentPose->v(), currentPose->delta()));
 
-    actualPath->push_back(*currentPose);
+    actualPath->push_back(currentPose);
 }
 
 
@@ -95,7 +95,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR
     {
         x = start->x() + (goal->x() - start->x()) * ratio * (i+1) / (float) numOfStates;
         y = start->y() + (goal->y() - start->y()) * ratio * (i+1) / (float) numOfStates;
-        path->push_back(SS_VECTOR(x, y, goal->theta()));
+        path->push_back(make_shared<SS_VECTOR> (SS_VECTOR(x, y, goal->theta())));
     }
     return path;
 }
@@ -136,7 +136,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_pt
     {
         x = start->x() + dx * ratio * i / (float) numOfStates;
         y = start->y() + dy * ratio * i / (float) numOfStates;
-        path->push_back(SS_VECTOR(x, y, orientation));
+        path->push_back(make_shared<SS_VECTOR> (SS_VECTOR(x, y, orientation)));
     }
     return path;
 }
@@ -146,7 +146,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     shared_ptr<SS_VECTOR> state = start;
     state->limitVariables(param, vehicleParam);
-    path->push_back(*state);
+    path->push_back(state);
 
     // TODO kokany
     float dt = param->resolution / state->v();
@@ -158,7 +158,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
         //if(controlInput->ddelta > 0) ROS_INFO_STREAM("" << controlInput->ddelta);
         state = RK4(state, controlInput, dt);
         state->limitVariables(param, vehicleParam);
-        path->push_back(*state);
+        path->push_back(state);
         t += dt;
     } while (t <= param->simulationTimeStep);
 
@@ -167,7 +167,6 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
 
 shared_ptr<SS_VECTOR> VehicleModel::RK4(const shared_ptr<SS_VECTOR>& startState, const shared_ptr<Control>& controlInput, float dt) const
 {
-    // TODO leakage
     SS_VECTOR k1, k2, k3, k4, k;
     k1 = *(startState->derivative(controlInput, vehicleParam)) * dt;
     k2 = *startState + k1*0.5;
@@ -203,8 +202,8 @@ void VehicleModel::visualize(visualization_msgs::MarkerArray* markerArray) const
     for (pathIterator = this->actualPath->begin(); pathIterator != this->actualPath->end(); pathIterator++)
     {
         
-        coord.x = (*pathIterator).x();
-        coord.y = (*pathIterator).y();
+        coord.x = (*pathIterator)->x();
+        coord.y = (*pathIterator)->y();
         actualPathLine.points.push_back(coord);
 
     }

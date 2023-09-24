@@ -32,14 +32,14 @@ double Trajectory::getDistanceCost(void) const
 {
     if(this->size() < 2) return 100;
     
-    SS_VECTOR prevState = (*this)[0];
-    SS_VECTOR currState;
+    shared_ptr<SS_VECTOR> prevState = (*this)[0];
+    shared_ptr<SS_VECTOR> currState;
     int size = this->size();
     double length = 0;
     for (int i = 1; i < size; i++)
     {
         currState = (*this)[i];
-        length += prevState.getDistEuclidean(currState);
+        length += prevState->getDistEuclidean(*currState);
         prevState = currState;
     }
     return length;
@@ -49,16 +49,16 @@ double Trajectory::getTimeCost(void) const
 {
     if(this->size() < 2) return 100;
     
-    SS_VECTOR prevState = (*this)[0];
-    SS_VECTOR currState;
+    shared_ptr<SS_VECTOR> prevState = (*this)[0];
+    shared_ptr<SS_VECTOR> currState;
     int size = this->size();
     double elapsed = 0;
     for (int i = 1; i < size; i++)
     {
         currState = (*this)[i];
-        if(prevState.v() > 0)
+        if(prevState->v() > 0)
         {
-            elapsed += prevState.getDistEuclidean(currState) / prevState.v();
+            elapsed += prevState->getDistEuclidean(*currState) / prevState->v();
         }
         else
         {
