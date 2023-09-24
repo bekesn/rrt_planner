@@ -7,21 +7,17 @@ SearchTree::SearchTree()
     type = LOCAL_RRT;
     bestPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     tree = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
-    loopClosingNodes = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
-}
-
-SearchTree::SearchTree(shared_ptr<SS_VECTOR> startState, RRT_TYPE rrtType)
-{
-    param = unique_ptr<RRT_PARAMETERS> (new RRT_PARAMETERS);
-    type = rrtType;
-    bestPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
-    tree = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
-    loopClosingNodes = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
-
-    this->init(startState);
 
     pathLength = 0;
     pathTime = 0;
+    pathCost = 0;
+}
+
+SearchTree::SearchTree(shared_ptr<SS_VECTOR> startState, RRT_TYPE rrtType) : SearchTree()
+{
+    type = rrtType;
+
+    this->init(startState);
 }
 
 SearchTree::~SearchTree()
@@ -210,8 +206,8 @@ void SearchTree::visualize(void)
         for (pathIterator = this->bestPath->begin(); pathIterator != this->bestPath->end(); pathIterator++)
         {
             
-            coord.x = (*pathIterator).x();
-            coord.y = (*pathIterator).y();
+            coord.x = (*pathIterator)->x();
+            coord.y = (*pathIterator)->y();
             bestPathLine.points.push_back(coord);
 
         }
@@ -255,13 +251,11 @@ void SearchTree::visualize(void)
 void SearchTree::init(const shared_ptr<SS_VECTOR>& startState)
 {
     tree->clear();
-    loopClosingNodes->clear();
     tree->push_back(make_shared<SearchTreeNode> (SearchTreeNode(NULL, startState, 0)));
 
     // Initialize status variables
     nodeCount = 1;
     rewireCount = 0;
-    pathClosed = false;
     pathFound = false;
 }
 
@@ -274,20 +268,20 @@ void SearchTree::init(shared_ptr<PATH_TYPE> initPath)
     segment.push_back(initPath->front());
 
     // Initialize tree
-    init(make_shared<SS_VECTOR> (initPath->front()));
+    init(initPath->front());
 
     // Add remaining states
     shared_ptr<SearchTreeNode> node = tree->front();
     for (it = initPath->begin() + 1; it != initPath->end(); it++)
     {
-        if(!alreadyInTree(make_shared<SS_VECTOR> (*it)))
+        if(!alreadyInTree(*it))
         {
             // Calculate cost
             segment.push_back(*it);
             cost = segment.cost(param);
 
             // Add state to tree
-            node = addChild(node, make_shared<SS_VECTOR> (*it), cost);
+            node = addChild(node, *it, cost);
 
             // Reset segment
             segment.erase(segment.begin());
@@ -305,9 +299,59 @@ shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const shared_ptr<SS_VECTOR>& g
     shared_ptr<SearchTreeNode> closestNode = getNearest(goalState, param->minCost);
     if (closestNode == NULL) return NULL;
 
+    return traceBackToRoot(closestNode);
+}
+
+shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const shared_ptr<SearchTreeNode>& node) const
+{
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
-    closestNode->traceBackToRoot(path);
+    node->traceBackToRoot(path);
     return path;
+}
+
+void SearchTree::updatePath(shared_ptr<SearchTreeNode>& endNode)
+{
+    bestPath = traceBackToRoot(endNode);
+    pathLength = bestPath->getDistanceCost();
+    pathTime = bestPath->getTimeCost();
+}
+
+bool SearchTree::closeLoop(const shared_ptr<SearchTreeNode>& startNode, const shared_ptr<SearchTreeNode>& endNode)
+{
+    shared_ptr<PATH_TYPE> path = traceBackToRoot(endNode);
+    bool isLoop = false;
+    float cost = 0;
+
+    PATH_TYPE::iterator startIterator;
+
+    startIterator = find(path->begin(), path->end(), startNode->getState());
+    if (startIterator != path->end())
+    {
+        // Remove states from path before start state
+        path->erase(path->begin(), startIterator);
+        
+        // Add start state to the end to create a loop
+        path->push_back(startNode->getState());
+        
+        isLoop = true;
+        cost = path->cost(param);
+    }
+
+    // If a loop is found:
+    // If no loop was defined before, this will be the loop
+    // If loop was defined but this has a lower cost, loop is replaced
+    if (isLoop && (!pathFound || (cost < pathCost)))
+    {
+        pathFound = true;
+
+        // Update path and its costs
+        bestPath = path;
+        pathCost = cost;
+        pathLength = bestPath->getDistanceCost();
+        pathTime = bestPath->getTimeCost();
+    }
+
+    return isLoop;
 }
 
 float SearchTree::getAbsCost(const shared_ptr<SearchTreeNode>& node) const
@@ -315,6 +359,11 @@ float SearchTree::getAbsCost(const shared_ptr<SearchTreeNode>& node) const
     float absCost = 0;
     node->addToAbsoluteCost(&absCost);
     return absCost;
+}
+
+shared_ptr<PATH_TYPE> SearchTree::getBestPath(void)
+{
+    return bestPath;
 }
 
 bool SearchTree::maxNumOfNodesReached() const

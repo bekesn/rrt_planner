@@ -6,7 +6,7 @@
 #include <vector>
 #include <cereal/types/vector.hpp>
 
-class Trajectory : public vector<SS_VECTOR>
+class Trajectory : public vector<shared_ptr<SS_VECTOR>>
 {
     
 public:

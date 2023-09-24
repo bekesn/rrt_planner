@@ -63,7 +63,7 @@ void RRTPlanner::stateMachine()
         case WAITFORGLOBAL:
             planLocalRRT();
             planGlobalRRT();
-            if(globalRRT->pathClosed) state = GLOBALPLANNING;
+            if(globalRRT->pathFound) state = GLOBALPLANNING;
             break;
         case GLOBALPLANNING:
             planGlobalRRT();
@@ -81,7 +81,7 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     shared_ptr<PATH_TYPE> trajectory;
 
     // Get random state
-    randState = mapHandler->getRandomState(rrt->bestPath, rrt->param);
+    randState = mapHandler->getRandomState(rrt->getBestPath(), rrt->param);
 
     // Get nearest node
     shared_ptr<SearchTreeNode> nearest = rrt->getNearest(randState);
@@ -96,7 +96,7 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     if ((!offCourse) && (trajectory->size() > 0))
     {
         // Check if new node would be duplicate
-        newState = make_shared<SS_VECTOR> (trajectory->back());
+        newState = trajectory->back();
         alreadyInTree = rrt->alreadyInTree(newState);
 
         if(!alreadyInTree)
@@ -125,20 +125,32 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
         trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param);
         if (trajectory->size() > 0)
         {
+            float error = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
             // Check if new path leads close to new state
-            if (trajectory->back().getDistOriented(*(*it)->getState(), rrt->param) < rrt->param->minDeviation)
+            if ( error < rrt->param->minDeviation)
             {
                 float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
-                // Compare costs. If the childCost is significantly
-                if (((newNodeCost + segmentCost) < childCost) || ((newNodeCost - rrt->param->minCost) > childCost))
+                // Compare costs  if it is worth rewiring
+                if ((newNodeCost + segmentCost) < childCost)
                 {
                     //Rewire if it reduces cost
                     rrt->rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
-                    
-                    // If a node with lower cost is rewired to another, this causes a loop and has to be marked
-                    (*it)->setRoot(newNodeCost > childCost);
+                }
+                else if ((newNodeCost - rrt->param->minCost) > childCost)
+                {
+                    // If newNodeCost is significantly higher than childCost, a loop might be created
+                    // Rewiring would create a loop with multiple problems
+                    // Instead of making a loop, mark it in the SearchTree
+                    bool isLoop = rrt->closeLoop(*it, newNode);
+
+                    // If a loop is not created, rewire 
+                    if(!isLoop)
+                    {
+                        rrt->rewire(*it,newNode);
+                        (*it)->changeSegmentCost(segmentCost);
+                    }
                 }
             }
         }
@@ -150,11 +162,10 @@ void RRTPlanner::planLocalRRT(void)
 {
     shared_ptr<SS_VECTOR> pose = vehicleModel->getCurrentPose();
     localRRT->init(pose);
-    localRRT->pathFound = false;
     int iteration = 0;
     shared_ptr<SS_VECTOR> goalState = mapHandler->getGoalState();
+    shared_ptr<SearchTreeNode> endNode;
 
-    // TODO
     while((!localRRT->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
     {
         shared_ptr<SearchTreeNode> node = extend(localRRT);
@@ -162,23 +173,26 @@ void RRTPlanner::planLocalRRT(void)
         {   
             rewire(localRRT, node);
             float goalDist = node->getState()->getDistEuclidean(*goalState);
-            if(goalDist < localRRT->param->goalRadius) localRRT->pathFound = true;
+            if(goalDist < localRRT->param->goalRadius)
+            {
+                localRRT->pathFound = true;
+                endNode = node;
+            }
         }
         iteration++;
     }
 
+    // Update path
     if (localRRT->pathFound)
     {
-        localRRT->bestPath = localRRT->traceBackToRoot(goalState);
-        localRRT->pathLength = localRRT->bestPath->getDistanceCost();
-        localRRT->pathTime = localRRT->bestPath->getTimeCost();
+        localRRT->updatePath(endNode);
     }
 
     static bool isSaved = false;
     if(!isSaved)
     {
         {
-            std::ofstream f( "tree.xml" );
+            std::ofstream f( "localTree.xml" );
             cereal::XMLOutputArchive archive( f );
 
             archive( (*localRRT) );
@@ -207,11 +221,17 @@ void RRTPlanner::planGlobalRRT(void)
         iteration++;
     }
 
-    if (globalRRT->pathFound)
+    static bool isSaved = false;
+    if(!isSaved && globalRRT->maxNumOfNodesReached())
     {
-        globalRRT->bestPath = globalRRT->traceBackToRoot(globalRRT->getRoot());
-        globalRRT->pathLength = globalRRT->bestPath->getDistanceCost();
-        globalRRT->pathTime = globalRRT->bestPath->getTimeCost();
+        {
+            std::ofstream f( "globalTree.xml" );
+            cereal::XMLOutputArchive archive( f );
+
+            archive( (*globalRRT) );
+            archive.serializeDeferments();
+        }
+        isSaved = true;
     }
 }
 
@@ -222,18 +242,18 @@ bool RRTPlanner::handleActualPath(void)
     if (fullCost < globalRRT->param->minCost) return false;
 
     shared_ptr<PATH_TYPE> loop = shared_ptr<PATH_TYPE> (new PATH_TYPE);
-    SS_VECTOR currentPose = actualPath->back();
+    shared_ptr<SS_VECTOR> currentPose = actualPath->back();
     PATH_TYPE::iterator it;
     bool isLoop = false;
     float cost = 0;
     PATH_TYPE segment;
     segment.push_back(actualPath->front());
 
-    float distStep = globalRRT->param->simulationTimeStep * currentPose.v();
+    float distStep = globalRRT->param->simulationTimeStep * currentPose->v();
 
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
-        if ((currentPose.getDistToTarget((*it), globalRRT->param) < distStep) &&
+        if ((currentPose->getDistToTarget(**it, globalRRT->param) < distStep) &&
             (cost < (fullCost - 3* distStep)))
         {
             isLoop = true;

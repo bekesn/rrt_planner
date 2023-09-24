@@ -48,7 +48,7 @@ bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory) 
     // Collect nearby cones with the same color
     for (auto & cone : map)
     {
-        double dist = trajectory->front().getDistEuclidean((StateSpace2D){(float) cone->x, (float) cone->y, 0});
+        double dist = trajectory->front()->getDistEuclidean((StateSpace2D){(float) cone->x, (float) cone->y, 0});
         if (dist < mapParam->collisionRange)
         {
             switch (cone->color)
@@ -84,7 +84,7 @@ bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory) 
     isOC = false;
     for (it = trajectory->begin(); it != trajectory->end(); it++)
     {
-         if(isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeBlueLandmarks) || isOnTrackEdge(make_shared<SS_VECTOR>(*it), closeYellowLandmarks))
+         if(isOnTrackEdge(*it, closeBlueLandmarks) || isOnTrackEdge(*it, closeYellowLandmarks))
          {
             isOC = true;
             break;
@@ -110,12 +110,11 @@ bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory
     for (it = trajectory->begin(); it != trajectory->end(); it++)
     {   
         bool isOnEdge = false;
-        shared_ptr<SS_VECTOR> vehicleState = make_shared<SS_VECTOR>(*it);
         int size = blueTrackBoundary.size();
 
         for(int i = 1; i < size; i++)
         {
-            isOnEdge = isOnTrackEdge(vehicleState, blueTrackBoundary[i-1], blueTrackBoundary[i]); 
+            isOnEdge = isOnTrackEdge(*it, blueTrackBoundary[i-1], blueTrackBoundary[i]); 
             if (isOnEdge) 
             {
                 isOC = true;
@@ -127,7 +126,7 @@ bool MapHandler::isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& trajectory
 
         for(int i = 1; i < size; i++)
         {
-            isOnEdge = isOnTrackEdge(vehicleState, yellowTrackBoundary[i-1], yellowTrackBoundary[i]); 
+            isOnEdge = isOnTrackEdge(*it, yellowTrackBoundary[i-1], yellowTrackBoundary[i]); 
             if (isOnEdge) 
             {
                 isOC = true;
@@ -193,8 +192,8 @@ shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& pa
         int nodeID = rand() % path->size();
         double range = param->sampleRange/10;
 
-        x = (*path)[nodeID].x()+ (rand()%((int) (200*range))) / 100.0 - range;
-        y  = (*path)[nodeID].y() + (rand()%((int) (200*range))) / 100.0 - range;
+        x = (*path)[nodeID]->x() + (rand()%((int) (200*range))) / 100.0 - range;
+        y = (*path)[nodeID]->y() + (rand()%((int) (200*range))) / 100.0 - range;
         theta = (rand() % ((int) (2000*M_PI))) / 1000.0 - M_PI;
 
         randState = make_shared<SS_VECTOR> (SS_VECTOR(x, y, theta));
