@@ -152,6 +152,7 @@ bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const 
             isOnEdge = isOnTrackEdge(vehicleState, ((*cones)[i]), ((*cones)[j])); 
             if (isOnEdge) break;
         }
+        if (isOnEdge) break;
     }
     return isOnEdge;
 }
