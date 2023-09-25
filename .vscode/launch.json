@@ -7,7 +7,7 @@
         {
             "name": "ROS: Launch",
             "request": "launch",
-            "target": "/home/bekesn/frt_ros_ws/src/rrt_planner/launch/rrt_planner.launch",
+            "target": "/home/bekesn/frt_ros_ws/src/rrt_planner/launch/bag.launch",
             "launch": "[rviz, gz, gzclient, gzserver]",
             "type": "ros"
         }

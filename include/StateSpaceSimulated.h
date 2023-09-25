@@ -18,6 +18,9 @@ public:
     // Calculate derivative of statespace vector
     shared_ptr<StateSpaceSimulated> derivative(const shared_ptr<Control>& controlInput, const unique_ptr<VEHICLE_PARAMETERS>& param) const;
 
+    // Return whether state is getting closer to goal state
+    bool isGettingCloser(const shared_ptr<StateSpace2D> goalState, const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
+
     // Limit constrained state variables
     void limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
     

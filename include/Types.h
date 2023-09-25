@@ -52,6 +52,7 @@ struct RRT_PARAMETERS{
     float maxVelocity;
     float resolution;
     float rewireTime;
+    int simIterations;
     float simulationTimeStep;
     float thetaWeight;
 

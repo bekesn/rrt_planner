@@ -41,6 +41,21 @@ shared_ptr<StateSpaceSimulated> StateSpaceSimulated::derivative(const shared_ptr
     return shared_ptr<StateSpaceSimulated>(new StateSpaceSimulated(x, y, theta, v, delta));
 }
 
+bool StateSpaceSimulated::isGettingCloser(const shared_ptr<StateSpace2D> goalState, const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const
+{
+    // Calculation is based on derivative of getDistOriented
+    // Derivative of state variables is calculated as in derivative(), but Control is not needed
+    float dx, dy, dtheta;
+    dx = v_ * cos(theta_);
+    dy = v_ * sin(theta_);
+    dtheta = v_ / vehicleParam->track * tan(delta_);
+
+    float numerator = (x_ - goalState->x()) * dx +
+                      (y_ - goalState->y()) * dy ;//+
+                      //(theta_ - goalState->theta()) * dtheta * rrtParam->thetaWeight;s
+    return numerator < 0;
+}
+
 void StateSpaceSimulated::limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
     // Limit v

@@ -93,7 +93,7 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     offCourse = mapHandler->isOffCourse(trajectory);
 
     // Add node
-    if ((!offCourse) && (trajectory->size() > 0))
+    if ((!offCourse) && (trajectory->size() > 1))
     {
         // Check if new node would be duplicate
         newState = trajectory->back();
@@ -123,7 +123,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     {
         
         trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param);
-        if (trajectory->size() > 0)
+        if (trajectory->size() > 1)
         {
             float error = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
             // Check if new path leads close to new state
@@ -138,7 +138,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
                     rrt->rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
                 }
-                else if ((newNodeCost - rrt->param->minCost) > childCost)
+                else if ((newNodeCost - globalRRT->param->minCost) > childCost)
                 {
                     // If newNodeCost is significantly higher than childCost, a loop might be created
                     // Rewiring would create a loop with multiple problems
@@ -192,10 +192,10 @@ void RRTPlanner::planLocalRRT(void)
     if(!isSaved)
     {
         {
-            std::ofstream f( "localTree.xml" );
-            cereal::XMLOutputArchive archive( f );
+            std::ofstream f("localTree.xml");
+            cereal::XMLOutputArchive archive(f);
 
-            archive( (*localRRT) );
+            archive(localRRT);
             archive.serializeDeferments();
         }
         isSaved = true;
@@ -225,10 +225,10 @@ void RRTPlanner::planGlobalRRT(void)
     if(!isSaved && globalRRT->maxNumOfNodesReached())
     {
         {
-            std::ofstream f( "globalTree.xml" );
-            cereal::XMLOutputArchive archive( f );
+            std::ofstream f("globalTree.xml");
+            cereal::XMLOutputArchive archive(f);
 
-            archive( (*globalRRT) );
+            archive(globalRRT);
             archive.serializeDeferments();
         }
         isSaved = true;
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
 
 void RRTPlanner::loadParameter(const string& topic, float& parameter, const float defaultValue)
 {
-    if (!ros::param::get(topic, parameter))
+    if (!ros::param::get("/rrt_planner/" + topic, parameter))
     {
         parameter = defaultValue;
         ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
@@ -322,7 +322,7 @@ void RRTPlanner::loadParameter(const string& topic, float& parameter, const floa
 
 void RRTPlanner::loadParameter(const string& topic, int& parameter, const int defaultValue)
 {
-    if (!ros::param::get(topic, parameter))
+    if (!ros::param::get("/rrt_planner/" + topic, parameter))
     {
         parameter = defaultValue;
         ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
@@ -332,7 +332,7 @@ void RRTPlanner::loadParameter(const string& topic, int& parameter, const int de
 
 void RRTPlanner::loadParameter(const string& topic, string& parameter, const string defaultValue)
 {
-    if (!ros::param::get(topic, parameter))
+    if (!ros::param::get("/rrt_planner/" + topic, parameter))
     {
         parameter = defaultValue;
         ROS_ERROR_STREAM(nodeName << " Parameter " << topic << " not found."); 
@@ -385,6 +385,9 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/sampleRange", localRRT->param->sampleRange, 3);
     loadParameter("/GLOBAL/sampleRange", globalRRT->param->sampleRange, 3);
 
+    loadParameter("/LOCAL/simIterations", localRRT->param->simIterations, 1);
+    loadParameter("/GLOBAL/simIterations", globalRRT->param->simIterations, 1);
+
     loadParameter("/LOCAL/simulationTimeStep", localRRT->param->simulationTimeStep, 0.2f);
     loadParameter("/GLOBAL/simulationTimeStep", globalRRT->param->simulationTimeStep, 0.2f);
 
@@ -397,7 +400,7 @@ void RRTPlanner::loadParameters(void)
 
     loadParameter("/MAP/collisionRange", mapHandler->getParameters()->collisionRange, 6.0f);
     loadParameter("/MAP/goalHorizon", mapHandler->getParameters()->goalHorizon, 15.0f);
-    loadParameter("/GLOBAL/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
+    loadParameter("/MAP/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
 
     loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
     loadParameter("/CONTROL/maxdDelta", Control::getParameters()->maxdDelta, 0.1f);

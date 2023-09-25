@@ -146,21 +146,63 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     shared_ptr<SS_VECTOR> state = start;
     state->limitVariables(param, vehicleParam);
-    path->push_back(state);
 
-    // TODO kokany
-    float dt = param->resolution / state->v();
-    float t = 0;
+    bool gettingCloser = true;
 
-    do
+    int numOfStates = (int) (param->simulationTimeStep * state->v() / param->resolution) + 1;
+    float dt = param->simulationTimeStep / (float) numOfStates;
+
+    for (int i = 0; i < numOfStates + 1; i++)
     {
-        shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
-        //if(controlInput->ddelta > 0) ROS_INFO_STREAM("" << controlInput->ddelta);
-        state = RK4(state, controlInput, dt);
-        state->limitVariables(param, vehicleParam);
-        path->push_back(state);
-        t += dt;
-    } while (t <= param->simulationTimeStep);
+        // If trajectory is not getting closer to goal, break from cycle
+        if (state->isGettingCloser(goal, param, vehicleParam))
+        {
+            path->push_back(state);
+
+            // In the last step, do not simulate
+            if (i < numOfStates)
+            {
+                // Simulate movement
+                shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
+                state = RK4(state, controlInput, dt);
+                state->limitVariables(param, vehicleParam);
+            }
+        }
+        else
+        {
+            gettingCloser = false;
+            break;
+        }
+    }
+
+    // If the cycle ended early because of !gettingCloser, the closest point should be searched
+    // If path is empty, start state is already !gettingCloser
+    if (!gettingCloser && (path->size() > 0))
+    {
+        // The trajectory endpoint is now the last state which is getting closer
+        shared_ptr<SS_VECTOR> prevState = path->back();
+        bool closerFound = false;
+
+        for (int i = 0; i < param->simIterations; i++)
+        {
+            dt = dt / 2.0f;
+            
+            // Simulate movement
+            shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
+            state = RK4(prevState, controlInput, dt);
+            state->limitVariables(param, vehicleParam);
+
+            // If new state is still getting closer, 
+            bool positiveDerivative = state->isGettingCloser(goal, param, vehicleParam);
+            if (positiveDerivative)
+            {
+                prevState = state;
+                closerFound = true;
+            }
+        }
+        
+        if (closerFound) path->push_back(state);
+    }
 
     return path;
 }
