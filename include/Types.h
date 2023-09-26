@@ -48,6 +48,7 @@ struct RRT_PARAMETERS{
     int maxNumOfNodes;
     float minCost;
     float minDeviation;
+    float minDeviationDist;
     float sampleRange;
     float maxVelocity;
     float resolution;

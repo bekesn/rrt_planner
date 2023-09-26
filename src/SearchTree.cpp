@@ -97,8 +97,25 @@ shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> SearchTree::getNearby(shared
 
 bool SearchTree::alreadyInTree(const shared_ptr<SS_VECTOR>& state) const
 {
-    shared_ptr<SS_VECTOR> closest = getNearest(state)->getState();
-    return abs(closest->getDistOriented(*state, param)) < param->minDeviation;
+    std::vector<shared_ptr<SearchTreeNode>>::iterator it;
+    bool isInTree = false;
+
+    // Iterate through tree
+    for (it = tree->begin(); it != tree->end(); it++)
+    {
+        if(state->getDistEuclidean(*(*it)->getState()) < param->minDeviationDist)
+        {
+           isInTree = true;
+           break;
+        }
+        else if(state->getDistOriented(*(*it)->getState(), param) < param->minDeviation)
+        {
+           isInTree = true;
+           break;
+        }
+    }
+
+    return isInTree;
 }
 
 void SearchTree::visualize(void)

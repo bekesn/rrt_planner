@@ -215,8 +215,8 @@ void RRTPlanner::planGlobalRRT(void)
             bool rewired = rewire(globalRRT, node);
             if(rewired) changed = true;
 
-            float goalDist = node->getState()->getDistToTarget(*globalRRT->getRoot(), globalRRT->param);
-            if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
+            //float goalDist = node->getState()->getDistToTarget(*globalRRT->getRoot(), globalRRT->param);
+            //if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
         iteration++;
     }
@@ -373,8 +373,11 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/minCost", localRRT->param->minCost, 0.0f);
     loadParameter("/GLOBAL/minCost", globalRRT->param->minCost, 3.0f);
 
-    loadParameter("/LOCAL/minDeviation", localRRT->param->minDeviation, 0.05f);
-    loadParameter("/GLOBAL/minDeviation", globalRRT->param->minDeviation, 0.05f);
+    loadParameter("/LOCAL/minDeviation", localRRT->param->minDeviation, 0.1f);
+    loadParameter("/GLOBAL/minDeviation", globalRRT->param->minDeviation, 0.1f);
+
+    loadParameter("/LOCAL/minDeviationDist", localRRT->param->minDeviationDist, 0.05f);
+    loadParameter("/GLOBAL/minDeviationDist", globalRRT->param->minDeviationDist, 0.05f);
 
     loadParameter("/LOCAL/resolution", localRRT->param->resolution, 0.05f);
     loadParameter("/GLOBAL/resolution", globalRRT->param->resolution, 0.05f);
