@@ -132,7 +132,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
                 float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
                 // Compare costs  if it is worth rewiring
-                if ((newNodeCost + segmentCost) < childCost)
+                if ((newNodeCost + segmentCost + error) < childCost)
                 {
                     //Rewire if it reduces cost
                     rrt->rewire(*it,newNode);

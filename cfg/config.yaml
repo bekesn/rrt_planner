@@ -17,7 +17,7 @@ rrt_planner:
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        4.0           # used for random sampling near the detected cones, range in [m]
     simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
-    simulationTimeStep: 0.2           # in [s]
+    simulationTimeStep: 0.5           # in [s]
     thetaWeight:        5000          # weight of orientation difference in distance calculation
 
   GLOBAL:
@@ -34,7 +34,7 @@ rrt_planner:
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
     simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
-    simulationTimeStep: 0.2           # in [s]
+    simulationTimeStep: 0.5           # in [s]
     thetaWeight:        1000          # weight of orientation difference in distance calculation
 
   VEHICLE:
@@ -49,6 +49,6 @@ rrt_planner:
     maxConeDist:        6             # maximal distance between consecutive cones in [m]
 
   CONTROL:
-    k:                  10
+    k:                  2
     maxdDelta:          0.1           # maximum change of front axis steering angle in [rad] in one timestep
     maxLongAccel:       10            # maximum longitudinal acceleration in [m/s2]

@@ -17,7 +17,7 @@ shared_ptr<Control> Control::angleControl(const SS_VECTOR& state, const StateSpa
 {
     float angle = state.getAngleToTarget(target);
     shared_ptr<Control> input = shared_ptr<Control> (new Control());
-    input->ddelta = (-controlParam->k * angle) - state.delta();
+    input->ddelta = -controlParam->k * angle;
     input->ax = getRandomAccel();
     input->MYaw = 0;
 
