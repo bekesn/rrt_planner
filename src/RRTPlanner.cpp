@@ -122,7 +122,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
-        trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param);
+        trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param, rrt->param->rewireTime);
         if (trajectory->size() > 1)
         {
             float error = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);

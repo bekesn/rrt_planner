@@ -53,20 +53,21 @@ unique_ptr<VEHICLE_PARAMETERS>& VehicleModel::getParameters()
     return vehicleParam;
 }
 
-shared_ptr<PATH_TYPE> VehicleModel::simulateToTarget(const shared_ptr<SS_VECTOR>& startState, const shared_ptr<SS_VECTOR>& goalState, const unique_ptr<RRT_PARAMETERS>& param) const
+shared_ptr<PATH_TYPE> VehicleModel::simulateToTarget(const shared_ptr<SS_VECTOR>& startState, const shared_ptr<SS_VECTOR>& goalState,
+    const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier) const
 {
     shared_ptr<PATH_TYPE> trajectory;
 
     switch(vehicleParam->simType)
     {
         case HOLONOMIC:
-            trajectory = simulateHolonomic(startState, goalState, param);
+            trajectory = simulateHolonomic(startState, goalState, param, multiplier);
             break;
         case HOLONOMIC_CONSTRAINED:
-            trajectory = simulateHolonomicConstrained(startState, goalState, param);
+            trajectory = simulateHolonomicConstrained(startState, goalState, param, multiplier);
             break;
         case BICYCLE_SIMPLE:
-            trajectory = simulateBicycleSimple(startState, goalState, param);
+            trajectory = simulateBicycleSimple(startState, goalState, param, multiplier);
             break;
         case BICYCLE:
             //TODO
@@ -79,7 +80,8 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateToTarget(const shared_ptr<SS_VECTOR>
     return trajectory;
 }
 
-shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal, const unique_ptr<RRT_PARAMETERS>& param) const
+shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+    const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier) const
 {
     float distance, ratio, x, y;
     int i, numOfStates;
@@ -87,7 +89,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR
 
     float maxConndist = param->maxVelocity * param->simulationTimeStep;
     distance = start->getDistEuclidean(*goal);
-    ratio = maxConndist / distance;
+    ratio = multiplier * maxConndist / distance;
     if (ratio > 1) ratio = 1;
     numOfStates = (int) (ratio*distance/param->resolution) + 1;
 
@@ -100,7 +102,8 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR
     return path;
 }
 
-shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal, const unique_ptr<RRT_PARAMETERS>& param, float maxAngle) const
+shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+    const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier, float maxAngle) const
 {
 
     float distance, angleDiff, ratio, x, y, orientation, dx, dy;
@@ -128,7 +131,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_pt
     dx = cos(orientation) * distance;
     dy = sin(orientation) * distance;
 
-    ratio = maxConndist / distance;
+    ratio = multiplier * maxConndist / distance;
     if (ratio > 1) ratio = 1;
     numOfStates = (int) (ratio*distance/param->resolution) + 1;
 
@@ -141,7 +144,8 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_pt
     return path;
 }
 
-shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal, const unique_ptr<RRT_PARAMETERS>& param) const
+shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
+    const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier) const
 {
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     shared_ptr<SS_VECTOR> state = start;
@@ -149,7 +153,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
 
     bool gettingCloser = true;
 
-    int numOfStates = (int) (param->simulationTimeStep * state->v() / param->resolution) + 1;
+    int numOfStates = (int) (multiplier * param->simulationTimeStep * state->v() / param->resolution) + 1;
     float dt = param->simulationTimeStep / (float) numOfStates;
 
     for (int i = 0; i < numOfStates + 1; i++)

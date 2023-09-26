@@ -38,20 +38,20 @@ public:
 
     // Simulate advancing towards target
     shared_ptr<PATH_TYPE> simulateToTarget(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
-                                           const unique_ptr<RRT_PARAMETERS>& param) const;
+                                           const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier = 1.0f) const;
 
     // SIMULATION FUNCTIONS
     // Holonomic model
     shared_ptr<PATH_TYPE> simulateHolonomic(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
-                                            const unique_ptr<RRT_PARAMETERS>& param) const;
+                                            const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier) const;
 
     // Holonomic model with constraints
     shared_ptr<PATH_TYPE> simulateHolonomicConstrained(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
-                                                       const unique_ptr<RRT_PARAMETERS>& param, float maxAngle = 0.5f) const;
+                                                       const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier, float maxAngle = 0.5f) const;
 
     // Simple kinematic bicycle model
     shared_ptr<PATH_TYPE> simulateBicycleSimple(const shared_ptr<SS_VECTOR>& start, const shared_ptr<SS_VECTOR>& goal,
-                                                const unique_ptr<RRT_PARAMETERS>& param) const;
+                                                const unique_ptr<RRT_PARAMETERS>& param, const float& multiplier) const;
 
     // DIFFERENTIAL EQUATION SOLVER
     // Runge-Kutta 4th order

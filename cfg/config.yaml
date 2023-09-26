@@ -11,12 +11,12 @@ rrt_planner:
     maxNumOfNodes:      600           # limits number of nodes in searchtree
     maxVelocity:        10            # in [m/s]
     minCost:            0.0           # cost threshold used to filter nodes when tracing back the path to root
-    minDeviation:       0.3           # minimum distance (oriented) between close states in [m]
+    minDeviation:       1.0           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        4.0           # used for random sampling near the detected cones, range in [m]
-    simIterations:      2             # number of iterations of searching closest point on trajectory to goal state
+    simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.2           # in [s]
     thetaWeight:        5000          # weight of orientation difference in distance calculation
 
@@ -28,12 +28,12 @@ rrt_planner:
     maxNumOfNodes:      9000          # limits number of nodes in searchtree
     maxVelocity:        10            # in [m/s]
     minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
-    minDeviation:       0.3           # minimum distance (oriented) between close states in [m]
+    minDeviation:       1.0           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
-    simIterations:      2             # number of iterations of searching closest point on trajectory to goal state
+    simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.2           # in [s]
     thetaWeight:        1000          # weight of orientation difference in distance calculation
 
