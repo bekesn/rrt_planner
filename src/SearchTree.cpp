@@ -43,7 +43,16 @@ shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> paren
 
 void SearchTree::remove(shared_ptr<SearchTreeNode> node)
 {
-
+    int numOfChildren = node->getChildren()->size();
+    if(numOfChildren == 0)
+    {
+        node->getParent()->removeChild(node);
+        tree->erase(std::remove(tree->begin(), tree->end(), node),tree->end());
+    }
+    else
+    {
+        ROS_WARN_STREAM("Trying to delete node with " << numOfChildren << " children.");
+    }
 }
 
 shared_ptr<SearchTreeNode> SearchTree::getNearest(const shared_ptr<SS_VECTOR>& toState, float minCost) const
