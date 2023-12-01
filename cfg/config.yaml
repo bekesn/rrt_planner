@@ -5,7 +5,7 @@ rrt_planner:
 
   LOCAL:
     costType:           "TIME"        # can be "DISTANCE" , "TIME"
-    goalBias:           0.2   
+    goalBias:           0.3   
     goalRadius:         4.0           # acceptance range in [m]
     iterations:         500           # iterations for planning
     maxNumOfNodes:      600           # limits number of nodes in searchtree
@@ -16,7 +16,7 @@ rrt_planner:
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        4.0           # used for random sampling near the detected cones, range in [m]
-    simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
+    simIterations:      4             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
     thetaWeight:        5000          # weight of orientation difference in distance calculation
     triangleIterations: 1             # number of triangle optimizations in one iteration of planning
@@ -34,9 +34,9 @@ rrt_planner:
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
-    simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
+    simIterations:      2             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
-    thetaWeight:        1000          # weight of orientation difference in distance calculation
+    thetaWeight:        5000          # weight of orientation difference in distance calculation
     triangleIterations: 3             # number of triangle optimizations in one iteration of planning
 
   VEHICLE:

@@ -188,7 +188,7 @@ void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<Search
     {
         segmentCost = trajectory->cost(rrt->param);
         isClose = trajectory->back()->getDistOriented(*node->getState(), rrt->param) < rrt->param->minDeviation;
-        isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost();
+        isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost() + rrt->param->minDeviation / (parentParent->getState()->v() *2);
         offCourse = mapHandler->isOffCourse(trajectory);
 
         if(isClose && isLowerCost && !offCourse)
