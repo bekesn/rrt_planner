@@ -167,7 +167,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
             if (i < numOfStates)
             {
                 // Simulate movement
-                shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
+                shared_ptr<Control> controlInput = Control::control(*state, *goal, dt);
                 state = RK4(state, controlInput, dt);
                 state->limitVariables(param, vehicleParam);
             }
@@ -192,7 +192,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
             dt = dt / 2.0f;
             
             // Simulate movement
-            shared_ptr<Control> controlInput = Control::angleControl(*state, *goal);
+            shared_ptr<Control> controlInput = Control::control(*state, *goal, dt);
             state = RK4(prevState, controlInput, dt);
             state->limitVariables(param, vehicleParam);
 

@@ -51,6 +51,7 @@ rrt_planner:
     maxConeDist:        6             # maximal distance between consecutive cones in [m]
 
   CONTROL:
-    k:                  2
-    maxdDelta:          0.1           # maximum change of front axis steering angle in [rad] in one timestep
-    maxLongAccel:       10            # maximum longitudinal acceleration in [m/s2]
+    k:                  2                 
+    maxdDelta:          1.2           # maximum speed of front axis steering angle in [rad/s] 
+    maxLatAccel:        16            # maximum lateral acceleration in [m/s2]
+    maxLongAccel:       12            # maximum longitudinal acceleration in [m/s2]

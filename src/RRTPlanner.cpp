@@ -463,6 +463,7 @@ void RRTPlanner::loadParameters(void)
 
     loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
     loadParameter("/CONTROL/maxdDelta", Control::getParameters()->maxdDelta, 0.1f);
+    loadParameter("/CONTROL/maxLatAccel", Control::getParameters()->maxLatAccel, 10.0f);
     loadParameter("/CONTROL/maxLongAccel", Control::getParameters()->maxLongAccel, 5.0f);
 
     // Choose simulation type
