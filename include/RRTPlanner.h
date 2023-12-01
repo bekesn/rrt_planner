@@ -52,7 +52,12 @@ public:
     // Extend searchtree by a new node
     shared_ptr<SearchTreeNode> extend(unique_ptr<SearchTree>& rrt);
 
+    // Globally optimize tree by reorganizing edges
     bool rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode);
+
+    // Locally optimize tree by reorganizing edges
+    void optimizeTriangles(unique_ptr<SearchTree>& rrt);
+    void optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> node);
 
     // RRT on partially discovered map
     void planLocalRRT(void);

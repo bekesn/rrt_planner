@@ -76,7 +76,9 @@
         "forward_list": "cpp",
         "regex": "cpp",
         "future": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "*.ipp": "cpp",
+        "*.txx": "cpp"
     },
     "python.analysis.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"

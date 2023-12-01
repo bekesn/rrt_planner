@@ -97,6 +97,9 @@ public:
     // Rewiring node from former parent to newParent node
     void rewire(shared_ptr<SearchTreeNode> node, shared_ptr<SearchTreeNode> newParent);
 
+    // Provide a randomly chosen node
+    shared_ptr<SearchTreeNode> getRandomNode(void) const;
+
     // Archive function for cereal
     template<class Archive>
     void serialize(Archive & archive){archive(CEREAL_NVP(tree), CEREAL_NVP(pathCost), CEREAL_NVP(type), CEREAL_NVP(param), 

@@ -19,6 +19,7 @@ rrt_planner:
     simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
     thetaWeight:        5000          # weight of orientation difference in distance calculation
+    triangleIterations: 1             # number of triangle optimizations in one iteration of planning
 
   GLOBAL:
     costType:           "TIME"        # can be "DISTANCE" , "TIME"
@@ -36,6 +37,7 @@ rrt_planner:
     simIterations:      0             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
     thetaWeight:        1000          # weight of orientation difference in distance calculation
+    triangleIterations: 3             # number of triangle optimizations in one iteration of planning
 
   VEHICLE:
     maxDelta:           0.38          # maximum front axis steering angle in [rad]

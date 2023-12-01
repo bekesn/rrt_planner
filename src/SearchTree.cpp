@@ -48,6 +48,7 @@ void SearchTree::remove(shared_ptr<SearchTreeNode> node)
     {
         node->getParent()->removeChild(node);
         tree->erase(std::remove(tree->begin(), tree->end(), node),tree->end());
+        nodeCount--;
     }
     else
     {
@@ -402,4 +403,10 @@ void SearchTree::rewire(shared_ptr<SearchTreeNode> node, shared_ptr<SearchTreeNo
     if(node->getParent() != NULL) node->getParent()->removeChild(node);
     node->changeParent(newParent, node);
     rewireCount++;
+}
+
+shared_ptr<SearchTreeNode> SearchTree::getRandomNode(void) const
+{
+    int ID = rand() % nodeCount;
+    return (*tree)[ID];
 }
