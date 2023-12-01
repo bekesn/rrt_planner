@@ -56,6 +56,7 @@ struct RRT_PARAMETERS{
     int simIterations;
     float simulationTimeStep;
     float thetaWeight;
+    float triangleIterations;
 
     // Archive function for cereal
     template<class Archive>

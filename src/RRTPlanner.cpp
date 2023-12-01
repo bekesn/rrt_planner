@@ -118,21 +118,24 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> nearbyNodes = rrt->getNearby(newNode);
     vector<shared_ptr<SearchTreeNode>>::iterator it;
     float newNodeCost = rrt->getAbsCost(newNode);
+    bool offCourse;
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
         trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param, rrt->param->rewireTime);
-        if (trajectory->size() > 1)
+        offCourse = mapHandler->isOffCourse(trajectory);
+        if ((trajectory->size() > 1) && !offCourse)
         {
-            float error = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
+            float distError = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
             // Check if new path leads close to new state
-            if ( error < rrt->param->minDeviation)
+            if ( distError < rrt->param->minDeviation)
             {
                 float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
+                float timeError = distError / trajectory->back()->v();
                 // Compare costs  if it is worth rewiring
-                if ((newNodeCost + segmentCost + error) < childCost)
+                if ((newNodeCost + segmentCost + timeError) < childCost)
                 {
                     //Rewire if it reduces cost
                     rrt->rewire(*it,newNode);
@@ -158,6 +161,50 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     return false;
 }
 
+
+void RRTPlanner::optimizeTriangles(unique_ptr<SearchTree>& rrt)
+{
+    for(int i = 0; i < rrt->param->triangleIterations; i++)
+    {
+        shared_ptr<SearchTreeNode> node = rrt->getRandomNode();
+        optimizeTriangle(rrt, node);
+    }
+}
+
+void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> node)
+{
+    shared_ptr<SearchTreeNode> parent, parentParent;
+    shared_ptr<PATH_TYPE> trajectory;
+    bool isClose, isLowerCost, offCourse;
+    float segmentCost;
+
+    parent = node->getParent();
+    if(parent == NULL) return;
+    parentParent = parent->getParent();
+    if(parentParent == NULL) return;
+
+    trajectory = vehicleModel->simulateToTarget(parentParent->getState(), node->getState(), rrt->param, rrt->param->rewireTime);
+    if(trajectory->size() > 0)
+    {
+        segmentCost = trajectory->cost(rrt->param);
+        isClose = trajectory->back()->getDistOriented(*node->getState(), rrt->param) < rrt->param->minDeviation;
+        isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost();
+        offCourse = mapHandler->isOffCourse(trajectory);
+
+        if(isClose && isLowerCost && !offCourse)
+        {
+            rrt->rewire(node, parentParent);
+            node->changeSegmentCost(segmentCost);
+            if(parent->getChildren()->size() == 0)
+            {
+                rrt->remove(parent);
+            }
+
+        }
+    }
+
+}
+
 void RRTPlanner::planLocalRRT(void)
 {
     shared_ptr<SS_VECTOR> pose = vehicleModel->getCurrentPose();
@@ -179,6 +226,9 @@ void RRTPlanner::planLocalRRT(void)
                 endNode = node;
             }
         }
+
+        optimizeTriangles(localRRT);
+
         iteration++;
     }
 
@@ -218,6 +268,9 @@ void RRTPlanner::planGlobalRRT(void)
             //float goalDist = node->getState()->getDistToTarget(*globalRRT->getRoot(), globalRRT->param);
             //if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
+
+        optimizeTriangles(globalRRT);
+        
         iteration++;
     }
 
@@ -396,6 +449,9 @@ void RRTPlanner::loadParameters(void)
 
     loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 1000.0f);
     loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 1000.0f);
+
+    loadParameter("/LOCAL/triangleIterations", localRRT->param->triangleIterations, 1.0f);
+    loadParameter("/GLOBAL/triangleIterations", globalRRT->param->triangleIterations, 1.0f);
 
     loadParameter("/VEHICLE/maxDelta", vehicleModel->getParameters()->maxDelta, 0.38f);
     loadParameter("/VEHICLE/track", vehicleModel->getParameters()->track, 1.2f);

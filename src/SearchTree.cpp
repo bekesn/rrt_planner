@@ -43,7 +43,17 @@ shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> paren
 
 void SearchTree::remove(shared_ptr<SearchTreeNode> node)
 {
-
+    int numOfChildren = node->getChildren()->size();
+    if(numOfChildren == 0)
+    {
+        node->getParent()->removeChild(node);
+        tree->erase(std::remove(tree->begin(), tree->end(), node),tree->end());
+        nodeCount--;
+    }
+    else
+    {
+        ROS_WARN_STREAM("Trying to delete node with " << numOfChildren << " children.");
+    }
 }
 
 shared_ptr<SearchTreeNode> SearchTree::getNearest(const shared_ptr<SS_VECTOR>& toState, float minCost) const
@@ -393,4 +403,10 @@ void SearchTree::rewire(shared_ptr<SearchTreeNode> node, shared_ptr<SearchTreeNo
     if(node->getParent() != NULL) node->getParent()->removeChild(node);
     node->changeParent(newParent, node);
     rewireCount++;
+}
+
+shared_ptr<SearchTreeNode> SearchTree::getRandomNode(void) const
+{
+    int ID = rand() % nodeCount;
+    return (*tree)[ID];
 }
