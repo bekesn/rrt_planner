@@ -118,21 +118,24 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> nearbyNodes = rrt->getNearby(newNode);
     vector<shared_ptr<SearchTreeNode>>::iterator it;
     float newNodeCost = rrt->getAbsCost(newNode);
+    bool offCourse;
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
         trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param, rrt->param->rewireTime);
-        if (trajectory->size() > 1)
+        offCourse = mapHandler->isOffCourse(trajectory);
+        if ((trajectory->size() > 1) && !offCourse)
         {
-            float error = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
+            float distError = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
             // Check if new path leads close to new state
-            if ( error < rrt->param->minDeviation)
+            if ( distError < rrt->param->minDeviation)
             {
                 float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
+                float timeError = distError / trajectory->back()->v();
                 // Compare costs  if it is worth rewiring
-                if ((newNodeCost + segmentCost + error) < childCost)
+                if ((newNodeCost + segmentCost + timeError) < childCost)
                 {
                     //Rewire if it reduces cost
                     rrt->rewire(*it,newNode);
