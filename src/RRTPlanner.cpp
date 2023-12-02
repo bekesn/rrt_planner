@@ -146,7 +146,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
                     // If newNodeCost is significantly higher than childCost, a loop might be created
                     // Rewiring would create a loop with multiple problems
                     // Instead of making a loop, mark it in the SearchTree
-                    bool isLoop = rrt->closeLoop(*it, newNode);
+                    bool isLoop = rrt->addLoop(newNode, *it, segmentCost);
 
                     // If a loop is not created, rewire 
                     if(!isLoop)
@@ -273,6 +273,8 @@ void RRTPlanner::planGlobalRRT(void)
         
         iteration++;
     }
+
+    globalRRT->manageLoops();
 
     static bool isSaved = false;
     if(!isSaved && globalRRT->maxNumOfNodesReached())

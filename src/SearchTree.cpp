@@ -279,6 +279,8 @@ void SearchTree::init(const shared_ptr<SS_VECTOR>& startState)
 {
     tree->clear();
     tree->push_back(make_shared<SearchTreeNode> (SearchTreeNode(NULL, startState, 0)));
+    vEdges.clear();
+    // bestPath is not reinitialized as if local planning fails, it can reuse previous path
 
     // Initialize status variables
     nodeCount = 1;
@@ -343,7 +345,7 @@ void SearchTree::updatePath(shared_ptr<SearchTreeNode>& endNode)
     pathTime = bestPath->getTimeCost();
 }
 
-bool SearchTree::closeLoop(const shared_ptr<SearchTreeNode>& startNode, const shared_ptr<SearchTreeNode>& endNode)
+/*bool SearchTree::closeLoop(const shared_ptr<SearchTreeNode>& startNode, const shared_ptr<SearchTreeNode>& endNode)
 {
     shared_ptr<PATH_TYPE> path = traceBackToRoot(endNode);
     bool isLoop = false;
@@ -379,6 +381,72 @@ bool SearchTree::closeLoop(const shared_ptr<SearchTreeNode>& startNode, const sh
     }
 
     return isLoop;
+}*/
+
+bool SearchTree::addLoop(const shared_ptr<SearchTreeNode> startNode, const shared_ptr<SearchTreeNode> endNode, const float& cost)
+{
+    shared_ptr<PATH_TYPE> path = traceBackToRoot(startNode);
+    bool isLoop = false;
+
+    PATH_TYPE::iterator endIterator;
+
+    endIterator = find(path->begin(), path->end(), endNode->getState());
+    if (endIterator != path->end())
+    {
+        // A loop is detected
+        vEdge virtEdge = {startNode, endNode, cost};
+        vEdges.push_back(make_shared<vEdge>(virtEdge));
+        isLoop = true;
+    }
+
+    return isLoop;
+}
+
+void SearchTree::manageLoops(void)
+{
+    for(auto virtEdge : vEdges)
+    {
+        bool isLoop = false;
+        shared_ptr<PATH_TYPE> path = traceBackToRoot(virtEdge->start);
+        if(path->size() > 1)
+        {
+            PATH_TYPE::iterator endIterator;
+
+            endIterator = find(path->begin(), path->end(), virtEdge->end->getState());
+            if (endIterator != path->end())
+            {
+                // A loop is detected
+                pathFound = true;
+                isLoop = true;
+
+                // Calculate cost of loop
+                float cost = 0;
+                cost = getAbsCost(virtEdge->start) - getAbsCost(virtEdge->end) + virtEdge->cost;
+
+                // bestPath should be updated if cost is better or bestPath has not been created
+                if(cost < pathCost || bestPath->size() == 0)
+                {
+                    // Remove states from path before end state
+                    path->erase(path->begin(), endIterator);
+
+                    // Add end state to the end to create a loop
+                    path->push_back(virtEdge->end->getState());
+
+                    // Update path related variables
+                    bestPath = path;
+                    pathCost = cost;
+                    pathLength = bestPath->getDistanceCost();
+                    pathTime = bestPath->getTimeCost();
+                }
+            }
+        }
+        
+        // If virtEdge does not create a loop anymore, delete it
+        if(!isLoop)
+        {
+            vEdges.erase(std::remove(vEdges.begin(), vEdges.end(), virtEdge), vEdges.end());
+        }
+    }
 }
 
 float SearchTree::getAbsCost(const shared_ptr<SearchTreeNode>& node) const
