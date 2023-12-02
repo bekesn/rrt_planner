@@ -420,9 +420,6 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/maxNumOfNodes", localRRT->param->maxNumOfNodes, 1000);
     loadParameter("/GLOBAL/maxNumOfNodes", globalRRT->param->maxNumOfNodes, 1000);
 
-    loadParameter("/LOCAL/maxVelocity", localRRT->param->maxVelocity, 10.0f);
-    loadParameter("/GLOBAL/maxVelocity", globalRRT->param->maxVelocity, 10.0f);
-
     loadParameter("/LOCAL/minCost", localRRT->param->minCost, 0.0f);
     loadParameter("/GLOBAL/minCost", globalRRT->param->minCost, 3.0f);
 
@@ -453,7 +450,10 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/triangleIterations", localRRT->param->triangleIterations, 1.0f);
     loadParameter("/GLOBAL/triangleIterations", globalRRT->param->triangleIterations, 1.0f);
 
+    loadParameter("/VEHICLE/maxdDelta", vehicleModel->getParameters()->maxdDelta, 0.1f);
     loadParameter("/VEHICLE/maxDelta", vehicleModel->getParameters()->maxDelta, 0.38f);
+    loadParameter("/VEHICLE/maxLatAccel", vehicleModel->getParameters()->maxLatAccel, 10.0f);
+    loadParameter("/VEHICLE/maxLongAccel", vehicleModel->getParameters()->maxLongAccel, 5.0f);
     loadParameter("/VEHICLE/track", vehicleModel->getParameters()->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", vehicleModel->getParameters()->wheelBase, 1.54f); 
 
@@ -462,8 +462,6 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/MAP/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
 
     loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
-    loadParameter("/CONTROL/maxdDelta", Control::getParameters()->maxdDelta, 0.1f);
-    loadParameter("/CONTROL/maxLongAccel", Control::getParameters()->maxLongAccel, 5.0f);
 
     // Choose simulation type
     std::string simType;

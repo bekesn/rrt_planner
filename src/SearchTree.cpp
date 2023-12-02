@@ -166,7 +166,7 @@ void SearchTree::visualize(void)
         coord.y = (*it)->getState()->y();
         treeNodes.points.push_back(coord);
 
-        relativeVelocity = (*it)->getState()->v() / param->maxVelocity;
+        relativeVelocity = (*it)->getState()->v() / 10;
         if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
         varColor.r = relativeVelocity;
         varColor.g = 1 - relativeVelocity;

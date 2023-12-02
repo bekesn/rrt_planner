@@ -18,12 +18,17 @@ public:
 
     Control();
 
-    // Return Control object for controlling the vehicle
-    static shared_ptr<Control> stanleyToTarget(const SS_VECTOR& state, const StateSpace2D& target);
-    static shared_ptr<Control> angleControl(const SS_VECTOR& state, const StateSpace2D& target);
+    // Create control inputs
+    static shared_ptr<Control> control(const StateSpaceSimulated& state, const StateSpaceSimulated& target,
+                                       const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);
 
-    // Get random acceleration value
-    static double getRandomAccel(void);
+    // Calculate steering speed for lateral control of the vehicle
+    static float thetaLateralControl(const StateSpace2D& state, const StateSpace2D& target);
+    static float psiLateralControl(const StateSpace2D& state, const StateSpace2D& target);
+
+    // Calculate a_x for longitudinal control of the vehicle
+    static float getRandomAccel(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
+    static float longitudinalControl(const StateSpaceSimulated& state, const StateSpaceSimulated& target, const float& timeStep);
 
     // Set control parameters
     static void setParameters(const unique_ptr<CONTROL_PARAMETERS> param);
@@ -32,7 +37,7 @@ public:
     static unique_ptr<CONTROL_PARAMETERS>& getParameters(void);
 
     // Limit input
-    void limitValues(void);
+    void limitValues(const StateSpaceSimulated& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);
     
     // Archive function for cereal
     template<class Archive>
