@@ -189,8 +189,6 @@ void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<Search
         segmentCost = trajectory->cost(rrt->param);
         shared_ptr<StateSpace2D> s = node->getState();
         float error = trajectory->back()->getDistOriented(*s, rrt->param);
-        ROS_INFO_STREAM("" << error << "  " << parentParent->getState()->getDistEuclidean(*s) << 
-            "  " << parent->getSegmentCost() + parentParent->getSegmentCost());
         isClose =  error < rrt->param->minDeviation;
         isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost() + rrt->param->minDeviation / (parentParent->getState()->v() *2);
         offCourse = mapHandler->isOffCourse(trajectory);

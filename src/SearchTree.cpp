@@ -404,9 +404,11 @@ bool SearchTree::addLoop(const shared_ptr<SearchTreeNode> startNode, const share
 
 void SearchTree::manageLoops(void)
 {
-    for(auto virtEdge : vEdges)
+    vector<shared_ptr<vEdge>>::iterator it;
+    for(it = vEdges.begin(); it < vEdges.end(); it++)
     {
         bool isLoop = false;
+        shared_ptr<vEdge> virtEdge = *it;
         shared_ptr<PATH_TYPE> path = traceBackToRoot(virtEdge->start);
         if(path->size() > 1)
         {
@@ -442,7 +444,7 @@ void SearchTree::manageLoops(void)
         // If virtEdge does not create a loop anymore, delete it
         if(!isLoop)
         {
-            vEdges.erase(std::remove(vEdges.begin(), vEdges.end(), virtEdge), vEdges.end());
+            it = vEdges.erase(std::remove(vEdges.begin(), vEdges.end(), virtEdge), vEdges.end());
         }
     }
 }
