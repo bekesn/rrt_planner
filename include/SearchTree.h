@@ -79,8 +79,8 @@ public:
     // Returns with trajectory from root to node
     shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SearchTreeNode>& node) const;
 
-    // Update best path which ends at given node
-    void updatePath(shared_ptr<SearchTreeNode>& endNode);
+    // Update best path to given path
+    void updatePath(const shared_ptr<PATH_TYPE>& path);
 
     // Create closing segment to define best loop
     // Investigates if a real loop is defined

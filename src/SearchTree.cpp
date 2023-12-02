@@ -338,9 +338,9 @@ shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const shared_ptr<SearchTreeNod
     return path;
 }
 
-void SearchTree::updatePath(shared_ptr<SearchTreeNode>& endNode)
+void SearchTree::updatePath(const shared_ptr<PATH_TYPE>& path)
 {
-    bestPath = traceBackToRoot(endNode);
+    bestPath = path;
     pathLength = bestPath->getDistanceCost();
     pathTime = bestPath->getTimeCost();
 }
@@ -433,10 +433,8 @@ void SearchTree::manageLoops(void)
                     path->push_back(virtEdge->end->getState());
 
                     // Update path related variables
-                    bestPath = path;
                     pathCost = cost;
-                    pathLength = bestPath->getDistanceCost();
-                    pathTime = bestPath->getTimeCost();
+                    updatePath(path);
                 }
             }
         }
