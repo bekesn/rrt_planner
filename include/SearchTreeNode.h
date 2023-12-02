@@ -2,7 +2,6 @@
 #define SEARCHTREENODE_H
 
 #include <vector>
-#include <ros/ros.h>
 #include <iterator>
 #include "Types.h"
 #include "StateSpaceSimulated.h"

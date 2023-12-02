@@ -4,6 +4,7 @@
 #include "StateSpace2D.h"
 #include "Control.h"
 #include <cereal/types/base_class.hpp>
+#include <ros/ros.h>
 
 class StateSpaceSimulated : public StateSpace2D
 {
@@ -27,6 +28,7 @@ public:
     // Calculate maximum allowed vx
     float vxLimit(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
     float vxLimitNext(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& ddelta, const float& timeStep) const;
+    float vxLimitKinematic(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& delta) const;
 
     // Calculate maximum acceleration based on G-G diagram
     float axLimit(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
