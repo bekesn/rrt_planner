@@ -50,7 +50,6 @@ struct RRT_PARAMETERS{
     float minDeviation;
     float minDeviationDist;
     float sampleRange;
-    float maxVelocity;
     float resolution;
     float rewireTime;
     int simIterations;
@@ -62,18 +61,22 @@ struct RRT_PARAMETERS{
     template<class Archive>
     void serialize(Archive & archive){archive(costType, goalBias, goalRadius,
                     iterations, maxNumOfNodes, minCost, minDeviation, sampleRange, 
-                    maxVelocity, resolution, rewireTime, simulationTimeStep, thetaWeight);}
+                    resolution, rewireTime, simulationTimeStep, thetaWeight);}
 };
 
 struct VEHICLE_PARAMETERS{
     SIMULATION_TYPE simType;
+    float maxdDelta;
     float maxDelta;
+    float maxLatAccel;
+    float maxLongAccel;
+    float maxVelocity;
     float track;
     float wheelBase;
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(simType, maxDelta, track, wheelBase);}
+    void serialize(Archive & archive){archive(simType, maxDelta, maxdDelta, maxLongAccel, maxVelocity, track, wheelBase);}
 };
 
 struct MAP_PARAMETERS{
@@ -88,13 +91,10 @@ struct MAP_PARAMETERS{
 
 struct CONTROL_PARAMETERS{
     float k;
-    float maxdDelta;
-    float maxLatAccel;
-    float maxLongAccel;
 
     // Archive function for cereal
     template<class Archive>
-    void serialize(Archive & archive){archive(k, maxdDelta, maxLongAccel);}
+    void serialize(Archive & archive){archive(k);}
 };
 
 struct GENERAL_PARAMETERS{

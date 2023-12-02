@@ -87,7 +87,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomic(const shared_ptr<SS_VECTOR
     int i, numOfStates;
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 
-    float maxConndist = param->maxVelocity * param->simulationTimeStep;
+    float maxConndist = vehicleParam->maxVelocity * param->simulationTimeStep;
     distance = start->getDistEuclidean(*goal);
     ratio = multiplier * maxConndist / distance;
     if (ratio > 1) ratio = 1;
@@ -110,7 +110,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateHolonomicConstrained(const shared_pt
     int i, numOfStates;
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
 
-    float maxConndist = param->maxVelocity * param->simulationTimeStep;
+    float maxConndist = vehicleParam->maxVelocity * param->simulationTimeStep;
     distance = start->getDistEuclidean(*goal);
     angleDiff = start->getAngleToTarget(*goal);
     if ((-maxAngle <= angleDiff ) && (angleDiff < maxAngle))
@@ -149,7 +149,7 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
 {
     shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
     shared_ptr<SS_VECTOR> state = start;
-    state->limitVariables(param, vehicleParam);
+    state->limitVariables(vehicleParam);
 
     bool gettingCloser = true;
 
@@ -167,9 +167,9 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
             if (i < numOfStates)
             {
                 // Simulate movement
-                shared_ptr<Control> controlInput = Control::control(*state, *goal, dt);
+                shared_ptr<Control> controlInput = Control::control(*state, *goal, vehicleParam, dt);
                 state = RK4(state, controlInput, dt);
-                state->limitVariables(param, vehicleParam);
+                state->limitVariables(vehicleParam);
             }
         }
         else
@@ -192,9 +192,9 @@ shared_ptr<PATH_TYPE> VehicleModel::simulateBicycleSimple(const shared_ptr<SS_VE
             dt = dt / 2.0f;
             
             // Simulate movement
-            shared_ptr<Control> controlInput = Control::control(*state, *goal, dt);
+            shared_ptr<Control> controlInput = Control::control(*state, *goal, vehicleParam, dt);
             state = RK4(prevState, controlInput, dt);
-            state->limitVariables(param, vehicleParam);
+            state->limitVariables(vehicleParam);
 
             // If new state is still getting closer, 
             bool positiveDerivative = state->isGettingCloser(goal, param, vehicleParam);

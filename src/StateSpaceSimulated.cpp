@@ -56,10 +56,11 @@ bool StateSpaceSimulated::isGettingCloser(const shared_ptr<StateSpace2D> goalSta
     return numerator < 0;
 }
 
-void StateSpaceSimulated::limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
+void StateSpaceSimulated::limitVariables(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
     // Limit v
-    if(v_ > rrtParam->maxVelocity) v_ = rrtParam->maxVelocity;
+    float vMax = vxLimit(vehicleParam);
+    if(v_ > vMax) v_ = vMax;
     else if(v_ < 1) v_ = 1;
 
     // Limit delta
@@ -68,6 +69,22 @@ void StateSpaceSimulated::limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtPa
 
     // Limit theta between -PI and PI
     theta_ = std::remainder(theta_, 2*M_PI);
+}
+
+float StateSpaceSimulated::vxLimit(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const
+{
+    return sqrt(vehicleParam->wheelBase * vehicleParam->maxLatAccel / delta_);
+}
+
+float StateSpaceSimulated::vxLimitNext(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& ddelta, const float& timeStep) const
+{
+    return sqrt(vehicleParam->wheelBase * vehicleParam->maxLatAccel / (delta_ + timeStep * ddelta));
+}
+
+float StateSpaceSimulated::axLimit(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const
+{
+    float tmp = delta_ / (vehicleParam->wheelBase * vehicleParam->maxLatAccel);
+    return vehicleParam->maxLongAccel * sqrt(1 - pow(v_, 4) * tmp * tmp);
 }
 
 StateSpaceSimulated StateSpaceSimulated::operator+ (const StateSpaceSimulated & otherState) const

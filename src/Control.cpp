@@ -8,13 +8,14 @@ Control::Control()
 
 }
 
-shared_ptr<Control> Control::control(const StateSpaceSimulated& state, const StateSpaceSimulated& target, const float& timeStep)
+shared_ptr<Control> Control::control(const StateSpaceSimulated& state, const StateSpaceSimulated& target,
+                                     const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep)
 {
     shared_ptr<Control> input = shared_ptr<Control> (new Control());
     input->ddelta = psiLateralControl(state, target);
-    input->ax = getRandomAccel();
+    input->ax = getRandomAccel(vehicleParam);
 
-    input->limitValues();
+    input->limitValues(state, vehicleParam, timeStep);
     return input;
 }
 
@@ -50,16 +51,21 @@ unique_ptr<CONTROL_PARAMETERS>& Control::getParameters(void)
     return controlParam;
 }
 
-float Control::getRandomAccel(void)
+float Control::getRandomAccel(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
-    return (((float) (rand() % 100)) / 100.0f - 0.5f) * controlParam->maxLongAccel;
+    return (((float) (rand() % 100)) / 50.0f - 1.0f) * vehicleParam->maxLongAccel;
 }
 
-void Control::limitValues(void)
+void Control::limitValues(const StateSpaceSimulated& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep)
 {
-    if(ddelta > controlParam->maxdDelta) ddelta = controlParam->maxdDelta;
-    else if(ddelta < -controlParam->maxdDelta) ddelta = -controlParam->maxdDelta;
+    if(ddelta > vehicleParam->maxdDelta) ddelta = vehicleParam->maxdDelta;
+    else if(ddelta < -vehicleParam->maxdDelta) ddelta = -vehicleParam->maxdDelta;
 
-    if(ax > controlParam->maxLongAccel) ax = controlParam->maxLongAccel;
-    else if(ax < -controlParam->maxLongAccel) ax = -controlParam->maxLongAccel;
+    float axMax, axLimit, axPred;
+    axLimit = state.axLimit(vehicleParam);
+    axPred = (state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.v()) / timeStep;
+    axMax = min(axLimit, axPred);
+
+    if(ax > axMax) ax = axMax;
+    else if(ax < -axLimit) ax = -axLimit;
 }

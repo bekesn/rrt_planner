@@ -22,7 +22,14 @@ public:
     bool isGettingCloser(const shared_ptr<StateSpace2D> goalState, const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
 
     // Limit constrained state variables
-    void limitVariables(const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
+    void limitVariables(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
+
+    // Calculate maximum allowed vx
+    float vxLimit(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
+    float vxLimitNext(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& ddelta, const float& timeStep) const;
+
+    // Calculate maximum acceleration based on G-G diagram
+    float axLimit(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
     
     // Override operators
     StateSpaceSimulated operator+ (const StateSpaceSimulated & otherState) const;

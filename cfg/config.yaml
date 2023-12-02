@@ -9,7 +9,6 @@ rrt_planner:
     goalRadius:         4.0           # acceptance range in [m]
     iterations:         500           # iterations for planning
     maxNumOfNodes:      600           # limits number of nodes in searchtree
-    maxVelocity:        10            # in [m/s]
     minCost:            0.0           # cost threshold used to filter nodes when tracing back the path to root
     minDeviation:       1.0           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
@@ -27,7 +26,6 @@ rrt_planner:
     goalRadius:         3.0           # acceptance range in [m]
     iterations:         50            # iterations for planning
     maxNumOfNodes:      9000          # limits number of nodes in searchtree
-    maxVelocity:        10            # in [m/s]
     minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
     minDeviation:       1.0           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
@@ -40,7 +38,11 @@ rrt_planner:
     triangleIterations: 3             # number of triangle optimizations in one iteration of planning
 
   VEHICLE:
+    maxdDelta:          1.2           # maximum speed of front axis steering angle in [rad/s] 
     maxDelta:           0.38          # maximum front axis steering angle in [rad]
+    maxLatAccel:        16            # maximum lateral acceleration in [m/s2]
+    maxLongAccel:       12            # maximum longitudinal acceleration in [m/s2]
+    maxVelocity:        10            # in [m/s]
     simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
     track:              1.2           # in [m]
     wheelBase:          1.54          # in [m]
@@ -52,6 +54,3 @@ rrt_planner:
 
   CONTROL:
     k:                  2                 
-    maxdDelta:          1.2           # maximum speed of front axis steering angle in [rad/s] 
-    maxLatAccel:        16            # maximum lateral acceleration in [m/s2]
-    maxLongAccel:       12            # maximum longitudinal acceleration in [m/s2]
