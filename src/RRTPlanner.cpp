@@ -146,7 +146,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
                     // If newNodeCost is significantly higher than childCost, a loop might be created
                     // Rewiring would create a loop with multiple problems
                     // Instead of making a loop, mark it in the SearchTree
-                    bool isLoop = rrt->closeLoop(*it, newNode);
+                    bool isLoop = rrt->addLoop(newNode, *it, segmentCost);
 
                     // If a loop is not created, rewire 
                     if(!isLoop)
@@ -187,7 +187,9 @@ void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<Search
     if(trajectory->size() > 0)
     {
         segmentCost = trajectory->cost(rrt->param);
-        isClose = trajectory->back()->getDistOriented(*node->getState(), rrt->param) < rrt->param->minDeviation;
+        shared_ptr<StateSpace2D> s = node->getState();
+        float error = trajectory->back()->getDistOriented(*s, rrt->param);
+        isClose =  error < rrt->param->minDeviation;
         isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost() + rrt->param->minDeviation / (parentParent->getState()->v() *2);
         offCourse = mapHandler->isOffCourse(trajectory);
 
@@ -211,19 +213,22 @@ void RRTPlanner::planLocalRRT(void)
     localRRT->init(pose);
     int iteration = 0;
     shared_ptr<SS_VECTOR> goalState = mapHandler->getGoalState();
-    shared_ptr<SearchTreeNode> endNode;
 
     while((!localRRT->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
     {
         shared_ptr<SearchTreeNode> node = extend(localRRT);
         if (node != NULL)
         {   
-            rewire(localRRT, node);
-            float goalDist = node->getState()->getDistEuclidean(*goalState);
-            if(goalDist < localRRT->param->goalRadius)
+            bool rewired = rewire(localRRT, node);
+            bool isClose = node->getState()->getDistEuclidean(*goalState) < localRRT->param->goalRadius;
+            if ((localRRT->pathFound && rewired) || isClose)
+            {
+                localRRT->updatePath(localRRT->traceBackToRoot(localRRT->getNearest(goalState)));
+            }
+
+            if(isClose)
             {
                 localRRT->pathFound = true;
-                endNode = node;
             }
         }
 
@@ -233,10 +238,7 @@ void RRTPlanner::planLocalRRT(void)
     }
 
     // Update path
-    if (localRRT->pathFound)
-    {
-        localRRT->updatePath(endNode);
-    }
+   
 
     static bool isSaved = false;
     if(!isSaved)
@@ -273,6 +275,8 @@ void RRTPlanner::planGlobalRRT(void)
         
         iteration++;
     }
+
+    globalRRT->manageLoops();
 
     static bool isSaved = false;
     if(!isSaved && globalRRT->maxNumOfNodesReached())
@@ -429,6 +433,9 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/minDeviationDist", localRRT->param->minDeviationDist, 0.05f);
     loadParameter("/GLOBAL/minDeviationDist", globalRRT->param->minDeviationDist, 0.05f);
 
+    loadParameter("/LOCAL/psiWeight", localRRT->param->psiWeight, 5000.0f);
+    loadParameter("/GLOBAL/psiWeight", globalRRT->param->psiWeight, 5000.0f);
+
     loadParameter("/LOCAL/resolution", localRRT->param->resolution, 0.05f);
     loadParameter("/GLOBAL/resolution", globalRRT->param->resolution, 0.05f);
 
@@ -444,8 +451,8 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/simulationTimeStep", localRRT->param->simulationTimeStep, 0.2f);
     loadParameter("/GLOBAL/simulationTimeStep", globalRRT->param->simulationTimeStep, 0.2f);
 
-    loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 1000.0f);
-    loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 1000.0f);
+    loadParameter("/LOCAL/thetaWeight", localRRT->param->thetaWeight, 50.0f);
+    loadParameter("/GLOBAL/thetaWeight", globalRRT->param->thetaWeight, 50.0f);
 
     loadParameter("/LOCAL/triangleIterations", localRRT->param->triangleIterations, 1.0f);
     loadParameter("/GLOBAL/triangleIterations", globalRRT->param->triangleIterations, 1.0f);

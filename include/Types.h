@@ -49,6 +49,7 @@ struct RRT_PARAMETERS{
     float minCost;
     float minDeviation;
     float minDeviationDist;
+    float psiWeight;
     float sampleRange;
     float resolution;
     float rewireTime;

@@ -26,7 +26,7 @@ float StateSpace2D::getDistToTarget(const StateSpace2D& target, const unique_ptr
     float dx = target.x_ - x_;
     float dy = target.y_ - y_;
     float dtheta = getAngleToTarget(target);
-    return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight);
+    return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->psiWeight);
 }
 
 float StateSpace2D::getDistOriented(const StateSpace2D& state1, const StateSpace2D& state2, const unique_ptr<RRT_PARAMETERS>& param)

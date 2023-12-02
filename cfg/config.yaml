@@ -10,14 +10,15 @@ rrt_planner:
     iterations:         500           # iterations for planning
     maxNumOfNodes:      600           # limits number of nodes in searchtree
     minCost:            0.0           # cost threshold used to filter nodes when tracing back the path to root
-    minDeviation:       1.0           # minimum distance (oriented) between close states in [m]
+    minDeviation:       0.3           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
+    psiWeight:          5000          # weight of orientation difference in simulation distance estimation
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        4.0           # used for random sampling near the detected cones, range in [m]
     simIterations:      4             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
-    thetaWeight:        5000          # weight of orientation difference in distance calculation
+    thetaWeight:        50            # weight of orientation difference in state comparison
     triangleIterations: 1             # number of triangle optimizations in one iteration of planning
 
   GLOBAL:
@@ -27,15 +28,16 @@ rrt_planner:
     iterations:         50            # iterations for planning
     maxNumOfNodes:      9000          # limits number of nodes in searchtree
     minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
-    minDeviation:       1.0           # minimum distance (oriented) between close states in [m]
+    minDeviation:       0.3           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
+    psiWeight:          5000          # weight of orientation difference in simulation distance estimation
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
-    simIterations:      2             # number of iterations of searching closest point on trajectory to goal state
+    simIterations:      4             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
-    thetaWeight:        5000          # weight of orientation difference in distance calculation
-    triangleIterations: 3             # number of triangle optimizations in one iteration of planning
+    thetaWeight:        50            # weight of orientation difference in state comparison
+    triangleIterations: 10            # number of triangle optimizations in one iteration of planning
 
   VEHICLE:
     maxdDelta:          1.2           # maximum speed of front axis steering angle in [rad/s] 
@@ -53,4 +55,4 @@ rrt_planner:
     maxConeDist:        6             # maximal distance between consecutive cones in [m]
 
   CONTROL:
-    k:                  2                 
+    k:                  5                 

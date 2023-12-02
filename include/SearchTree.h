@@ -9,10 +9,14 @@
 #include <ros/ros.h>
 #include <VehicleModel.h>
 
+struct vEdge;
+
 class SearchTree
 {
 private:
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> tree;
+    vector<shared_ptr<vEdge>> vEdges;
+    shared_ptr<PATH_TYPE> bestPath;
 
     RRT_TYPE type;
 
@@ -21,7 +25,6 @@ private:
     int rewireCount;
     float pathLength;
     float pathTime;
-    shared_ptr<PATH_TYPE> bestPath;
 
 public:
     bool pathFound;
@@ -76,14 +79,15 @@ public:
     // Returns with trajectory from root to node
     shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SearchTreeNode>& node) const;
 
-    // Update best path which ends at given node
-    void updatePath(shared_ptr<SearchTreeNode>& endNode);
+    // Update best path to given path
+    void updatePath(const shared_ptr<PATH_TYPE>& path);
 
     // Create closing segment to define best loop
     // Investigates if a real loop is defined
     // Investigates if cost is decreased compared to the previous cost
     // Return whether the best loop was changed
-    bool closeLoop(const shared_ptr<SearchTreeNode>& startNode, const shared_ptr<SearchTreeNode>& endNode);
+    bool addLoop(const shared_ptr<SearchTreeNode> startNode, const shared_ptr<SearchTreeNode> endNode, const float& cost);
+    void manageLoops(void);
 
     // Get absolute cost to node
     float getAbsCost(const shared_ptr<SearchTreeNode>& node) const;
@@ -107,6 +111,11 @@ public:
                     CEREAL_NVP(pathFound), CEREAL_NVP(bestPath));}
 };
 
+struct vEdge{
+    shared_ptr<SearchTreeNode> start;
+    shared_ptr<SearchTreeNode> end;
+    float cost;
+};
 
 
 #endif //SEARCHTREE_H
