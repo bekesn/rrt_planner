@@ -20,6 +20,7 @@ MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<Vehicl
 
 bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
 {
+    /*
     switch (state)
     {
         case NOBOUNDARIES:
@@ -31,9 +32,18 @@ bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
         default:
             return false;
             break;
+    }*/
+    bool offCourse = false;
+    for(auto state : *trajectory)
+    {
+        Kdtree::KdNodeVector knv;
+        mapKdTree->range_nearest_neighbors({state->x(), state->y()}, 0.7, &knv);
+        if(knv.size() > 0) offCourse = true;
     }
-}
 
+    return offCourse;
+}
+/*
 bool MapHandler::isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& trajectory) const
 {
     // Filter empty trajectory
@@ -180,6 +190,42 @@ bool MapHandler::isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const 
     }
     return isOnTrackEdge;
 }
+*/
+
+void MapHandler::upSample(void)
+{
+    int size = map.size();
+    //vector<shared_ptr<frt_custom_msgs::Landmark>> upSampled;
+    Kdtree::KdNodeVector nodes;
+    for(auto lm : map)
+    {
+        nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &lm->color));
+    }
+
+    for(int i = 0; i < size; i++)
+    {
+        for(int j = i+1; j < size; j++)
+        {
+            if(map[i]->color == map[j]->color)
+            {
+                float dist = StateSpace2D::getDistEuclidean({(float) map[i]->x, (float) map[i]->y},{(float) map[j]->x, (float) map[j]->y});
+                if(dist < mapParam->maxConeDist)
+                {
+                    int numOfGaps = ceil(dist / mapParam->maxGap);
+
+                    for(int k = 1; k < numOfGaps; k++)
+                    {
+                        float x = (k * map[i]->x + (numOfGaps - k) * map[j]->x)/((float) numOfGaps);
+                        float y = (k * map[i]->y + (numOfGaps - k) * map[j]->y)/((float) numOfGaps);
+
+                        nodes.push_back(Kdtree::KdNode({x, y}, &map[i]->color));
+                    }
+                }
+            }
+        }
+    }
+    mapKdTree = shared_ptr<Kdtree::KdTree>(new Kdtree::KdTree(&nodes));
+}
 
 shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const
 {
@@ -224,14 +270,14 @@ unique_ptr<MAP_PARAMETERS>& MapHandler::getParameters(void)
 
 void MapHandler::calculateGoalState()
 {
-    std::vector<std::vector<frt_custom_msgs::Landmark*>*> closestLandmarks;
+    vector<shared_ptr<vector<shared_ptr<frt_custom_msgs::Landmark>>>> closestLandmarks;
     float maxDist = 0;
     shared_ptr<StateSpace2D> currentState = vehicleModel->getCurrentPose();
 
     // Create close blue-yellow pairs
     for (auto & landmark : map)
     {
-        std::vector<frt_custom_msgs::Landmark*>* pair = new std::vector<frt_custom_msgs::Landmark*>;
+        shared_ptr<vector<shared_ptr<frt_custom_msgs::Landmark>>> pair = shared_ptr<vector<shared_ptr<frt_custom_msgs::Landmark>>>(new vector<shared_ptr<frt_custom_msgs::Landmark>>);
         switch(landmark->color)
         {
             case frt_custom_msgs::Landmark::BLUE:
@@ -267,8 +313,6 @@ void MapHandler::calculateGoalState()
             maxDist = dist;
             goalState = make_shared<SS_VECTOR> (state);         
         }
-
-        delete pair;
     }
 
 }
@@ -281,6 +325,7 @@ shared_ptr<SS_VECTOR> MapHandler::getGoalState(void)
 void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 {
     mapReceived = updateLandmarkVector(msg, map);
+    upSample();
 
     switch(state)
     {
@@ -316,27 +361,19 @@ void MapHandler::yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPt
     yellowTrackBoundaryReceived =  updateLandmarkVector(msg, yellowTrackBoundary);
 }
 
-bool MapHandler::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<frt_custom_msgs::Landmark*> & vec)
+bool MapHandler::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<shared_ptr<frt_custom_msgs::Landmark>> & vec)
 {
     if (msg->map.empty())
     {
         return false;
     }
 
-    for (int i = 0; i < vec.size(); i++) 
-    {
-        delete  vec[i];
-    }
     vec.clear();
 
 
     for (frt_custom_msgs::Landmark landmark: msg->map) 
     {
-        frt_custom_msgs::Landmark* newLandmark = new frt_custom_msgs::Landmark();
-        newLandmark->x = landmark.x;
-        newLandmark->y = landmark.y;
-        newLandmark->color = landmark.color;
-        vec.push_back(newLandmark);
+        vec.push_back(make_shared<frt_custom_msgs::Landmark>(landmark));
     }
 
     return true;
@@ -347,10 +384,11 @@ void MapHandler::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)
     loopClosed = msg.loop_closed;
 }
 
-void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray) const
+void MapHandler::visualize(visualization_msgs::MarkerArray* mArray) const
 {
-    if(!mapReceived);
+    if(!mapReceived) return;
 
+    // visualize goal state
     visualization_msgs::Marker goal;
         goal.header.frame_id = "map";
         goal.header.stamp = ros::Time::now();
@@ -359,9 +397,9 @@ void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray) const
         goal.pose.orientation.w = 1.0;
         goal.id = 3;
         goal.type = visualization_msgs::Marker::CUBE_LIST;
-        goal.scale.x = 0.4f;
-        goal.scale.y = 0.4f;
-        goal.scale.z = 0.4f;
+        goal.scale.x = 0.2f;
+        goal.scale.y = 0.2f;
+        goal.scale.z = 0.2f;
         goal.color.r = 1.0f;
         goal.color.g = 0.0f;
         goal.color.b = 0.0f;
@@ -373,13 +411,63 @@ void MapHandler::visualizePoints(visualization_msgs::MarkerArray* mArray) const
     goal.points.push_back(coord);
 
     mArray->markers.emplace_back(goal);
+
+    std_msgs::ColorRGBA varColor;
+    varColor.r = 0;
+    varColor.g = 0;
+    varColor.b = 1;
+    varColor.a = 1;
+
+    // visualize upsampled map
+    visualization_msgs::Marker upsampled;
+        upsampled.header.frame_id = "map";
+        upsampled.header.stamp = ros::Time::now();
+        upsampled.ns = "rrt_map";
+        upsampled.action = visualization_msgs::Marker::ADD;
+        upsampled.pose.orientation.w = 1.0;
+        upsampled.id = 4;
+        upsampled.type = visualization_msgs::Marker::CUBE_LIST;
+        upsampled.scale.x = 0.4f;
+        upsampled.scale.y = 0.4f;
+        upsampled.scale.z = 0.4f;
+        /*upsampled.color.r = 1.0f;
+        upsampled.color.g = 1.0f;
+        upsampled.color.b = 0.0f;
+        upsampled.color.a = 1.0f;*/
+
+    for(auto node : mapKdTree->allnodes)
+    {
+        coord.x = node.point[0];
+        coord.y = node.point[1];
+        upsampled.points.push_back(coord);
+        
+        frt_custom_msgs::Landmark::_color_type* c = (frt_custom_msgs::Landmark::_color_type*) node.data;
+        if(*c == frt_custom_msgs::Landmark::Type::BLUE)
+        {
+            varColor.g = 0;
+            varColor.b = 1;
+        }
+        else if(*c == frt_custom_msgs::Landmark::Type::YELLOW)
+        {
+            varColor.g = 1;
+            varColor.b = 1;
+        }
+        else
+        {
+            varColor.g = 1;
+            varColor.b = 0;
+        }
+        upsampled.colors.push_back(varColor);
+
+    }
+    mArray->markers.emplace_back(upsampled);
 }
 
-frt_custom_msgs::Landmark* MapHandler::getClosestLandmark(const frt_custom_msgs::Landmark* selectedLandmark, const frt_custom_msgs::Landmark::_color_type color) const
+shared_ptr<frt_custom_msgs::Landmark> MapHandler::getClosestLandmark(const shared_ptr<frt_custom_msgs::Landmark>& selectedLandmark, const frt_custom_msgs::Landmark::_color_type& color) const
 {
     float minDist = 100.0;
     float dist;
-    frt_custom_msgs::Landmark* closestLandmark;
+    shared_ptr<frt_custom_msgs::Landmark> closestLandmark;
     bool colorOK;
 
     for(auto & landmark : map)

@@ -53,6 +53,7 @@ rrt_planner:
     collisionRange:     6             # cones in this range will be checked for collision - in [m]
     goalHorizon:        10            # maximal distance for local goal state in [m]
     maxConeDist:        6             # maximal distance between consecutive cones in [m]
+    maxGap:             1.8           # maximum allowed gap between upsampled cones
 
   CONTROL:
     k:                  5                 

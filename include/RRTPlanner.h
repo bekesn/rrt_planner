@@ -19,9 +19,11 @@ class RRTPlanner
     ros::Subscriber poseSubscriber;
     ros::Subscriber SLAMStatusSubscriber;
     ros::Subscriber odometrySubscriber;
-    std::string nodeName;
-
+    ros::Publisher commonPublisher;
+    visualization_msgs::MarkerArray commonMArray;
     ros::WallTimer timer;
+
+    std::string nodeName;
 
     // General parameters
     unique_ptr<GENERAL_PARAMETERS> genParam;
@@ -73,7 +75,7 @@ public:
     void timerCallback(const ros::WallTimerEvent &event);
 
     // Visualize markers
-    void visualize(unique_ptr<SearchTree>& rrt);
+    void visualize(void);
 
 };
 
