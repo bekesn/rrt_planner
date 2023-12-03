@@ -38,6 +38,14 @@ void MapHandler::upSample(void)
     Kdtree::KdNodeVector nodes;
     for(auto lm : map)
     {
+        if(lm->color != frt_custom_msgs::Landmark::Type::BLUE && lm->color != frt_custom_msgs::Landmark::Type::YELLOW)
+        {
+            shared_ptr<frt_custom_msgs::Landmark> closest = getClosestLandmark(lm, frt_custom_msgs::Landmark::Type::UNKNOWN);
+            if(closest != NULL)
+            {
+                lm->color = closest->color;
+            }
+        }
         nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &lm->color));
     }
 
@@ -48,7 +56,7 @@ void MapHandler::upSample(void)
             if(map[i]->color == map[j]->color)
             {
                 float dist = StateSpace2D::getDistEuclidean({(float) map[i]->x, (float) map[i]->y},{(float) map[j]->x, (float) map[j]->y});
-                if(dist < mapParam->maxConeDist)
+                if(dist < mapParam->maxConeDist && dist > mapParam->maxGap)
                 {
                     int numOfGaps = ceil(dist / mapParam->maxGap);
 
@@ -307,7 +315,7 @@ void MapHandler::visualize(visualization_msgs::MarkerArray* mArray) const
 
 shared_ptr<frt_custom_msgs::Landmark> MapHandler::getClosestLandmark(const shared_ptr<frt_custom_msgs::Landmark>& selectedLandmark, const frt_custom_msgs::Landmark::_color_type& color) const
 {
-    float minDist = 100.0;
+    float minDist = 1000.0;
     float dist;
     shared_ptr<frt_custom_msgs::Landmark> closestLandmark;
     bool colorOK;
