@@ -28,15 +28,15 @@ rrt_planner:
     iterations:         50            # iterations for planning
     maxNumOfNodes:      9000          # limits number of nodes in searchtree
     minCost:            10.0          # cost threshold used to filter nodes when tracing back the path to root
-    minDeviation:       0.3           # minimum distance (oriented) between close states in [m]
+    minDeviation:       0.2           # minimum distance (oriented) between close states in [m]
     minDeviationDist:   0.05          # minimum distance between close states in [m]
-    psiWeight:          5000          # weight of orientation difference in simulation distance estimation
+    psiWeight:          1000          # weight of orientation difference in simulation distance estimation
     resolution:         0.1           # maximum of interpolation steps in [m]
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
     simIterations:      4             # number of iterations of searching closest point on trajectory to goal state
     simulationTimeStep: 0.5           # in [s]
-    thetaWeight:        50            # weight of orientation difference in state comparison
+    thetaWeight:        15            # weight of orientation difference in state comparison
     triangleIterations: 10            # number of triangle optimizations in one iteration of planning
 
   VEHICLE:

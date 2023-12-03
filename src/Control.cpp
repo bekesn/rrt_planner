@@ -63,7 +63,7 @@ void Control::limitValues(const StateSpaceSimulated& state, const unique_ptr<VEH
 
     float axMax, axLimit, axPred;
     axLimit = state.axLimit(vehicleParam);
-    axPred = (state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.v()) / timeStep;
+    axPred = (0.9*state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.v()) / timeStep;
     axMax = min(axLimit, axPred);
 
     if(ax > axMax) ax = axMax;
