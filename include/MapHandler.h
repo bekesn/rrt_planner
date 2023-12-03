@@ -8,14 +8,16 @@
 #include "frt_custom_msgs/Landmark.h"
 #include "frt_custom_msgs/SlamStatus.h"
 #include <cereal/cereal.hpp> // for defer
+#include <kdtree/kdtree.hpp>
 
 class MapHandler
 {
 private:
     
-    vector<frt_custom_msgs::Landmark*> map;
-    vector<frt_custom_msgs::Landmark*> blueTrackBoundary;
-    vector<frt_custom_msgs::Landmark*> yellowTrackBoundary;
+    vector<shared_ptr<frt_custom_msgs::Landmark>> map;
+    shared_ptr<Kdtree::KdTree> mapKdTree;
+    vector<shared_ptr<frt_custom_msgs::Landmark>> blueTrackBoundary;
+    vector<shared_ptr<frt_custom_msgs::Landmark>> yellowTrackBoundary;
     shared_ptr<VehicleModel> vehicleModel;
     shared_ptr<SS_VECTOR> goalState;
     bool mapReceived;
@@ -34,19 +36,8 @@ public:
     // Check for offcourse
     bool isOffCourse(const shared_ptr<PATH_TYPE>& path) const;
 
-    // Check for offcourse if boundaries are not given
-    // Should not be called directly
-    bool isOffCourseNoBoundary(const shared_ptr<PATH_TYPE>& path) const;
-
-    // Check for offcourse if boundaries not given
-    // Should not be called directly
-    bool isOffCourseWithBoundary(const shared_ptr<PATH_TYPE>& path) const;
-
-    // Check for collision with lines
-    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const std::vector<frt_custom_msgs::Landmark*>* cones) const;
-
-    // Check for collision with 1 line
-    bool isOnTrackEdge(const shared_ptr<SS_VECTOR>& vehicleState, const frt_custom_msgs::Landmark* cone1, const frt_custom_msgs::Landmark* cone2) const;
+    // Upsample cones
+    void upSample(void);
 
     // Get random state
     shared_ptr<SS_VECTOR> getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
@@ -68,16 +59,16 @@ public:
     void yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg);
 
     // Update given Landmark vector
-    static bool updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<frt_custom_msgs::Landmark*> &vec);
+    static bool updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<shared_ptr<frt_custom_msgs::Landmark>> &vec);
 
     // Update SLAM status
     void SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg);
 
     // Visualize significant points
-    void visualizePoints(visualization_msgs::MarkerArray* mArray) const;
+    void visualize(visualization_msgs::MarkerArray* mArray) const;
 
     // Get closest cone by color
-    frt_custom_msgs::Landmark* getClosestLandmark(const frt_custom_msgs::Landmark* landmark, const frt_custom_msgs::Landmark::_color_type color) const;
+    shared_ptr<frt_custom_msgs::Landmark> getClosestLandmark(const shared_ptr<frt_custom_msgs::Landmark>& landmark, const frt_custom_msgs::Landmark::_color_type& color) const;
 
     // Return if map arrived
     MapHandlerState getState(void) const;

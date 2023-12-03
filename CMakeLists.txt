@@ -121,6 +121,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
+  ${PROJECT_SOURCE_DIR}/lib
   ${PROJECT_SOURCE_DIR}/lib/cereal/include
   ${PROJECT_SOURCE_DIR}/include
   ${catkin_INCLUDE_DIRS}
@@ -154,6 +155,8 @@ add_library(SearchTree src/SearchTree.cpp)
 target_link_libraries(SearchTree ${catkin_LIBRARIES})
 target_link_libraries(SearchTree SearchTreeNode)
 
+add_library(libKdTree lib/kdtree/kdtree.cpp)
+target_link_libraries(libKdTree ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -172,6 +175,7 @@ target_link_libraries(rrt_planner_node
   SearchTree
   MapHandler
   VehicleModel
+  libKdTree
   ${catkin_LIBRARIES})
 
 

@@ -39,6 +39,7 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &VehicleModel::velocityCallback, &(*(vehicleModel)));
     localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
     globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
+    commonPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_common_viz", 10);
 
     timer = nh.createWallTimer(ros::WallDuration(genParam->timerPeriod), &RRTPlanner::timerCallback, this);
     
@@ -340,8 +341,7 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
 {
     ros::Time startTime = ros::Time::now();
     stateMachine();
-    visualize(localRRT);
-    visualize(globalRRT);
+    visualize();
     ros::Duration runTime = ros::Time::now() - startTime;
     if(runTime.toSec() > genParam->timerPeriod)
     {
@@ -349,13 +349,20 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
     }
 }
 
-void RRTPlanner::visualize(unique_ptr<SearchTree>& rrt)
+void RRTPlanner::visualize(void)
 {
-    rrt->markerArray.markers.clear();
-    rrt->visualize();
-    mapHandler->visualizePoints(&rrt->markerArray);
-    vehicleModel->visualize(&rrt->markerArray); //TODO
-    rrt->markerPublisher.publish(rrt->markerArray);
+    localRRT->markerArray.markers.clear();
+    localRRT->visualize();
+    localRRT->markerPublisher.publish(localRRT->markerArray);
+
+    globalRRT->markerArray.markers.clear();
+    globalRRT->visualize();
+    globalRRT->markerPublisher.publish(globalRRT->markerArray);
+
+    commonMArray.markers.clear();
+    mapHandler->visualize(&commonMArray);
+    vehicleModel->visualize(&commonMArray); //TODO
+    commonPublisher.publish(commonMArray);
 }
 
 
@@ -467,6 +474,7 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/MAP/collisionRange", mapHandler->getParameters()->collisionRange, 6.0f);
     loadParameter("/MAP/goalHorizon", mapHandler->getParameters()->goalHorizon, 15.0f);
     loadParameter("/MAP/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
+    loadParameter("/MAP/maxGap", mapHandler->getParameters()->maxGap, 1.5f);
 
     loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
 

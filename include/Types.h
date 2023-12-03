@@ -84,6 +84,7 @@ struct MAP_PARAMETERS{
     float collisionRange;
     float goalHorizon;
     float maxConeDist;
+    float maxGap;
 
     // Archive function for cereal
     template<class Archive>
