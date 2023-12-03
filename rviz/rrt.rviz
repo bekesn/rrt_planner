@@ -88,6 +88,7 @@ Visualization Manager:
       Marker Topic: /rrt_global_viz
       Name: MarkerArray
       Namespaces:
+        rrt_best_path: true
         rrt_graph_edge: true
         rrt_info: true
         rrt_states: true
@@ -105,13 +106,15 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_common_viz
       Name: MarkerArray
       Namespaces:
-        {}
+        rrt_goal: true
+        rrt_map: true
+        vehicle_actual_path: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /path_visualisations
@@ -148,7 +151,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 56.518497467041016
+      Distance: 29.713449478149414
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -156,17 +159,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 20.254976272583008
-        Y: 3.511873483657837
-        Z: 30.35541343688965
+        X: 14.548851013183594
+        Y: 12.90460205078125
+        Z: 21.332992553710938
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.834796667098999
+      Pitch: 1.0497969388961792
       Target Frame: <Fixed Frame>
-      Yaw: 5.635472297668457
+      Yaw: 5.540440559387207
     Saved: ~
 Window Geometry:
   Displays:

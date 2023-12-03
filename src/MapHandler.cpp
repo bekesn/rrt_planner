@@ -444,16 +444,19 @@ void MapHandler::visualize(visualization_msgs::MarkerArray* mArray) const
         frt_custom_msgs::Landmark::_color_type* c = (frt_custom_msgs::Landmark::_color_type*) node.data;
         if(*c == frt_custom_msgs::Landmark::Type::BLUE)
         {
+            varColor.r = 0;
             varColor.g = 0;
             varColor.b = 1;
         }
         else if(*c == frt_custom_msgs::Landmark::Type::YELLOW)
         {
-            varColor.g = 1;
-            varColor.b = 1;
+            varColor.r = 1;
+            varColor.g = 0.9;
+            varColor.b = 0.3;
         }
         else
         {
+            varColor.r = 0;
             varColor.g = 1;
             varColor.b = 0;
         }
