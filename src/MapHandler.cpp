@@ -20,12 +20,18 @@ MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<Vehicl
 
 bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
 {
+    if(mapKdTree->allnodes.size() < 2) return true;
+
     bool offCourse = false;
     for(auto state : *trajectory)
     {
         Kdtree::KdNodeVector knv;
         mapKdTree->range_nearest_neighbors({state->x(), state->y()}, 0.7, &knv);
-        if(knv.size() > 0) offCourse = true;
+        if(knv.size() > 0)
+        {
+            offCourse = true;
+            break;
+        }
     }
 
     return offCourse;
@@ -38,9 +44,9 @@ void MapHandler::upSample(void)
     Kdtree::KdNodeVector nodes;
     for(auto lm : map)
     {
-        if(lm->color != frt_custom_msgs::Landmark::Type::BLUE && lm->color != frt_custom_msgs::Landmark::Type::YELLOW)
+        if(lm->color != frt_custom_msgs::Landmark::BLUE && lm->color != frt_custom_msgs::Landmark::YELLOW)
         {
-            shared_ptr<frt_custom_msgs::Landmark> closest = getClosestLandmark(lm, frt_custom_msgs::Landmark::Type::UNKNOWN);
+            shared_ptr<frt_custom_msgs::Landmark> closest = getClosestLandmark(lm, frt_custom_msgs::Landmark::UNKNOWN);
             if(closest != NULL)
             {
                 lm->color = closest->color;
@@ -48,6 +54,8 @@ void MapHandler::upSample(void)
         }
         nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &lm->color));
     }
+
+    if(nodes.size() < 2) return;
 
     for(int i = 0; i < size; i++)
     {
