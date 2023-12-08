@@ -3,7 +3,6 @@
 
 #include "StateSpace2D.h"
 #include "Control.h"
-#include <cereal/types/base_class.hpp>
 #include <ros/ros.h>
 
 class StateSpaceSimulated : public StateSpace2D
@@ -41,10 +40,6 @@ public:
     // Access variables
     float v(void) const ;
     float delta(void) const ;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(cereal::base_class<StateSpace2D> ( this ), CEREAL_NVP(v_), CEREAL_NVP(delta_));}
 
 };
 

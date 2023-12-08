@@ -6,9 +6,6 @@
 #include "Types.h"
 #include "StateSpaceSimulated.h"
 #include "Trajectory.h"
-#include <cereal/cereal.hpp> // for defer
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
 
 class SearchTreeNode
 {
@@ -51,12 +48,6 @@ public:
 
     // Trace back to parent and add state
     void traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(childNodes)),
-                    cereal::defer(CEREAL_NVP(parentNode)), CEREAL_NVP(state), CEREAL_NVP(cost));}
-
 };
 
 

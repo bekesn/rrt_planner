@@ -122,7 +122,6 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   ${PROJECT_SOURCE_DIR}/lib
-  ${PROJECT_SOURCE_DIR}/lib/cereal/include
   ${PROJECT_SOURCE_DIR}/include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}

@@ -238,21 +238,6 @@ void RRTPlanner::planLocalRRT(void)
         iteration++;
     }
 
-    // Update path
-   
-
-    static bool isSaved = false;
-    if(!isSaved)
-    {
-        {
-            std::ofstream f("localTree.xml");
-            cereal::XMLOutputArchive archive(f);
-
-            archive(localRRT);
-            archive.serializeDeferments();
-        }
-        isSaved = true;
-    }
 }
 
 void RRTPlanner::planGlobalRRT(void)
@@ -278,19 +263,6 @@ void RRTPlanner::planGlobalRRT(void)
     }
 
     globalRRT->manageLoops();
-
-    static bool isSaved = false;
-    if(!isSaved && globalRRT->maxNumOfNodesReached())
-    {
-        {
-            std::ofstream f("globalTree.xml");
-            cereal::XMLOutputArchive archive(f);
-
-            archive(globalRRT);
-            archive.serializeDeferments();
-        }
-        isSaved = true;
-    }
 }
 
 bool RRTPlanner::handleActualPath(void)

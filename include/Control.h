@@ -37,11 +37,7 @@ public:
     static unique_ptr<CONTROL_PARAMETERS>& getParameters(void);
 
     // Limit input
-    void limitValues(const StateSpaceSimulated& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);
-    
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(cereal::defer(CEREAL_NVP(controlParam)), CEREAL_NVP(ax), CEREAL_NVP(ddelta), CEREAL_NVP(MYaw));}   
+    void limitValues(const StateSpaceSimulated& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);  
 };
 
 #endif // CONTROL_H
