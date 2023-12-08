@@ -39,9 +39,9 @@ bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
 
 void MapHandler::upSample(void)
 {
-    int size = map.size();
     //vector<shared_ptr<frt_custom_msgs::Landmark>> upSampled;
-    Kdtree::KdNodeVector nodes;
+    Kdtree::KdNodeVector nodes, knv;
+    int i, j;
     for(auto lm : map)
     {
         if(lm->color != frt_custom_msgs::Landmark::BLUE && lm->color != frt_custom_msgs::Landmark::YELLOW)
@@ -55,16 +55,20 @@ void MapHandler::upSample(void)
         nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &lm->color));
     }
 
-    if(nodes.size() < 2) return;
+    int size = nodes.size();
+    if(size < 2) return;
 
-    for(int i = 0; i < size; i++)
-    {
-        for(int j = i+1; j < size; j++)
+    Kdtree::KdTree tmp = Kdtree::KdTree(&nodes);
+
+    for(i = 0; i < size; i++)
+    {   
+        for(j = i+1; j < size; j++)
         {
             if(map[i]->color == map[j]->color)
             {
                 float dist = StateSpace2D::getDistEuclidean({(float) map[i]->x, (float) map[i]->y},{(float) map[j]->x, (float) map[j]->y});
-                if(dist < mapParam->maxConeDist && dist > mapParam->maxGap)
+                tmp.range_nearest_neighbors({(map[i]->x + map[j]->x)/2, (map[i]->y + map[j]->y)/2}, dist/3, &knv);
+                if((dist < mapParam->maxConeDist) && (dist > mapParam->maxGap) && (knv.size() == 0))
                 {
                     int numOfGaps = ceil(dist / mapParam->maxGap);
 
