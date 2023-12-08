@@ -39,8 +39,9 @@ bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
 
 void MapHandler::upSample(void)
 {
-    //vector<shared_ptr<frt_custom_msgs::Landmark>> upSampled;
     Kdtree::KdNodeVector nodes, knv;
+    frt_custom_msgs::Landmark::_color_type* color1, *color2;
+    float x1, x2, y1, y2;
     int i, j;
     for(auto lm : map)
     {
@@ -50,9 +51,13 @@ void MapHandler::upSample(void)
             if(closest != NULL)
             {
                 lm->color = closest->color;
+                nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &closest->color));
             }
         }
-        nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &lm->color));
+        else
+        {
+            nodes.push_back(Kdtree::KdNode({lm->x, lm->y}, &lm->color));
+        }
     }
 
     int size = nodes.size();
@@ -62,20 +67,26 @@ void MapHandler::upSample(void)
 
     for(i = 0; i < size; i++)
     {   
+        color1 = (frt_custom_msgs::Landmark::_color_type*) nodes[i].data;
         for(j = i+1; j < size; j++)
-        {
-            if(map[i]->color == map[j]->color)
+        {   
+            color2 = (frt_custom_msgs::Landmark::_color_type*) nodes[j].data;
+            if(*color1 == *color2)
             {
-                float dist = StateSpace2D::getDistEuclidean({(float) map[i]->x, (float) map[i]->y},{(float) map[j]->x, (float) map[j]->y});
-                tmp.range_nearest_neighbors({(map[i]->x + map[j]->x)/2, (map[i]->y + map[j]->y)/2}, dist/3, &knv);
+                x1 = nodes[i].point[0];
+                y1 = nodes[i].point[1];
+                x2 = nodes[j].point[0];
+                y2 = nodes[j].point[1];
+                float dist = StateSpace2D::getDistEuclidean({x1, y1},{x2, y2});
+                tmp.range_nearest_neighbors({(x1 + x2)/2, (y1 + y2)/2}, dist/3, &knv);
                 if((dist < mapParam->maxConeDist) && (dist > mapParam->maxGap) && (knv.size() == 0))
                 {
                     int numOfGaps = ceil(dist / mapParam->maxGap);
 
                     for(int k = 1; k < numOfGaps; k++)
                     {
-                        float x = (k * map[i]->x + (numOfGaps - k) * map[j]->x)/((float) numOfGaps);
-                        float y = (k * map[i]->y + (numOfGaps - k) * map[j]->y)/((float) numOfGaps);
+                        float x = (k * x1 + (numOfGaps - k) * x2)/((float) numOfGaps);
+                        float y = (k * y1 + (numOfGaps - k) * y2)/((float) numOfGaps);
 
                         nodes.push_back(Kdtree::KdNode({x, y}, &map[i]->color));
                     }
