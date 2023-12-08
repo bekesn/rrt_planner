@@ -17,7 +17,7 @@ rrt_planner:
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        4.0           # used for random sampling near the detected cones, range in [m]
     simIterations:      4             # number of iterations of searching closest point on trajectory to goal state
-    simulationTimeStep: 0.5           # in [s]
+    simulationTimeStep: 0.2           # in [s]
     thetaWeight:        50            # weight of orientation difference in state comparison
     triangleIterations: 1             # number of triangle optimizations in one iteration of planning
 
@@ -35,8 +35,8 @@ rrt_planner:
     rewireTime:         2.0           # maximum estimated time in which connection is checked in [simulationTimeStep]
     sampleRange:        5.0           # used for random sampling near the detected cones, range in [m]
     simIterations:      4             # number of iterations of searching closest point on trajectory to goal state
-    simulationTimeStep: 0.5           # in [s]
-    thetaWeight:        15            # weight of orientation difference in state comparison
+    simulationTimeStep: 0.2           # in [s]
+    thetaWeight:        1            # weight of orientation difference in state comparison
     triangleIterations: 10            # number of triangle optimizations in one iteration of planning
 
   VEHICLE:
@@ -45,7 +45,7 @@ rrt_planner:
     maxLatAccel:        16            # maximum lateral acceleration in [m/s2]
     maxLongAccel:       12            # maximum longitudinal acceleration in [m/s2]
     maxVelocity:        10            # in [m/s]
-    simType:            "BICYCLE_SIMPLE"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+    simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
     track:              1.2           # in [m]
     wheelBase:          1.54          # in [m]
 
