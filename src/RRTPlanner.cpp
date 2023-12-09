@@ -4,7 +4,6 @@
 template<class StateSpaceVector>
 RRTPlanner<StateSpaceVector>::RRTPlanner(int argc, char** argv)
 {
-    ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
     nodeName = "[" + ros::this_node::getName() + "]";
 
@@ -345,7 +344,30 @@ void RRTPlanner<StateSpaceVector>::visualize(void)
 
 int main(int argc, char** argv)
 {
-    RRTPlanner<StateSpace2D> planner(argc, argv);
+    ros::init(argc, argv, "rrt_planner");
+
+    string simType;
+    while(!ros::param::get("/rrt_planner/VEHICLE/simType", simType))
+    {
+        sleep(10);
+    }
+    if (simType == "HOLONOMIC")
+    {
+        RRTPlanner<StateSpace2D> planner(argc, argv);
+    }
+    else if (simType == "KINEMATIC")
+    {
+        RRTPlanner<KinematicBicycle> planner(argc, argv);
+    }
+    else if (simType == "DYNAMIC")
+    {
+        RRTPlanner<DynamicBicycle> planner(argc, argv);
+    }
+    else
+    {
+        ROS_ERROR_STREAM("[rrt_planner] Wrong simType parameter. Using holonomic model.");
+        RRTPlanner<StateSpace2D> planner(argc, argv);
+    }
 
     return 0;
 }
@@ -462,9 +484,8 @@ void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>
     std::string simType;
     loadParameter("/VEHICLE/simType", simType, "HOLONOMIC");
     if (simType == "HOLONOMIC") vehicle->getParameters()->simType = HOLONOMIC;
-    else if (simType == "HOLONOMIC_CONSTRAINED") vehicle->getParameters()->simType = HOLONOMIC_CONSTRAINED;
-    else if (simType == "BICYCLE_SIMPLE") vehicle->getParameters()->simType = BICYCLE_SIMPLE;
-    else if (simType == "BICYCLE") vehicle->getParameters()->simType = BICYCLE;
+    else if (simType == "KINEMATIC") vehicle->getParameters()->simType = KINEMATIC;
+    else if (simType == "DYNAMIC") vehicle->getParameters()->simType = DYNAMIC;
 }
 
 // Define classes
