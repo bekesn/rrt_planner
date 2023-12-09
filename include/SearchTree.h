@@ -1,12 +1,9 @@
 #ifndef SEARCHTREE_H
 #define SEARCHTREE_H
 
-#include <vector>
-#include <SearchTreeNode.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
-#include <geometry_msgs/Point.h>
 #include <ros/ros.h>
+#include <visualization_msgs/MarkerArray.h>
+#include "SearchTreeNode.h"
 
 template<class StateSpaceVector>
 struct vEdge;

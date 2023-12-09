@@ -161,19 +161,13 @@ void SearchTree<StateSpaceVector>::visualize(void)
         treeNodes.scale.x = 0.15f;
         treeNodes.scale.y = 0.15f;
         treeNodes.scale.z = 0.15f;
-        /*treeNodes.color.r = 0.176f;
-        treeNodes.color.g = 0.658f;
-        treeNodes.color.b = 0.105f;
-        treeNodes.color.a = 1.0f;*/
 
     geometry_msgs::Point coord;
     
     typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        coord.x = (*it)->getState()->x();
-        coord.y = (*it)->getState()->y();
-        treeNodes.points.push_back(coord);
+        treeNodes.points.push_back(*(*it)->getState()->toPoint());
 
         relativeVelocity = (*it)->getState()->vx() / 10;
         if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
@@ -183,7 +177,7 @@ void SearchTree<StateSpaceVector>::visualize(void)
     }
 
     markerArray.markers.emplace_back(treeNodes);
-/*
+
     // RRT edges visualization
     visualization_msgs::Marker graphEdge;
         graphEdge.header.frame_id = "map";
@@ -200,55 +194,33 @@ void SearchTree<StateSpaceVector>::visualize(void)
         graphEdge.color.a = 1.0f;
 
     typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator treeIterator;
-    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator childIterator;
-    typename shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> children;
 
-    for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
+    for (treeIterator = tree->begin()+1; treeIterator != tree->end(); treeIterator++)
     {
-        children = (*treeIterator)->getChildren();
-        for (childIterator = children->begin(); childIterator != children->end(); childIterator++)
-        {
-            coord.x = (*treeIterator)->getState()->x();
-            coord.y = (*treeIterator)->getState()->y();
-            graphEdge.points.push_back(coord);
-            coord.x = (*childIterator)->getState()->x();
-            coord.y = (*childIterator)->getState()->y();
-            graphEdge.points.push_back(coord);
-        }
+            graphEdge.points.push_back(*(*treeIterator)->getParent()->getState()->toPoint());
+            graphEdge.points.push_back(*(*treeIterator)->getState()->toPoint());
     }
-
 
     markerArray.markers.emplace_back(graphEdge);
     
-*/
     if (this->pathFound && (bestPath->size() > 1))
     {        
-        // Best path visualization
-        visualization_msgs::Marker bestPathLine;
-            bestPathLine.header.frame_id = "map";
-            bestPathLine.header.stamp = ros::Time::now();
-            bestPathLine.ns = "rrt_best_path";
-            bestPathLine.action = visualization_msgs::Marker::ADD;
-            bestPathLine.pose.orientation.w = 1.0;
-            bestPathLine.id = 2;
-            bestPathLine.type = visualization_msgs::Marker::LINE_STRIP;
-            bestPathLine.scale.x = 0.15f;
-            bestPathLine.color.r = 0.0f;
-            bestPathLine.color.g = 0.5f;
-            bestPathLine.color.b = 1.0f;
-            bestPathLine.color.a = 1.0f;
+        visualization_msgs::Marker pathLine;
+            pathLine.header.frame_id = "map";
+            pathLine.header.stamp = ros::Time::now();
+            pathLine.ns = "rrt_best_path";
+            pathLine.action = visualization_msgs::Marker::ADD;
+            pathLine.pose.orientation.w = 1.0;
+            pathLine.id = 2;
+            pathLine.type = visualization_msgs::Marker::LINE_STRIP;
+            pathLine.scale.x = 0.15f;
+            pathLine.color.r = 0.0f;
+            pathLine.color.g = 0.5f;
+            pathLine.color.b = 1.0f;
+            pathLine.color.a = 1.0f;
 
-        typename Trajectory<StateSpaceVector>::iterator pathIterator;
-        for (pathIterator = this->bestPath->begin(); pathIterator != this->bestPath->end(); pathIterator++)
-        {
-            
-            coord.x = (*pathIterator)->x();
-            coord.y = (*pathIterator)->y();
-            bestPathLine.points.push_back(coord);
-
-        }
-        
-        markerArray.markers.emplace_back(bestPathLine);
+        bestPath->visualize(&pathLine);
+        markerArray.markers.emplace_back(pathLine);
     }
 
     // Display status text

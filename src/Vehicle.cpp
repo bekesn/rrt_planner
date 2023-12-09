@@ -59,8 +59,6 @@ unique_ptr<VEHICLE_PARAMETERS>& Vehicle<StateSpaceVector>::getParameters()
 template<class StateSpaceVector> 
 void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* markerArray) const
 {
-    geometry_msgs::Point coord;
-
     visualization_msgs::Marker actualPathLine;
         actualPathLine.header.frame_id = "map";
         actualPathLine.header.stamp = ros::Time::now();
@@ -75,16 +73,7 @@ void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* marke
         actualPathLine.color.b = 0.5f;
         actualPathLine.color.a = 1.0f;
 
-    typename Trajectory<StateSpaceVector>::iterator pathIterator;
-    for (pathIterator = this->actualPath->begin(); pathIterator != this->actualPath->end(); pathIterator++)
-    {
-        
-        coord.x = (*pathIterator)->x();
-        coord.y = (*pathIterator)->y();
-        actualPathLine.points.push_back(coord);
-
-    }
-    
+    actualPath->visualize(&actualPathLine);    
     markerArray->markers.emplace_back(actualPathLine);
 }
 

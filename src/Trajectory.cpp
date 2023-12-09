@@ -9,7 +9,7 @@ Trajectory<StateSpaceVector>::Trajectory(/* args */)
 template<class StateSpaceVector>
 Trajectory<StateSpaceVector>::~Trajectory()
 {
-}
+};
 
 template<class StateSpaceVector>
 double Trajectory<StateSpaceVector>::cost(const unique_ptr<RRT_PARAMETERS>& param) const
@@ -72,6 +72,16 @@ double Trajectory<StateSpaceVector>::getTimeCost(void) const
         prevState = currState;
     }
     return elapsed;
+}
+
+template<class StateSpaceVector>
+void Trajectory<StateSpaceVector>::visualize(visualization_msgs::Marker* marker)
+{
+    typename Trajectory<StateSpaceVector>::iterator pathIterator;
+    for (pathIterator = this->begin(); pathIterator != this->end(); pathIterator++)
+    {
+        marker->points.push_back(*(*pathIterator)->toPoint());
+    }
 }
 
 // Define classes

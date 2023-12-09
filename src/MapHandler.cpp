@@ -289,11 +289,7 @@ void MapHandler<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* mA
         goal.color.b = 0.0f;
         goal.color.a = 1.0f;
 
-    geometry_msgs::Point coord;
-    coord.x = goalState->x();
-    coord.y = goalState->y();
-    goal.points.push_back(coord);
-
+    goal.points.push_back(*goalState->toPoint());
     mArray->markers.emplace_back(goal);
 
     std_msgs::ColorRGBA varColor;
@@ -314,11 +310,8 @@ void MapHandler<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* mA
         upsampled.scale.x = 0.4f;
         upsampled.scale.y = 0.4f;
         upsampled.scale.z = 0.4f;
-        /*upsampled.color.r = 1.0f;
-        upsampled.color.g = 1.0f;
-        upsampled.color.b = 0.0f;
-        upsampled.color.a = 1.0f;*/
 
+    geometry_msgs::Point coord;
     for(auto node : mapKdTree->allnodes)
     {
         coord.x = node.point[0];

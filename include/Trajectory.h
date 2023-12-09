@@ -1,9 +1,9 @@
 #ifndef TRAJECTORY_H
 #define TRAJECTORY_H
 
+#include <visualization_msgs/Marker.h>
 #include "Types.h"
 #include "DynamicBicycle.h"
-#include <vector>
 
 template<typename StateSpaceVector>
 class Trajectory : public vector<shared_ptr<StateSpaceVector>>
@@ -26,6 +26,9 @@ public:
 
     // Cost according to elapsed time
     double getTimeCost(void) const;
+
+    // Visualize
+    void visualize(visualization_msgs::Marker* marker);
 
 };
 
