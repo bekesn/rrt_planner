@@ -1,9 +1,6 @@
 #ifndef types_h
 #define types_h
 
-#define SS_VECTOR   StateSpaceSimulated
-#define PATH_TYPE   Trajectory//std::vector<SS_VECTOR>
-
 enum RRT_TYPE{
     LOCAL_RRT,
     GLOBAL_RRT
@@ -57,12 +54,6 @@ struct RRT_PARAMETERS{
     float simulationTimeStep;
     float thetaWeight;
     float triangleIterations;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(costType, goalBias, goalRadius,
-                    iterations, maxNumOfNodes, minCost, minDeviation, sampleRange, 
-                    resolution, rewireTime, simulationTimeStep, thetaWeight);}
 };
 
 struct VEHICLE_PARAMETERS{
@@ -74,10 +65,6 @@ struct VEHICLE_PARAMETERS{
     float maxVelocity;
     float track;
     float wheelBase;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(simType, maxDelta, maxdDelta, maxLongAccel, maxVelocity, track, wheelBase);}
 };
 
 struct MAP_PARAMETERS{
@@ -85,26 +72,14 @@ struct MAP_PARAMETERS{
     float goalHorizon;
     float maxConeDist;
     float maxGap;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(collisionRange, goalHorizon, maxConeDist);}
 };
 
 struct CONTROL_PARAMETERS{
     float k;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(k);}
 };
 
 struct GENERAL_PARAMETERS{
     float timerPeriod;
-
-    // Archive function for cereal
-    template<class Archive>
-    void serialize(Archive & archive){archive(timerPeriod);}
 };
 
 #endif

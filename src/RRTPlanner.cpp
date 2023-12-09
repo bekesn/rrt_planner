@@ -1,10 +1,8 @@
 #include "RRTPlanner.h"
-#include "std_msgs/String.h"
-#include <string>
 
 
-
-RRTPlanner::RRTPlanner(int argc, char** argv)
+template<class StateSpaceVector>
+RRTPlanner<StateSpaceVector>::RRTPlanner(int argc, char** argv)
 {
     ros::init(argc, argv, "rrt_planner");
     ros::NodeHandle nh;
@@ -19,24 +17,24 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
     unique_ptr<CONTROL_PARAMETERS> controlParam = unique_ptr<CONTROL_PARAMETERS> (new CONTROL_PARAMETERS);
 
     // Init objects with zero parameters
-    vehicleModel = make_shared<VehicleModel> (VehicleModel(move(vehicleParam)));
-    mapHandler = make_shared<MapHandler> (MapHandler(move(mapParam), vehicleModel));
-    localRRT = unique_ptr<SearchTree>(new SearchTree(make_shared<SS_VECTOR> (SS_VECTOR()), LOCAL_RRT));
-    globalRRT = unique_ptr<SearchTree>(new SearchTree(make_shared<SS_VECTOR> (SS_VECTOR()), GLOBAL_RRT));
-
-    Control::setParameters(move(controlParam));
+    vehicle = make_shared<Vehicle<StateSpaceVector>> (Vehicle<StateSpaceVector>(move(vehicleParam)));
+    mapHandler = make_shared<MapHandler<StateSpaceVector>> (MapHandler<StateSpaceVector>(move(mapParam), vehicle));
+    localRRT = unique_ptr<SearchTree<StateSpaceVector>>(new SearchTree<StateSpaceVector>(make_shared<StateSpaceVector> (StateSpaceVector()), LOCAL_RRT));
+    globalRRT = unique_ptr<SearchTree<StateSpaceVector>>(new SearchTree<StateSpaceVector>(make_shared<StateSpaceVector> (StateSpaceVector()), GLOBAL_RRT));
 
     // Load ROS parameters
-    loadParameters();
+    loadParameters(controlParam);
+
+    StateSpaceVector::initStateSpace(move(controlParam));
 
     // Subscribe to map
     ROS_INFO_STREAM("" << nodeName << " Node started.");
-    mapSubscriber = nh.subscribe("/map", 1, &MapHandler::mapCallback, &(*(mapHandler.get())));
-    blueTrackBoundarySubscriber = nh.subscribe("/blueTrackBoundary", 1, &MapHandler::blueTrackBoundaryCallback, &(*(mapHandler.get())));
-    yellowTrackBoundarySubscriber = nh.subscribe("/yellowTrackBoundary", 1, &MapHandler::yellowTrackBoundaryCallback, &(*(mapHandler.get())));
-    poseSubscriber = nh.subscribe("/pose", 1, &VehicleModel::poseCallback, &(*(vehicleModel)));
-    SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler::SLAMStatusCallback, &(*(mapHandler.get())));
-    odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &VehicleModel::velocityCallback, &(*(vehicleModel)));
+    mapSubscriber = nh.subscribe("/map", 1, &MapHandler<StateSpaceVector>::mapCallback, &(*(mapHandler.get())));
+    blueTrackBoundarySubscriber = nh.subscribe("/blueTrackBoundary", 1, &MapHandler<StateSpaceVector>::blueTrackBoundaryCallback, &(*(mapHandler.get())));
+    yellowTrackBoundarySubscriber = nh.subscribe("/yellowTrackBoundary", 1, &MapHandler<StateSpaceVector>::yellowTrackBoundaryCallback, &(*(mapHandler.get())));
+    poseSubscriber = nh.subscribe("/pose", 1, &Vehicle<StateSpaceVector>::poseCallback, &(*(vehicle)));
+    SLAMStatusSubscriber = nh.subscribe("/slam_status", 1, &MapHandler<StateSpaceVector>::SLAMStatusCallback, &(*(mapHandler.get())));
+    odometrySubscriber = nh.subscribe("/odometry/velocity", 1, &Vehicle<StateSpaceVector>::velocityCallback, &(*(vehicle)));
     localRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_local_viz", 10);
     globalRRT->markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_global_viz", 10);
     commonPublisher = nh.advertise<visualization_msgs::MarkerArray>("/rrt_common_viz", 10);
@@ -47,7 +45,8 @@ RRTPlanner::RRTPlanner(int argc, char** argv)
 }
 
 
-void RRTPlanner::stateMachine()
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::stateMachine()
 {
     switch(state)
     {
@@ -73,22 +72,23 @@ void RRTPlanner::stateMachine()
 }
 
 
-shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
+template<class StateSpaceVector>
+shared_ptr<SearchTreeNode<StateSpaceVector>> RRTPlanner<StateSpaceVector>::extend(unique_ptr<SearchTree<StateSpaceVector>>& rrt)
 {
-    shared_ptr<SearchTreeNode> newNode;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> newNode;
     bool offCourse, alreadyInTree;
-    shared_ptr<SS_VECTOR> randState;
-    shared_ptr<SS_VECTOR> newState;
-    shared_ptr<PATH_TYPE> trajectory;
+    shared_ptr<StateSpaceVector> randState;
+    shared_ptr<StateSpaceVector> newState;
+    shared_ptr<Trajectory<StateSpaceVector>> trajectory;
 
     // Get random state
     randState = mapHandler->getRandomState(rrt->getBestPath(), rrt->param);
 
     // Get nearest node
-    shared_ptr<SearchTreeNode> nearest = rrt->getNearest(randState);
+    shared_ptr<SearchTreeNode<StateSpaceVector>> nearest = rrt->getNearest(randState);
 
     // Simulate movement towards new state
-    trajectory = vehicleModel->simulateToTarget(nearest->getState(), randState, rrt->param);
+    trajectory = StateSpaceVector::simulate(nearest->getState(), randState, rrt->param, vehicle->getParameters());
 
     // Check for offCourse
     offCourse = mapHandler->isOffCourse(trajectory);
@@ -113,18 +113,19 @@ shared_ptr<SearchTreeNode> RRTPlanner::extend(unique_ptr<SearchTree>& rrt)
     return newNode;
 }
 
-bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode)
+template<class StateSpaceVector>
+bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector>>& rrt, shared_ptr<SearchTreeNode<StateSpaceVector>> newNode)
 {
-    shared_ptr<PATH_TYPE> trajectory;
-    shared_ptr<vector<shared_ptr<SearchTreeNode>>> nearbyNodes = rrt->getNearby(newNode);
-    vector<shared_ptr<SearchTreeNode>>::iterator it;
+    shared_ptr<Trajectory<StateSpaceVector>> trajectory;
+    shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> nearbyNodes = rrt->getNearby(newNode);
+    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     float newNodeCost = rrt->getAbsCost(newNode);
     bool offCourse;
 
     for (it = nearbyNodes->begin(); it != nearbyNodes->end(); it++)
     {
         
-        trajectory = vehicleModel->simulateToTarget(newNode->getState(), (*it)->getState(), rrt->param, rrt->param->rewireTime);
+        trajectory = StateSpaceVector::simulate(newNode->getState(), (*it)->getState(), rrt->param, vehicle->getParameters(), rrt->param->rewireTime);
         offCourse = mapHandler->isOffCourse(trajectory);
         if ((trajectory->size() > 1) && !offCourse)
         {
@@ -134,7 +135,7 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
             {
                 float segmentCost = trajectory->cost(rrt->param);
                 float childCost = rrt->getAbsCost(*it);
-                float timeError = distError / trajectory->back()->v();
+                float timeError = distError / trajectory->back()->vx();
                 // Compare costs  if it is worth rewiring
                 if ((newNodeCost + segmentCost + timeError) < childCost)
                 {
@@ -162,20 +163,21 @@ bool RRTPlanner::rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> 
     return false;
 }
 
-
-void RRTPlanner::optimizeTriangles(unique_ptr<SearchTree>& rrt)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::optimizeTriangles(unique_ptr<SearchTree<StateSpaceVector>>& rrt)
 {
     for(int i = 0; i < rrt->param->triangleIterations; i++)
     {
-        shared_ptr<SearchTreeNode> node = rrt->getRandomNode();
+        shared_ptr<SearchTreeNode<StateSpaceVector>> node = rrt->getRandomNode();
         optimizeTriangle(rrt, node);
     }
 }
 
-void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> node)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::optimizeTriangle(unique_ptr<SearchTree<StateSpaceVector>>& rrt, shared_ptr<SearchTreeNode<StateSpaceVector>> node)
 {
-    shared_ptr<SearchTreeNode> parent, parentParent;
-    shared_ptr<PATH_TYPE> trajectory;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> parent, parentParent;
+    shared_ptr<Trajectory<StateSpaceVector>> trajectory;
     bool isClose, isLowerCost, offCourse;
     float segmentCost;
 
@@ -184,14 +186,14 @@ void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<Search
     parentParent = parent->getParent();
     if(parentParent == NULL) return;
 
-    trajectory = vehicleModel->simulateToTarget(parentParent->getState(), node->getState(), rrt->param, rrt->param->rewireTime);
+    trajectory = StateSpaceVector::simulate(parentParent->getState(), node->getState(), rrt->param, vehicle->getParameters(), rrt->param->rewireTime);
     if(trajectory->size() > 0)
     {
         segmentCost = trajectory->cost(rrt->param);
         shared_ptr<StateSpace2D> s = node->getState();
         float error = trajectory->back()->getDistOriented(*s, rrt->param);
         isClose =  error < rrt->param->minDeviation;
-        isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost() + rrt->param->minDeviation / (parentParent->getState()->v() *2);
+        isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost() + rrt->param->minDeviation / (parentParent->getState()->vx() *2);
         offCourse = mapHandler->isOffCourse(trajectory);
 
         if(isClose && isLowerCost && !offCourse)
@@ -208,16 +210,17 @@ void RRTPlanner::optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<Search
 
 }
 
-void RRTPlanner::planLocalRRT(void)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::planLocalRRT(void)
 {
-    shared_ptr<SS_VECTOR> pose = vehicleModel->getCurrentPose();
+    shared_ptr<StateSpaceVector> pose = vehicle->getCurrentPose();
     localRRT->init(pose);
     int iteration = 0;
-    shared_ptr<SS_VECTOR> goalState = mapHandler->getGoalState();
+    shared_ptr<StateSpaceVector> goalState = mapHandler->getGoalState();
 
     while((!localRRT->maxNumOfNodesReached()) && (iteration <= localRRT->param->iterations))
     {
-        shared_ptr<SearchTreeNode> node = extend(localRRT);
+        shared_ptr<SearchTreeNode<StateSpaceVector>> node = extend(localRRT);
         if (node != NULL)
         {   
             bool rewired = rewire(localRRT, node);
@@ -240,14 +243,14 @@ void RRTPlanner::planLocalRRT(void)
 
 }
 
-void RRTPlanner::planGlobalRRT(void)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::planGlobalRRT(void)
 {
     int iteration = 0;
     bool changed = false;
-    shared_ptr<SS_VECTOR> goalState = mapHandler->getGoalState();
     while((!globalRRT->maxNumOfNodesReached()) && (iteration <= globalRRT->param->iterations))
     {
-        shared_ptr<SearchTreeNode> node = extend(globalRRT);
+        shared_ptr<SearchTreeNode<StateSpaceVector>> node = extend(globalRRT);
         if (node != NULL)
         {   
             bool rewired = rewire(globalRRT, node);
@@ -265,21 +268,22 @@ void RRTPlanner::planGlobalRRT(void)
     globalRRT->manageLoops();
 }
 
-bool RRTPlanner::handleActualPath(void)
+template<class StateSpaceVector>
+bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 {
-    shared_ptr<PATH_TYPE> actualPath = vehicleModel->getActualPath();
+    shared_ptr<Trajectory<StateSpaceVector>> actualPath = vehicle->getActualPath();
     float fullCost = actualPath->cost(globalRRT->param);
     if (fullCost < globalRRT->param->minCost) return false;
 
-    shared_ptr<PATH_TYPE> loop = shared_ptr<PATH_TYPE> (new PATH_TYPE);
-    shared_ptr<SS_VECTOR> currentPose = actualPath->back();
-    PATH_TYPE::iterator it;
+    shared_ptr<Trajectory<StateSpaceVector>> loop = shared_ptr<Trajectory<StateSpaceVector>> (new Trajectory<StateSpaceVector>);
+    shared_ptr<StateSpaceVector> currentPose = actualPath->back();
+    typename Trajectory<StateSpaceVector>::iterator it;
     bool isLoop = false;
     float cost = 0;
-    PATH_TYPE segment;
+    Trajectory<StateSpaceVector> segment;
     segment.push_back(actualPath->front());
 
-    float distStep = globalRRT->param->simulationTimeStep * currentPose->v();
+    float distStep = globalRRT->param->simulationTimeStep * currentPose->vx();
 
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
@@ -309,7 +313,8 @@ bool RRTPlanner::handleActualPath(void)
     return isLoop;
 }
 
-void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::timerCallback(const ros::WallTimerEvent &event)
 {
     ros::Time startTime = ros::Time::now();
     stateMachine();
@@ -321,7 +326,8 @@ void RRTPlanner::timerCallback(const ros::WallTimerEvent &event)
     }
 }
 
-void RRTPlanner::visualize(void)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::visualize(void)
 {
     localRRT->markerArray.markers.clear();
     localRRT->visualize();
@@ -333,20 +339,19 @@ void RRTPlanner::visualize(void)
 
     commonMArray.markers.clear();
     mapHandler->visualize(&commonMArray);
-    vehicleModel->visualize(&commonMArray); //TODO
+    vehicle->visualize(&commonMArray); //TODO
     commonPublisher.publish(commonMArray);
 }
 
-
 int main(int argc, char** argv)
 {
-    RRTPlanner planner(argc, argv);
+    RRTPlanner<StateSpace2D> planner(argc, argv);
 
     return 0;
 }
 
-
-void RRTPlanner::loadParameter(const string& topic, float& parameter, const float defaultValue)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::loadParameter(const string& topic, float& parameter, const float defaultValue)
 {
     if (!ros::param::get("/rrt_planner/" + topic, parameter))
     {
@@ -356,7 +361,8 @@ void RRTPlanner::loadParameter(const string& topic, float& parameter, const floa
     ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(parameter)); 
 }
 
-void RRTPlanner::loadParameter(const string& topic, int& parameter, const int defaultValue)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::loadParameter(const string& topic, int& parameter, const int defaultValue)
 {
     if (!ros::param::get("/rrt_planner/" + topic, parameter))
     {
@@ -366,7 +372,8 @@ void RRTPlanner::loadParameter(const string& topic, int& parameter, const int de
     ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  std::to_string(parameter)); 
 }
 
-void RRTPlanner::loadParameter(const string& topic, string& parameter, const string defaultValue)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::loadParameter(const string& topic, string& parameter, const string defaultValue)
 {
     if (!ros::param::get("/rrt_planner/" + topic, parameter))
     {
@@ -376,7 +383,8 @@ void RRTPlanner::loadParameter(const string& topic, string& parameter, const str
     ROS_INFO_STREAM(nodeName << " " << topic << "  =  " <<  parameter);     
 }
 
-void RRTPlanner::loadParameters(void)
+template<class StateSpaceVector>
+void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>& controlParam)
 {
     ROS_INFO_STREAM(nodeName << " LOADING PARAMETERS");
     loadParameter("/GENERAL/timerPeriod", genParam->timerPeriod, 0.1f);
@@ -436,25 +444,30 @@ void RRTPlanner::loadParameters(void)
     loadParameter("/LOCAL/triangleIterations", localRRT->param->triangleIterations, 1.0f);
     loadParameter("/GLOBAL/triangleIterations", globalRRT->param->triangleIterations, 1.0f);
 
-    loadParameter("/VEHICLE/maxdDelta", vehicleModel->getParameters()->maxdDelta, 0.1f);
-    loadParameter("/VEHICLE/maxDelta", vehicleModel->getParameters()->maxDelta, 0.38f);
-    loadParameter("/VEHICLE/maxLatAccel", vehicleModel->getParameters()->maxLatAccel, 10.0f);
-    loadParameter("/VEHICLE/maxLongAccel", vehicleModel->getParameters()->maxLongAccel, 5.0f);
-    loadParameter("/VEHICLE/track", vehicleModel->getParameters()->track, 1.2f);
-    loadParameter("/VEHICLE/wheelBase", vehicleModel->getParameters()->wheelBase, 1.54f); 
+    loadParameter("/VEHICLE/maxdDelta", vehicle->getParameters()->maxdDelta, 0.1f);
+    loadParameter("/VEHICLE/maxDelta", vehicle->getParameters()->maxDelta, 0.38f);
+    loadParameter("/VEHICLE/maxLatAccel", vehicle->getParameters()->maxLatAccel, 10.0f);
+    loadParameter("/VEHICLE/maxLongAccel", vehicle->getParameters()->maxLongAccel, 5.0f);
+    loadParameter("/VEHICLE/track", vehicle->getParameters()->track, 1.2f);
+    loadParameter("/VEHICLE/wheelBase", vehicle->getParameters()->wheelBase, 1.54f); 
 
     loadParameter("/MAP/collisionRange", mapHandler->getParameters()->collisionRange, 6.0f);
     loadParameter("/MAP/goalHorizon", mapHandler->getParameters()->goalHorizon, 15.0f);
     loadParameter("/MAP/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
     loadParameter("/MAP/maxGap", mapHandler->getParameters()->maxGap, 1.5f);
 
-    loadParameter("/CONTROL/k", Control::getParameters()->k, 15.0f);
+    loadParameter("/CONTROL/k", controlParam->k, 15.0f);
 
     // Choose simulation type
     std::string simType;
     loadParameter("/VEHICLE/simType", simType, "HOLONOMIC");
-    if (simType == "HOLONOMIC") vehicleModel->getParameters()->simType = HOLONOMIC;
-    else if (simType == "HOLONOMIC_CONSTRAINED") vehicleModel->getParameters()->simType = HOLONOMIC_CONSTRAINED;
-    else if (simType == "BICYCLE_SIMPLE") vehicleModel->getParameters()->simType = BICYCLE_SIMPLE;
-    else if (simType == "BICYCLE") vehicleModel->getParameters()->simType = BICYCLE;
+    if (simType == "HOLONOMIC") vehicle->getParameters()->simType = HOLONOMIC;
+    else if (simType == "HOLONOMIC_CONSTRAINED") vehicle->getParameters()->simType = HOLONOMIC_CONSTRAINED;
+    else if (simType == "BICYCLE_SIMPLE") vehicle->getParameters()->simType = BICYCLE_SIMPLE;
+    else if (simType == "BICYCLE") vehicle->getParameters()->simType = BICYCLE;
 }
+
+// Define classes
+template class RRTPlanner<StateSpace2D>;
+template class RRTPlanner<KinematicBicycle>;
+template class RRTPlanner<DynamicBicycle>;

@@ -134,8 +134,16 @@ target_link_libraries(Control ${catkin_LIBRARIES})
 add_library(StateSpace2D src/StateSpace2D.cpp)
 target_link_libraries(StateSpace2D ${catkin_LIBRARIES})
 
-add_library(StateSpaceSimulated src/StateSpaceSimulated.cpp)
-target_link_libraries(StateSpaceSimulated ${catkin_LIBRARIES})
+add_library(Solver src/Solver.cpp)
+target_link_libraries(Solver ${catkin_LIBRARIES})
+
+add_library(KinematicBicycle src/KinematicBicycle.cpp)
+target_link_libraries(KinematicBicycle ${catkin_LIBRARIES})
+target_link_libraries(KinematicBicycle Control)
+target_link_libraries(KinematicBicycle Solver)
+
+add_library(DynamicBicycle src/DynamicBicycle.cpp)
+target_link_libraries(DynamicBicycle ${catkin_LIBRARIES})
 
 add_library(Trajectory src/Trajectory.cpp)
 target_link_libraries(Trajectory ${catkin_LIBRARIES})
@@ -143,9 +151,8 @@ target_link_libraries(Trajectory ${catkin_LIBRARIES})
 add_library(MapHandler src/MapHandler.cpp)
 target_link_libraries(MapHandler ${catkin_LIBRARIES})
 
-add_library(VehicleModel src/VehicleModel.cpp)
-target_link_libraries(VehicleModel ${catkin_LIBRARIES})
-target_link_libraries(VehicleModel Control)
+add_library(Vehicle src/Vehicle.cpp)
+target_link_libraries(Vehicle ${catkin_LIBRARIES})
 
 add_library(SearchTreeNode src/SearchTreeNode.cpp)
 target_link_libraries(SearchTreeNode ${catkin_LIBRARIES})
@@ -167,13 +174,15 @@ target_link_libraries(libKdTree ${catkin_LIBRARIES})
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rrt_planner_node src/RRTPlanner.cpp)
 target_link_libraries(rrt_planner_node 
+  Control
   StateSpace2D
-  StateSpaceSimulated
+  KinematicBicycle
+  DynamicBicycle
   Trajectory
   SearchTreeNode
   SearchTree
   MapHandler
-  VehicleModel
+  Vehicle
   libKdTree
   ${catkin_LIBRARIES})
 

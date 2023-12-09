@@ -2,13 +2,13 @@
 #define RRTPLANNER_H
 
 #include "ros/ros.h"
+#include "Control.h"
 #include "MapHandler.h"
-#include "VehicleModel.h"
+#include "Vehicle.h"
 #include "SearchTree.h"
-#include "frt_custom_msgs/Landmark.h"
 #include <visualization_msgs/Marker.h>
-#include <fstream>
 
+template<class StateSpaceVector>
 class RRTPlanner
 {
     // ROS objects
@@ -28,11 +28,11 @@ class RRTPlanner
     unique_ptr<GENERAL_PARAMETERS> genParam;
 
     // Objects
-    shared_ptr<MapHandler> mapHandler;
-    shared_ptr<VehicleModel> vehicleModel;
+    shared_ptr<MapHandler<StateSpaceVector>> mapHandler;
+    shared_ptr<Vehicle<StateSpaceVector>> vehicle;
 
-    unique_ptr<SearchTree> localRRT;
-    unique_ptr<SearchTree> globalRRT;
+    unique_ptr<SearchTree<StateSpaceVector>> localRRT;
+    unique_ptr<SearchTree<StateSpaceVector>> globalRRT;
 
     PlannerState state;
 
@@ -45,20 +45,20 @@ public:
     void loadParameter(const string& topic, float& parameter, const float defaultValue);
     void loadParameter(const string& topic, int& parameter, const int defaultValue);
     void loadParameter(const string& topic, string& parameter, const string defaultValue);
-    void loadParameters(void);
+    void loadParameters(unique_ptr<CONTROL_PARAMETERS>& controlParam);
 
     // State machine of planner
     void stateMachine(void);
     
     // Extend searchtree by a new node
-    shared_ptr<SearchTreeNode> extend(unique_ptr<SearchTree>& rrt);
+    shared_ptr<SearchTreeNode<StateSpaceVector>> extend(unique_ptr<SearchTree<StateSpaceVector>>& rrt);
 
     // Globally optimize tree by reorganizing edges
-    bool rewire(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> newNode);
+    bool rewire(unique_ptr<SearchTree<StateSpaceVector>>& rrt, shared_ptr<SearchTreeNode<StateSpaceVector>> newNode);
 
     // Locally optimize tree by reorganizing edges
-    void optimizeTriangles(unique_ptr<SearchTree>& rrt);
-    void optimizeTriangle(unique_ptr<SearchTree>& rrt, shared_ptr<SearchTreeNode> node);
+    void optimizeTriangles(unique_ptr<SearchTree<StateSpaceVector>>& rrt);
+    void optimizeTriangle(unique_ptr<SearchTree<StateSpaceVector>>& rrt, shared_ptr<SearchTreeNode<StateSpaceVector>> node);
 
     // RRT on partially discovered map
     void planLocalRRT(void);

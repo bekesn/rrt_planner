@@ -3,9 +3,9 @@
 
 #include "Types.h"
 #include "StateSpace2D.h"
+#include "DynamicBicycle.h"
 
-class StateSpaceSimulated;
-
+template<class StateSpaceVector>
 class Control
 {
     static unique_ptr<CONTROL_PARAMETERS> controlParam;
@@ -19,7 +19,7 @@ public:
     Control();
 
     // Create control inputs
-    static shared_ptr<Control> control(const StateSpaceSimulated& state, const StateSpaceSimulated& target,
+    static shared_ptr<Control> control(const StateSpaceVector& state, const StateSpaceVector& target,
                                        const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);
 
     // Calculate steering speed for lateral control of the vehicle
@@ -28,7 +28,7 @@ public:
 
     // Calculate a_x for longitudinal control of the vehicle
     static float getRandomAccel(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
-    static float longitudinalControl(const StateSpaceSimulated& state, const StateSpaceSimulated& target, const float& timeStep);
+    static float longitudinalControl(const StateSpaceVector& state, const StateSpaceVector& target, const float& timeStep);
 
     // Set control parameters
     static void setParameters(const unique_ptr<CONTROL_PARAMETERS> param);
@@ -37,7 +37,7 @@ public:
     static unique_ptr<CONTROL_PARAMETERS>& getParameters(void);
 
     // Limit input
-    void limitValues(const StateSpaceSimulated& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);  
+    void limitValues(const StateSpaceVector& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);  
 };
 
 #endif // CONTROL_H

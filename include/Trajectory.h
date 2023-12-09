@@ -2,13 +2,18 @@
 #define TRAJECTORY_H
 
 #include "Types.h"
-#include "StateSpaceSimulated.h"
+#include "DynamicBicycle.h"
 #include <vector>
 
-class Trajectory : public vector<shared_ptr<SS_VECTOR>>
+template<typename StateSpaceVector>
+class Trajectory : public vector<shared_ptr<StateSpaceVector>>
 {
+
     
 public:
+
+    using vector<shared_ptr<StateSpaceVector>>::push_back;
+
     Trajectory(/* args */);
     ~Trajectory();
 

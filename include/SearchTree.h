@@ -7,16 +7,17 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Point.h>
 #include <ros/ros.h>
-#include <VehicleModel.h>
 
+template<class StateSpaceVector>
 struct vEdge;
 
+template<class StateSpaceVector>
 class SearchTree
 {
 private:
-    shared_ptr<vector<shared_ptr<SearchTreeNode>>> tree;
-    vector<shared_ptr<vEdge>> vEdges;
-    shared_ptr<PATH_TYPE> bestPath;
+    shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> tree;
+    vector<shared_ptr<vEdge<StateSpaceVector>>> vEdges;
+    shared_ptr<Trajectory<StateSpaceVector>> bestPath;
 
     RRT_TYPE type;
 
@@ -40,74 +41,75 @@ public:
 
     //Constructor
     SearchTree();
-    SearchTree(shared_ptr<SS_VECTOR> startState, RRT_TYPE rrtType);
+    SearchTree(shared_ptr<StateSpaceVector> startState, RRT_TYPE rrtType);
 
     //Destructor
     ~SearchTree();
 
     // Add child node
     // Return pointer to newly inserted node
-    shared_ptr<SearchTreeNode> addChild(shared_ptr<SearchTreeNode> parentNode, shared_ptr<SS_VECTOR> state, double nodeCost);
+    shared_ptr<SearchTreeNode<StateSpaceVector>> addChild(shared_ptr<SearchTreeNode<StateSpaceVector>> parentNode, shared_ptr<StateSpaceVector> state, double nodeCost);
 
     //Remove node
-    void remove(shared_ptr<SearchTreeNode> node);
+    void remove(shared_ptr<SearchTreeNode<StateSpaceVector>> node);
 
     //Get nearest node
-    shared_ptr<SearchTreeNode> getNearest(const shared_ptr<SS_VECTOR>& state, float minCost = 0.0f) const;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> getNearest(const shared_ptr<StateSpaceVector>& state, float minCost = 0.0f) const;
 
     //Get nearby nodes
-    shared_ptr<vector<shared_ptr<SearchTreeNode>>> getNearby(shared_ptr<SearchTreeNode> node) const;
+    shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> getNearby(shared_ptr<SearchTreeNode<StateSpaceVector>> node) const;
 
     // Decide whether almost similar state already exists
-    bool alreadyInTree(const shared_ptr<SS_VECTOR>& state) const;
+    bool alreadyInTree(const shared_ptr<StateSpaceVector>& state) const;
 
     // Draw tree as lines
     void visualize(void);
 
     // Delete tree and create new
-    void init(const shared_ptr<SS_VECTOR>& startState);
-    void init(shared_ptr<PATH_TYPE> initPath);
+    void init(const shared_ptr<StateSpaceVector>& startState);
+    void init(shared_ptr<Trajectory<StateSpaceVector>> initPath);
 
     // Get root
-    shared_ptr<SS_VECTOR> getRoot() const;
+    shared_ptr<StateSpaceVector> getRoot() const;
 
     // Traceback to root from given state
     // Gets closest node to given state and returns with trajectory from root to node
-    shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SS_VECTOR>& goalState) const;
+    shared_ptr<Trajectory<StateSpaceVector>> traceBackToRoot(const shared_ptr<StateSpaceVector>& goalState) const;
 
     // Traceback to root from given node
     // Returns with trajectory from root to node
-    shared_ptr<PATH_TYPE> traceBackToRoot(const shared_ptr<SearchTreeNode>& node) const;
+    shared_ptr<Trajectory<StateSpaceVector>> traceBackToRoot(const shared_ptr<SearchTreeNode<StateSpaceVector>>& node) const;
 
     // Update best path to given path
-    void updatePath(const shared_ptr<PATH_TYPE>& path);
+    void updatePath(const shared_ptr<Trajectory<StateSpaceVector>>& path);
 
     // Create closing segment to define best loop
     // Investigates if a real loop is defined
     // Investigates if cost is decreased compared to the previous cost
     // Return whether the best loop was changed
-    bool addLoop(const shared_ptr<SearchTreeNode> startNode, const shared_ptr<SearchTreeNode> endNode, const float& cost);
+    bool addLoop(const shared_ptr<SearchTreeNode<StateSpaceVector>> startNode, const shared_ptr<SearchTreeNode<StateSpaceVector>> endNode, const float& cost);
     void manageLoops(void);
 
     // Get absolute cost to node
-    float getAbsCost(const shared_ptr<SearchTreeNode>& node) const;
+    float getAbsCost(const shared_ptr<SearchTreeNode<StateSpaceVector>>& node) const;
 
     // Get best path
-    shared_ptr<PATH_TYPE> getBestPath(void);
+    shared_ptr<Trajectory<StateSpaceVector>> getBestPath(void);
 
     // Check wether number of nodes reached the maximum
     bool maxNumOfNodesReached() const;
 
     // Rewiring node from former parent to newParent node
-    void rewire(shared_ptr<SearchTreeNode> node, shared_ptr<SearchTreeNode> newParent);
+    void rewire(shared_ptr<SearchTreeNode<StateSpaceVector>> node, shared_ptr<SearchTreeNode<StateSpaceVector>> newParent);
 
     // Provide a randomly chosen node
-    shared_ptr<SearchTreeNode> getRandomNode(void) const;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> getRandomNode(void) const;
 };
 
+template<class StateSpaceVector>
 struct vEdge{
-    shared_ptr<SearchTreeNode> start;
-    shared_ptr<SearchTreeNode> end;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> start;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> end;
     float cost;
 };
 

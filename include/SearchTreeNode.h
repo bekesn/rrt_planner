@@ -4,42 +4,43 @@
 #include <vector>
 #include <iterator>
 #include "Types.h"
-#include "StateSpaceSimulated.h"
+#include "DynamicBicycle.h"
 #include "Trajectory.h"
 
+template<class StateSpaceVector>
 class SearchTreeNode
 {
 private:
     shared_ptr<SearchTreeNode> parentNode;
     shared_ptr<vector<shared_ptr<SearchTreeNode>>> childNodes;
-    shared_ptr<SS_VECTOR> state;
+    shared_ptr<StateSpaceVector> state;
     float cost;
 
 public:
 
     // Constructor
     SearchTreeNode();
-    SearchTreeNode(const SearchTreeNode &original);
-    SearchTreeNode(shared_ptr<SearchTreeNode> parent, shared_ptr<SS_VECTOR> stateSpace, double nodeCost);
+    SearchTreeNode(const SearchTreeNode<StateSpaceVector> &original);
+    SearchTreeNode(shared_ptr<SearchTreeNode<StateSpaceVector>> parent, shared_ptr<StateSpaceVector> stateSpace, double nodeCost);
 
     // Destructor
     ~SearchTreeNode();
 
     // Add child node
-    void addChild(shared_ptr<SearchTreeNode> childNode);
+    void addChild(shared_ptr<SearchTreeNode<StateSpaceVector>> childNode);
 
     // Remove child node
-    void removeChild(shared_ptr<SearchTreeNode> childNode);
+    void removeChild(shared_ptr<SearchTreeNode<StateSpaceVector>> childNode);
 
     // Get and change parent
-    shared_ptr<SearchTreeNode> getParent() const;
-    void changeParent(shared_ptr<SearchTreeNode> newParent, shared_ptr<SearchTreeNode>& selfPtr);
+    shared_ptr<SearchTreeNode<StateSpaceVector>> getParent() const;
+    void changeParent(shared_ptr<SearchTreeNode<StateSpaceVector>> newParent, shared_ptr<SearchTreeNode<StateSpaceVector>>& selfPtr);
 
     // Get children
-    shared_ptr<vector<shared_ptr<SearchTreeNode>>> getChildren() const;
+    shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> getChildren() const;
 
     // Get state
-    shared_ptr<SS_VECTOR> getState();
+    shared_ptr<StateSpaceVector> getState();
 
     // Cost
     float getSegmentCost(void) const;
@@ -47,7 +48,7 @@ public:
     void addToAbsoluteCost(float* absCost) const;
 
     // Trace back to parent and add state
-    void traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const;
+    void traceBackToRoot(shared_ptr<Trajectory<StateSpaceVector>>& stateVector) const;
 };
 
 

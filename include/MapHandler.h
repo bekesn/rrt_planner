@@ -2,13 +2,13 @@
 #define MAPHANDLER_H
 
 #include "ros/ros.h"
-#include "SearchTree.h"
-#include "VehicleModel.h"
+#include "Vehicle.h"
 #include "frt_custom_msgs/Map.h"
 #include "frt_custom_msgs/Landmark.h"
 #include "frt_custom_msgs/SlamStatus.h"
 #include <kdtree/kdtree.hpp>
 
+template<class StateSpaceVector>
 class MapHandler
 {
 private:
@@ -17,8 +17,8 @@ private:
     shared_ptr<Kdtree::KdTree> mapKdTree;
     vector<shared_ptr<frt_custom_msgs::Landmark>> blueTrackBoundary;
     vector<shared_ptr<frt_custom_msgs::Landmark>> yellowTrackBoundary;
-    shared_ptr<VehicleModel> vehicleModel;
-    shared_ptr<SS_VECTOR> goalState;
+    shared_ptr<Vehicle<StateSpaceVector>> vehicle;
+    shared_ptr<StateSpaceVector> goalState;
     bool mapReceived;
     bool blueTrackBoundaryReceived;
     bool yellowTrackBoundaryReceived;
@@ -29,24 +29,24 @@ private:
 
 public:
     MapHandler(void);
-    MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<VehicleModel> vehicleModel);
+    MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<Vehicle<StateSpaceVector>> vehicle);
     //~MapHandler();
     
     // Check for offcourse
-    bool isOffCourse(const shared_ptr<PATH_TYPE>& path) const;
+    bool isOffCourse(const shared_ptr<Trajectory<StateSpaceVector>>& path) const;
 
     // Upsample cones
     void upSample(void);
 
     // Get random state
-    shared_ptr<SS_VECTOR> getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
+    shared_ptr<StateSpaceVector> getRandomState(const shared_ptr<Trajectory<StateSpaceVector>>& path, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Get parameters
     unique_ptr<MAP_PARAMETERS>& getParameters(void);
 
     // Calculate and get goal state
     void calculateGoalState(void);
-    shared_ptr<SS_VECTOR> getGoalState(void);
+    shared_ptr<StateSpaceVector> getGoalState(void);
 
     // Update map
     void mapCallback(const frt_custom_msgs::Map::ConstPtr &msg);

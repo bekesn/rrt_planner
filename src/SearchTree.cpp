@@ -1,35 +1,39 @@
 #include <SearchTree.h>
 
 
-SearchTree::SearchTree()
+template<class StateSpaceVector>
+SearchTree<StateSpaceVector>::SearchTree()
 {
     param = unique_ptr<RRT_PARAMETERS> (new RRT_PARAMETERS);
     type = LOCAL_RRT;
-    bestPath = shared_ptr<PATH_TYPE> (new PATH_TYPE);
-    tree = unique_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
+    bestPath = shared_ptr<Trajectory<StateSpaceVector>> (new Trajectory<StateSpaceVector>);
+    tree = unique_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> (new vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>);
 
     pathLength = 0;
     pathTime = 0;
     pathCost = 0;
 }
 
-SearchTree::SearchTree(shared_ptr<SS_VECTOR> startState, RRT_TYPE rrtType) : SearchTree()
+template<class StateSpaceVector>
+SearchTree<StateSpaceVector>::SearchTree(shared_ptr<StateSpaceVector> startState, RRT_TYPE rrtType) : SearchTree()
 {
     type = rrtType;
 
     this->init(startState);
 }
 
-SearchTree::~SearchTree()
+template<class StateSpaceVector>
+SearchTree<StateSpaceVector>::~SearchTree()
 {
 
 }
 
-shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> parentNode, shared_ptr<SS_VECTOR> state, double nodeCost)
+template<class StateSpaceVector>
+shared_ptr<SearchTreeNode<StateSpaceVector>> SearchTree<StateSpaceVector>::addChild(shared_ptr<SearchTreeNode<StateSpaceVector>> parentNode, shared_ptr<StateSpaceVector> state, double nodeCost)
 {
     if (!maxNumOfNodesReached())
     {
-        tree->push_back(make_shared<SearchTreeNode>(SearchTreeNode(parentNode, state, nodeCost)));
+        tree->push_back(make_shared<SearchTreeNode<StateSpaceVector>>(SearchTreeNode<StateSpaceVector>(parentNode, state, nodeCost)));
         parentNode->addChild(tree->back());
         nodeCount++;
         return tree->back();
@@ -41,7 +45,8 @@ shared_ptr<SearchTreeNode> SearchTree::addChild(shared_ptr<SearchTreeNode> paren
     }
 }
 
-void SearchTree::remove(shared_ptr<SearchTreeNode> node)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::remove(shared_ptr<SearchTreeNode<StateSpaceVector>> node)
 {
     int numOfChildren = node->getChildren()->size();
     if(numOfChildren == 0)
@@ -56,12 +61,13 @@ void SearchTree::remove(shared_ptr<SearchTreeNode> node)
     }
 }
 
-shared_ptr<SearchTreeNode> SearchTree::getNearest(const shared_ptr<SS_VECTOR>& toState, float minCost) const
+template<class StateSpaceVector>
+shared_ptr<SearchTreeNode<StateSpaceVector>> SearchTree<StateSpaceVector>::getNearest(const shared_ptr<StateSpaceVector>& toState, float minCost) const
 {
-    std::vector<shared_ptr<SearchTreeNode>>::iterator it;
+    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     double minDist;
     double dist;
-    shared_ptr<SearchTreeNode> closest;
+    shared_ptr<SearchTreeNode<StateSpaceVector>> closest;
 
     // Initialize closest node and distance
     minDist = tree->front()->getState()->getDistToTarget(*toState, param);
@@ -86,16 +92,17 @@ shared_ptr<SearchTreeNode> SearchTree::getNearest(const shared_ptr<SS_VECTOR>& t
     return closest;
 }
 
-shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> SearchTree::getNearby(shared_ptr<SearchTreeNode> node) const
+template<class StateSpaceVector>
+shared_ptr<std::vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> SearchTree<StateSpaceVector>::getNearby(shared_ptr<SearchTreeNode<StateSpaceVector>> node) const
 {
-    vector<shared_ptr<SearchTreeNode>>::iterator it;
-    auto closeNodes = shared_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
-    shared_ptr<SS_VECTOR> state = node->getState();
+    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
+    auto closeNodes = shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> (new vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>);
+    shared_ptr<StateSpaceVector> state = node->getState();
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if ((state->getDistToTarget(*(*it)->getState(), param) < (param->rewireTime * param->simulationTimeStep * state->v())) && ((*it) != node))
+        if ((state->getDistToTarget(*(*it)->getState(), param) < (param->rewireTime * param->simulationTimeStep * state->vx())) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }
@@ -105,9 +112,10 @@ shared_ptr<std::vector<shared_ptr<SearchTreeNode>>> SearchTree::getNearby(shared
 
 }
 
-bool SearchTree::alreadyInTree(const shared_ptr<SS_VECTOR>& state) const
+template<class StateSpaceVector>
+bool SearchTree<StateSpaceVector>::alreadyInTree(const shared_ptr<StateSpaceVector>& state) const
 {
-    std::vector<shared_ptr<SearchTreeNode>>::iterator it;
+    typename std::vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     bool isInTree = false;
 
     // Iterate through tree
@@ -128,7 +136,8 @@ bool SearchTree::alreadyInTree(const shared_ptr<SS_VECTOR>& state) const
     return isInTree;
 }
 
-void SearchTree::visualize(void)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::visualize(void)
 {
     if(tree->size() < 2) return;
 
@@ -159,14 +168,14 @@ void SearchTree::visualize(void)
 
     geometry_msgs::Point coord;
     
-    vector<shared_ptr<SearchTreeNode>>::iterator it;
+    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     for (it = tree->begin(); it != tree->end(); it++)
     {
         coord.x = (*it)->getState()->x();
         coord.y = (*it)->getState()->y();
         treeNodes.points.push_back(coord);
 
-        relativeVelocity = (*it)->getState()->v() / 10;
+        relativeVelocity = (*it)->getState()->vx() / 10;
         if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
         varColor.r = relativeVelocity;
         varColor.g = 1 - relativeVelocity;
@@ -174,7 +183,7 @@ void SearchTree::visualize(void)
     }
 
     markerArray.markers.emplace_back(treeNodes);
-
+/*
     // RRT edges visualization
     visualization_msgs::Marker graphEdge;
         graphEdge.header.frame_id = "map";
@@ -190,9 +199,9 @@ void SearchTree::visualize(void)
         graphEdge.color.b = 0.0f;
         graphEdge.color.a = 1.0f;
 
-    vector<shared_ptr<SearchTreeNode>>::iterator treeIterator;
-    vector<shared_ptr<SearchTreeNode>>::iterator childIterator;
-    shared_ptr<vector<shared_ptr<SearchTreeNode>>> children;
+    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator treeIterator;
+    typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator childIterator;
+    typename shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> children;
 
     for (treeIterator = tree->begin(); treeIterator != tree->end(); treeIterator++)
     {
@@ -211,7 +220,7 @@ void SearchTree::visualize(void)
 
     markerArray.markers.emplace_back(graphEdge);
     
-
+*/
     if (this->pathFound && (bestPath->size() > 1))
     {        
         // Best path visualization
@@ -229,7 +238,7 @@ void SearchTree::visualize(void)
             bestPathLine.color.b = 1.0f;
             bestPathLine.color.a = 1.0f;
 
-        PATH_TYPE::iterator pathIterator;
+        typename Trajectory<StateSpaceVector>::iterator pathIterator;
         for (pathIterator = this->bestPath->begin(); pathIterator != this->bestPath->end(); pathIterator++)
         {
             
@@ -275,10 +284,11 @@ void SearchTree::visualize(void)
     markerArray.markers.emplace_back(textInfo);
 }
 
-void SearchTree::init(const shared_ptr<SS_VECTOR>& startState)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::init(const shared_ptr<StateSpaceVector>& startState)
 {
     tree->clear();
-    tree->push_back(make_shared<SearchTreeNode> (SearchTreeNode(NULL, startState, 0)));
+    tree->push_back(make_shared<SearchTreeNode<StateSpaceVector>> (SearchTreeNode<StateSpaceVector>(NULL, startState, 0)));
     vEdges.clear();
     // bestPath is not reinitialized as if local planning fails, it can reuse previous path
 
@@ -288,19 +298,20 @@ void SearchTree::init(const shared_ptr<SS_VECTOR>& startState)
     pathFound = false;
 }
 
-void SearchTree::init(shared_ptr<PATH_TYPE> initPath)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::init(shared_ptr<Trajectory<StateSpaceVector>> initPath)
 {
-    PATH_TYPE::iterator it;
+    typename Trajectory<StateSpaceVector>::iterator it;
     int i = 0;
     float cost;
-    PATH_TYPE segment;
+    Trajectory<StateSpaceVector> segment;
     segment.push_back(initPath->front());
 
     // Initialize tree
     init(initPath->front());
 
     // Add remaining states
-    shared_ptr<SearchTreeNode> node = tree->front();
+    shared_ptr<SearchTreeNode<StateSpaceVector>> node = tree->front();
     for (it = initPath->begin() + 1; it != initPath->end(); it++)
     {
         if(!alreadyInTree(*it))
@@ -318,101 +329,70 @@ void SearchTree::init(shared_ptr<PATH_TYPE> initPath)
     }
 }
 
-shared_ptr<SS_VECTOR> SearchTree::getRoot() const
+template<class StateSpaceVector>
+shared_ptr<StateSpaceVector> SearchTree<StateSpaceVector>::getRoot() const
 {
     return tree->front()->getState();
 }
 
-shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const shared_ptr<SS_VECTOR>& goalState) const
+template<class StateSpaceVector>
+shared_ptr<Trajectory<StateSpaceVector>> SearchTree<StateSpaceVector>::traceBackToRoot(const shared_ptr<StateSpaceVector>& goalState) const
 {
-    shared_ptr<SearchTreeNode> closestNode = getNearest(goalState, param->minCost);
+    shared_ptr<SearchTreeNode<StateSpaceVector>> closestNode = getNearest(goalState, param->minCost);
     if (closestNode == NULL) return NULL;
 
     return traceBackToRoot(closestNode);
 }
 
-shared_ptr<PATH_TYPE> SearchTree::traceBackToRoot(const shared_ptr<SearchTreeNode>& node) const
+template<class StateSpaceVector>
+shared_ptr<Trajectory<StateSpaceVector>> SearchTree<StateSpaceVector>::traceBackToRoot(const shared_ptr<SearchTreeNode<StateSpaceVector>>& node) const
 {
-    shared_ptr<PATH_TYPE> path = shared_ptr<PATH_TYPE> (new PATH_TYPE);
+    shared_ptr<Trajectory<StateSpaceVector>> path = shared_ptr<Trajectory<StateSpaceVector>> (new Trajectory<StateSpaceVector>());
     node->traceBackToRoot(path);
     return path;
 }
 
-void SearchTree::updatePath(const shared_ptr<PATH_TYPE>& path)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::updatePath(const shared_ptr<Trajectory<StateSpaceVector>>& path)
 {
     bestPath = path;
     pathLength = bestPath->getDistanceCost();
     pathTime = bestPath->getTimeCost();
 }
 
-/*bool SearchTree::closeLoop(const shared_ptr<SearchTreeNode>& startNode, const shared_ptr<SearchTreeNode>& endNode)
+template<class StateSpaceVector>
+bool SearchTree<StateSpaceVector>::addLoop(const shared_ptr<SearchTreeNode<StateSpaceVector>> startNode,
+                                           const shared_ptr<SearchTreeNode<StateSpaceVector>> endNode, const float& cost)
 {
-    shared_ptr<PATH_TYPE> path = traceBackToRoot(endNode);
-    bool isLoop = false;
-    float cost = 0;
-
-    PATH_TYPE::iterator startIterator;
-
-    startIterator = find(path->begin(), path->end(), startNode->getState());
-    if (startIterator != path->end())
-    {
-        // Remove states from path before start state
-        path->erase(path->begin(), startIterator);
-        
-        // Add start state to the end to create a loop
-        path->push_back(startNode->getState());
-        
-        isLoop = true;
-        cost = path->cost(param);
-    }
-
-    // If a loop is found:
-    // If no loop was defined before, this will be the loop
-    // If loop was defined but this has a lower cost, loop is replaced
-    if (isLoop && (!pathFound || (cost < pathCost)))
-    {
-        pathFound = true;
-
-        // Update path and its costs
-        bestPath = path;
-        pathCost = cost;
-        pathLength = bestPath->getDistanceCost();
-        pathTime = bestPath->getTimeCost();
-    }
-
-    return isLoop;
-}*/
-
-bool SearchTree::addLoop(const shared_ptr<SearchTreeNode> startNode, const shared_ptr<SearchTreeNode> endNode, const float& cost)
-{
-    shared_ptr<PATH_TYPE> path = traceBackToRoot(startNode);
+    shared_ptr<Trajectory<StateSpaceVector>> path = traceBackToRoot(startNode);
     bool isLoop = false;
 
-    PATH_TYPE::iterator endIterator;
+    typename Trajectory<StateSpaceVector>::iterator endIterator;
 
     endIterator = find(path->begin(), path->end(), endNode->getState());
     if (endIterator != path->end())
     {
         // A loop is detected
-        vEdge virtEdge = {startNode, endNode, cost};
-        vEdges.push_back(make_shared<vEdge>(virtEdge));
+        vEdge<StateSpaceVector> virtEdge = {startNode, endNode, cost};
+        vEdges.push_back(make_shared<vEdge<StateSpaceVector>>(virtEdge));
         isLoop = true;
     }
 
     return isLoop;
 }
 
-void SearchTree::manageLoops(void)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::manageLoops(void)
 {
-    vector<shared_ptr<vEdge>>::iterator it;
+    typename vector<shared_ptr<vEdge<StateSpaceVector>>>::iterator it;
     for(it = vEdges.begin(); it < vEdges.end(); it++)
     {
         bool isLoop = false;
-        shared_ptr<vEdge> virtEdge = *it;
-        shared_ptr<PATH_TYPE> path = traceBackToRoot(virtEdge->start);
+        shared_ptr<vEdge<StateSpaceVector>> virtEdge = *it;
+        shared_ptr<Trajectory<StateSpaceVector>> path = traceBackToRoot(virtEdge->start);
         if(path->size() > 1)
         {
-            PATH_TYPE::iterator endIterator;
+            typename Trajectory<StateSpaceVector>::iterator endIterator;
 
             endIterator = find(path->begin(), path->end(), virtEdge->end->getState());
             if (endIterator != path->end())
@@ -449,32 +429,46 @@ void SearchTree::manageLoops(void)
     }
 }
 
-float SearchTree::getAbsCost(const shared_ptr<SearchTreeNode>& node) const
+template<class StateSpaceVector>
+float SearchTree<StateSpaceVector>::getAbsCost(const shared_ptr<SearchTreeNode<StateSpaceVector>>& node) const
 {
     float absCost = 0;
     node->addToAbsoluteCost(&absCost);
     return absCost;
 }
 
-shared_ptr<PATH_TYPE> SearchTree::getBestPath(void)
+template<class StateSpaceVector>
+shared_ptr<Trajectory<StateSpaceVector>> SearchTree<StateSpaceVector>::getBestPath(void)
 {
     return bestPath;
 }
 
-bool SearchTree::maxNumOfNodesReached() const
+template<class StateSpaceVector>
+bool SearchTree<StateSpaceVector>::maxNumOfNodesReached() const
 {
     return (nodeCount == param->maxNumOfNodes);
 }
 
-void SearchTree::rewire(shared_ptr<SearchTreeNode> node, shared_ptr<SearchTreeNode> newParent)
+template<class StateSpaceVector>
+void SearchTree<StateSpaceVector>::rewire(shared_ptr<SearchTreeNode<StateSpaceVector>> node, shared_ptr<SearchTreeNode<StateSpaceVector>> newParent)
 {
     if(node->getParent() != NULL) node->getParent()->removeChild(node);
     node->changeParent(newParent, node);
     rewireCount++;
 }
 
-shared_ptr<SearchTreeNode> SearchTree::getRandomNode(void) const
+template<class StateSpaceVector>
+shared_ptr<SearchTreeNode<StateSpaceVector>> SearchTree<StateSpaceVector>::getRandomNode(void) const
 {
     int ID = rand() % nodeCount;
     return (*tree)[ID];
 }
+
+// Define classes
+template class SearchTree<StateSpace2D>;
+template class SearchTree<KinematicBicycle>;
+template class SearchTree<DynamicBicycle>;
+
+template struct vEdge<StateSpace2D>;
+template struct vEdge<KinematicBicycle>;
+template struct vEdge<DynamicBicycle>;
