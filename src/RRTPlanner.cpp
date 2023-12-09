@@ -342,7 +342,7 @@ void RRTPlanner<StateSpaceVector>::visualize(void)
 
     commonMArray.markers.clear();
     mapHandler->visualize(&commonMArray);
-    vehicle->visualize(&commonMArray); //TODO
+    vehicle->visualize(&commonMArray);
     commonPublisher.publish(commonMArray);
 }
 
@@ -474,6 +474,7 @@ void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>
     loadParameter("/VEHICLE/maxDelta", vehicle->getParameters()->maxDelta, 0.38f);
     loadParameter("/VEHICLE/maxLatAccel", vehicle->getParameters()->maxLatAccel, 10.0f);
     loadParameter("/VEHICLE/maxLongAccel", vehicle->getParameters()->maxLongAccel, 5.0f);
+    loadParameter("/VEHICLE/maxVelocity", vehicle->getParameters()->maxVelocity, 5.0f);
     loadParameter("/VEHICLE/track", vehicle->getParameters()->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", vehicle->getParameters()->wheelBase, 1.54f); 
 

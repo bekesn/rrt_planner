@@ -214,12 +214,18 @@ void SearchTree<StateSpaceVector>::visualize(void)
             pathLine.id = 2;
             pathLine.type = visualization_msgs::Marker::LINE_STRIP;
             pathLine.scale.x = 0.15f;
-            pathLine.color.r = 0.0f;
-            pathLine.color.g = 0.5f;
-            pathLine.color.b = 1.0f;
-            pathLine.color.a = 1.0f;
 
         bestPath->visualize(&pathLine);
+        // Heat map
+        typename Trajectory<StateSpaceVector>::iterator itT;
+        for (itT = bestPath->begin(); itT != bestPath->end(); itT++)
+        {
+            relativeVelocity = (*itT)->vx() / 10;
+            if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
+            varColor.r = relativeVelocity;
+            varColor.g = 1 - relativeVelocity;
+            pathLine.colors.push_back(varColor);
+        }
         markerArray.markers.emplace_back(pathLine);
     }
 

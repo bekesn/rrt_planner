@@ -59,6 +59,13 @@ unique_ptr<VEHICLE_PARAMETERS>& Vehicle<StateSpaceVector>::getParameters()
 template<class StateSpaceVector> 
 void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* markerArray) const
 {
+    float relativeVelocity;
+    std_msgs::ColorRGBA varColor;
+    varColor.r = 0;
+    varColor.g = 1;
+    varColor.b = 0;
+    varColor.a = 1;
+
     visualization_msgs::Marker actualPathLine;
         actualPathLine.header.frame_id = "map";
         actualPathLine.header.stamp = ros::Time::now();
@@ -73,7 +80,16 @@ void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* marke
         actualPathLine.color.b = 0.5f;
         actualPathLine.color.a = 1.0f;
 
-    actualPath->visualize(&actualPathLine);    
+    actualPath->visualize(&actualPathLine);   
+    typename Trajectory<StateSpaceVector>::iterator itT;
+    for (itT = actualPath->begin(); itT != actualPath->end(); itT++)
+    {
+        relativeVelocity = (*itT)->vx() / vehicleParam->maxVelocity;
+        if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
+        varColor.r = relativeVelocity;
+        varColor.g = 1 - relativeVelocity;
+        actualPathLine.colors.push_back(varColor);
+    } 
     markerArray->markers.emplace_back(actualPathLine);
 }
 

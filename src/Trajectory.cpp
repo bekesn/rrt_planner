@@ -83,7 +83,7 @@ shared_ptr<Trajectory<StateSpaceVector>> Trajectory<StateSpaceVector>::getSimula
     for(int i = 1; i < size; i++)
     {
         tmp = StateSpaceVector::simulate((*this)[i-1], (*this)[i], param, vParam);
-        tmp->pop_back();
+        if(tmp->size() > 0) tmp->pop_back();
         simulated->insert(simulated->end(), make_move_iterator(tmp->begin()), make_move_iterator(tmp->end()));
     }
     return simulated;
