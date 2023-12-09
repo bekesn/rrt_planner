@@ -15,7 +15,8 @@ shared_ptr<Control<StateSpaceVector>> Control<StateSpaceVector>::control(const S
 {
     shared_ptr<Control> input = shared_ptr<Control> (new Control());
     input->ddelta = psiLateralControl(state, target);
-    input->ax = getRandomAccel(vehicleParam);
+    //input->ax = getRandomAccel(vehicleParam);
+    input->ax = longitudinalControl(state, target, timeStep);
 
     input->limitValues(state, vehicleParam, timeStep);
     return input;
@@ -39,10 +40,7 @@ float Control<StateSpaceVector>::psiLateralControl(const StateSpace2D& state, co
 template<class StateSpaceVector>
 float Control<StateSpaceVector>::longitudinalControl(const StateSpaceVector& state, const StateSpaceVector& target, const float& timeStep)
 {
-    float ax;
-
-    ax = (target.vx() - state.vx()) / timeStep;
-    return 0;
+    return (target.vx() - state.vx()) / timeStep;
 }
 
 template<class StateSpaceVector>
@@ -71,7 +69,7 @@ void Control<StateSpaceVector>::limitValues(const StateSpaceVector& state, const
 
     float axMax, axLimit, axPred;
     axLimit = state.axLimit(vehicleParam);
-    axPred = (0.9*state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.vx()) / timeStep;
+    axPred = (state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.vx()) / timeStep;
     axMax = min(axLimit, axPred);
 
     if(ax > axMax) ax = axMax;
