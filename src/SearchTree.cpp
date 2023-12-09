@@ -354,7 +354,7 @@ bool SearchTree<StateSpaceVector>::addLoop(const shared_ptr<SearchTreeNode<State
 }
 
 template<class StateSpaceVector>
-void SearchTree<StateSpaceVector>::manageLoops(void)
+void SearchTree<StateSpaceVector>::manageLoops(const unique_ptr<VEHICLE_PARAMETERS>& vParam)
 {
     typename vector<shared_ptr<vEdge<StateSpaceVector>>>::iterator it;
     for(it = vEdges.begin(); it < vEdges.end(); it++)
@@ -388,7 +388,7 @@ void SearchTree<StateSpaceVector>::manageLoops(void)
 
                     // Update path related variables
                     pathCost = cost;
-                    updatePath(path);
+                    updatePath(path->getSimulated(param, vParam));
                 }
             }
         }

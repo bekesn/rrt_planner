@@ -234,10 +234,14 @@ void RRTPlanner<StateSpaceVector>::planLocalRRT(void)
                 localRRT->pathFound = true;
             }
         }
-
         optimizeTriangles(localRRT);
 
         iteration++;
+    }
+
+    if(localRRT->pathFound)
+    {
+        localRRT->updatePath(localRRT->traceBackToRoot(localRRT->getNearest(goalState))->getSimulated(localRRT->param, vehicle->getParameters()));
     }
 
 }
@@ -264,7 +268,7 @@ void RRTPlanner<StateSpaceVector>::planGlobalRRT(void)
         iteration++;
     }
 
-    globalRRT->manageLoops();
+    globalRRT->manageLoops(vehicle->getParameters());
 }
 
 template<class StateSpaceVector>

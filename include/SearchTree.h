@@ -85,7 +85,7 @@ public:
     // Investigates if cost is decreased compared to the previous cost
     // Return whether the best loop was changed
     bool addLoop(const shared_ptr<SearchTreeNode<StateSpaceVector>> startNode, const shared_ptr<SearchTreeNode<StateSpaceVector>> endNode, const float& cost);
-    void manageLoops(void);
+    void manageLoops(const unique_ptr<VEHICLE_PARAMETERS>& vParam);
 
     // Get absolute cost to node
     float getAbsCost(const shared_ptr<SearchTreeNode<StateSpaceVector>>& node) const;
