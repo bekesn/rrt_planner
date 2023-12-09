@@ -101,7 +101,7 @@ shared_ptr<SearchTreeNode<StateSpaceVector>> RRTPlanner<StateSpaceVector>::exten
 
         if(!alreadyInTree)
         {
-            newNode = rrt->addChild(nearest, newState, trajectory->cost(rrt->param));
+            newNode = rrt->addChild(nearest, newState, trajectory->getTimeCost());
         }
     }
     else
@@ -128,13 +128,13 @@ bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector
         offCourse = mapHandler->isOffCourse(trajectory);
         if ((trajectory->size() > 1) && !offCourse)
         {
-            float distError = trajectory->back()->getDistOriented(*(*it)->getState(), rrt->param);
+            float distError2 = trajectory->back()->getDistOriented2(*(*it)->getState(), rrt->param);
             // Check if new path leads close to new state
-            if ( distError < rrt->param->minDeviation)
+            if ( distError2 < rrt->param->minDeviation * rrt->param->minDeviation)
             {
-                float segmentCost = trajectory->cost(rrt->param);
+                float segmentCost = trajectory->getTimeCost();
                 float childCost = rrt->getAbsCost(*it);
-                float timeError = distError / trajectory->back()->vx();
+                float timeError = sqrt(distError2) / trajectory->back()->vx();
                 // Compare costs  if it is worth rewiring
                 if ((newNodeCost + segmentCost + timeError) < childCost)
                 {
@@ -188,10 +188,10 @@ void RRTPlanner<StateSpaceVector>::optimizeTriangle(unique_ptr<SearchTree<StateS
     trajectory = StateSpaceVector::simulate(parentParent->getState(), node->getState(), rrt->param, vehicle->getParameters(), rrt->param->rewireTime);
     if(trajectory->size() > 0)
     {
-        segmentCost = trajectory->cost(rrt->param);
+        segmentCost = trajectory->getTimeCost();
         shared_ptr<StateSpace2D> s = node->getState();
-        float error = trajectory->back()->getDistOriented(*s, rrt->param);
-        isClose =  error < rrt->param->minDeviation;
+        float error2 = trajectory->back()->getDistOriented2(*s, rrt->param);
+        isClose =  error2 < rrt->param->minDeviation;
         isLowerCost = segmentCost < parent->getSegmentCost() + node->getSegmentCost() + rrt->param->minDeviation / (parentParent->getState()->vx() *2);
         offCourse = mapHandler->isOffCourse(trajectory);
 
@@ -223,7 +223,7 @@ void RRTPlanner<StateSpaceVector>::planLocalRRT(void)
         if (node != NULL)
         {   
             bool rewired = rewire(localRRT, node);
-            bool isClose = node->getState()->getDistEuclidean(*goalState) < localRRT->param->goalRadius;
+            bool isClose = node->getState()->getDistEuclidean2(*goalState) < localRRT->param->goalRadius*localRRT->param->goalRadius;
             if ((localRRT->pathFound && rewired) || isClose)
             {
                 localRRT->updatePath(localRRT->traceBackToRoot(localRRT->getNearest(goalState)));
@@ -258,9 +258,6 @@ void RRTPlanner<StateSpaceVector>::planGlobalRRT(void)
         {   
             bool rewired = rewire(globalRRT, node);
             if(rewired) changed = true;
-
-            //float goalDist = node->getState()->getDistToTarget(*globalRRT->getRoot(), globalRRT->param);
-            //if(goalDist < globalRRT->param->goalRadius) globalRRT->pathFound = true;
         }
 
         optimizeTriangles(globalRRT);
@@ -275,7 +272,7 @@ template<class StateSpaceVector>
 bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 {
     shared_ptr<Trajectory<StateSpaceVector>> actualPath = vehicle->getActualPath();
-    float fullCost = actualPath->cost(globalRRT->param);
+    float fullCost = actualPath->getTimeCost();
     if (fullCost < globalRRT->param->minCost) return false;
 
     shared_ptr<Trajectory<StateSpaceVector>> loop = shared_ptr<Trajectory<StateSpaceVector>> (new Trajectory<StateSpaceVector>);
@@ -290,7 +287,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
-        if ((currentPose->getDistToTarget(**it, globalRRT->param) < distStep) &&
+        if ((currentPose->getDistToTarget2(**it, globalRRT->param) < distStep*distStep) &&
             (cost < (fullCost - 3 * globalRRT->param->rewireTime * globalRRT->param->simulationTimeStep)))
         {
             isLoop = true;
@@ -302,7 +299,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 
         // Calculate cost
         segment.push_back(*it);
-        cost += segment.cost(globalRRT->param);
+        cost += segment.getTimeCost();
 
         // Reset segment
         segment.erase(segment.begin());

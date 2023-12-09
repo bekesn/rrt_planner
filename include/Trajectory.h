@@ -18,8 +18,6 @@ public:
     ~Trajectory();
 
     // COST FUNCTIONS
-    // Cost function
-    float cost(const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Cost according to length of trajectory
     float getDistanceCost(void) const;

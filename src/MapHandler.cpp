@@ -148,7 +148,7 @@ template<class StateSpaceVector>
 void MapHandler<StateSpaceVector>::calculateGoalState()
 {
     vector<shared_ptr<vector<shared_ptr<frt_custom_msgs::Landmark>>>> closestLandmarks;
-    float maxDist = 0;
+    float maxDist2 = 0;
     shared_ptr<StateSpace2D> currentState = vehicle->getCurrentPose();
 
     // Create close blue-yellow pairs
@@ -169,7 +169,7 @@ void MapHandler<StateSpaceVector>::calculateGoalState()
                 break;
         }
 
-        if((pair->size() > 0) && (StateSpace2D::getDistEuclidean({(float) landmark->x, (float) landmark->y}, {(float) (*pair)[1]->x, (float) (*pair)[1]->y}) < mapParam->maxConeDist))
+        if((pair->size() > 0) && (StateSpace2D::getDistEuclidean2({(float) landmark->x, (float) landmark->y}, {(float) (*pair)[1]->x, (float) (*pair)[1]->y}) < mapParam->maxConeDist*mapParam->maxConeDist))
         {
             closestLandmarks.push_back(pair);
         }
@@ -179,15 +179,15 @@ void MapHandler<StateSpaceVector>::calculateGoalState()
 
     for (auto & pair : closestLandmarks)
     {
-        float dist = currentState->getDistEuclidean({(float) (*pair)[0]->x,(float) (*pair)[0]->y});
-        dist += currentState->getDistEuclidean({(float) (*pair)[1]->x, (float) (*pair)[1]->y});
-        dist = dist/2.0;
+        float dist2 = currentState->getDistEuclidean2({(float) (*pair)[0]->x,(float) (*pair)[0]->y});
+        dist2 += currentState->getDistEuclidean2({(float) (*pair)[1]->x, (float) (*pair)[1]->y});
+        dist2 = dist2/2;
 
         StateSpaceVector state = StateSpaceVector(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0,  vehicle->getParameters()->maxVelocity);
         double angleDiff = abs(currentState->getAngleToTarget(state));
-        if ((dist > maxDist) && (angleDiff < 1) && (dist < mapParam->goalHorizon))
+        if ((dist2 > maxDist2) && (angleDiff < 1) && (dist2 < mapParam->goalHorizon*mapParam->goalHorizon))
         {
-            maxDist = dist;
+            maxDist2 = dist2;
             goalState = make_shared<StateSpaceVector> (state);         
         }
     }
@@ -346,7 +346,7 @@ void MapHandler<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* mA
 template<class StateSpaceVector>
 shared_ptr<frt_custom_msgs::Landmark> MapHandler<StateSpaceVector>::getClosestLandmark(const shared_ptr<frt_custom_msgs::Landmark>& selectedLandmark, const frt_custom_msgs::Landmark::_color_type& color) const
 {
-    float minDist = 1000.0;
+    float minDist2 = 1000000.0;
     float dist;
     shared_ptr<frt_custom_msgs::Landmark> closestLandmark;
     bool colorOK;
@@ -366,11 +366,11 @@ shared_ptr<frt_custom_msgs::Landmark> MapHandler<StateSpaceVector>::getClosestLa
 
         if ((landmark != selectedLandmark) && colorOK)
         {
-            dist = StateSpace2D::getDistEuclidean({(float) landmark->x, (float) landmark->y}, {(float) selectedLandmark->x, (float) selectedLandmark->y});
-            if (dist < minDist)
+            dist = StateSpace2D::getDistEuclidean2({(float) landmark->x, (float) landmark->y}, {(float) selectedLandmark->x, (float) selectedLandmark->y});
+            if (dist < minDist2)
             {
                 closestLandmark = landmark;
-                minDist = dist;
+                minDist2 = dist;
             }
         }
     }
