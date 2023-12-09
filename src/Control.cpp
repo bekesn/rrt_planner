@@ -13,9 +13,11 @@ template<class StateSpaceVector>
 shared_ptr<Control<StateSpaceVector>> Control<StateSpaceVector>::control(const StateSpaceVector& state, const StateSpaceVector& target,
                                      const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep)
 {
+    float delta;
     shared_ptr<Control> input = shared_ptr<Control> (new Control());
-    input->ddelta = psiLateralControl(state, target);
-    //input->ax = getRandomAccel(vehicleParam);
+
+    delta = psiLateralControl(state, target, vehicleParam);
+    input->ddelta = controlParam->kDelta*(delta - state.delta());
     input->ax = longitudinalControl(state, target, timeStep);
 
     input->limitValues(state, vehicleParam, timeStep);
@@ -23,18 +25,20 @@ shared_ptr<Control<StateSpaceVector>> Control<StateSpaceVector>::control(const S
 }
 
 template<class StateSpaceVector>
-float Control<StateSpaceVector>::thetaLateralControl(const StateSpace2D& state, const StateSpace2D& target)
+float Control<StateSpaceVector>::thetaLateralControl(const StateSpace2D& state, const StateSpace2D& target, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
     return 0;
 }
 
 template<class StateSpaceVector>
-float Control<StateSpaceVector>::psiLateralControl(const StateSpace2D& state, const StateSpace2D& target)
+float Control<StateSpaceVector>::psiLateralControl(const StateSpace2D& state, const StateSpace2D& target, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
     float psi = state.getAngleToTarget(target);
-    float ddelta = controlParam->k * psi;
+    float delta = controlParam->kPsi * psi;
 
-    return ddelta;
+    delta = min(max(delta, -vehicleParam->maxDelta), vehicleParam->maxDelta);
+
+    return delta;
 }
 
 template<class StateSpaceVector>
@@ -64,16 +68,13 @@ float Control<StateSpaceVector>::getRandomAccel(const unique_ptr<VEHICLE_PARAMET
 template<class StateSpaceVector>
 void Control<StateSpaceVector>::limitValues(const StateSpaceVector& state, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep)
 {
-    if(ddelta > vehicleParam->maxdDelta) ddelta = vehicleParam->maxdDelta;
-    else if(ddelta < -vehicleParam->maxdDelta) ddelta = -vehicleParam->maxdDelta;
+    ddelta = min(max(ddelta, -vehicleParam->maxdDelta), vehicleParam->maxdDelta);
 
-    float axMax, axLimit, axPred;
+    float axLimit, axPred;
     axLimit = state.axLimit(vehicleParam);
     axPred = (state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.vx()) / timeStep;
-    axMax = min(axLimit, axPred);
 
-    if(ax > axMax) ax = axMax;
-    else if(ax < -axLimit) ax = -axLimit;
+    ax = min(max(ax, -axLimit), min(axLimit, axPred));
 }
 
 template class Control<KinematicBicycle>;

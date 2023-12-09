@@ -65,15 +65,11 @@ bool KinematicBicycle::isGettingCloser(const shared_ptr<StateSpace2D> goalState,
 
 void KinematicBicycle::limitVariables(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
-    // Limit v
-    float vxMax = vxLimit(vehicleParam);
-    //ROS_INFO_STREAM("" << vxMax << "   " << v_);
-    if(vx_ > vxMax) vx_ = vxMax;
-    else if(vx_ < 1) vx_ = 1;
+    // Limit vx
+    vx_ = min(max(vx_, 1.0f), vxLimit(vehicleParam));
 
     // Limit delta
-    if(delta_ > vehicleParam->maxDelta) delta_ = vehicleParam->maxDelta;
-    else if(delta_ < -vehicleParam->maxDelta) delta_ = -vehicleParam->maxDelta;
+    delta_ = min(max(delta_, -vehicleParam->maxDelta), vehicleParam->maxDelta);
 
     // Limit theta between -PI and PI
     theta_ = std::remainder(theta_, 2*M_PI);

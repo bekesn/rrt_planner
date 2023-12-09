@@ -481,7 +481,8 @@ void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>
     loadParameter("/MAP/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
     loadParameter("/MAP/maxGap", mapHandler->getParameters()->maxGap, 1.5f);
 
-    loadParameter("/CONTROL/k", controlParam->k, 15.0f);
+    loadParameter("/CONTROL/kPsi", controlParam->kPsi, 2.0f);
+    loadParameter("/CONTROL/kDelta", controlParam->kDelta, 5.0f);
 
     // Choose simulation type
     std::string simType;

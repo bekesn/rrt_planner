@@ -74,7 +74,8 @@ struct MAP_PARAMETERS{
 };
 
 struct CONTROL_PARAMETERS{
-    float k;
+    float kPsi;
+    float kDelta;
 };
 
 struct GENERAL_PARAMETERS{

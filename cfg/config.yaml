@@ -56,4 +56,5 @@ rrt_planner:
     maxGap:             1.8           # maximum allowed gap between upsampled cones
 
   CONTROL:
-    k:                  5                 
+    kPsi:               2             # proportional gain of psi lateral control in [-]
+    kDelta:             5             # poportional gain of steering angle control [1/s] 

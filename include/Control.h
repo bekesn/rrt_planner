@@ -23,8 +23,8 @@ public:
                                        const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam, const float& timeStep);
 
     // Calculate steering speed for lateral control of the vehicle
-    static float thetaLateralControl(const StateSpace2D& state, const StateSpace2D& target);
-    static float psiLateralControl(const StateSpace2D& state, const StateSpace2D& target);
+    static float thetaLateralControl(const StateSpace2D& state, const StateSpace2D& target, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
+    static float psiLateralControl(const StateSpace2D& state, const StateSpace2D& target, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
 
     // Calculate a_x for longitudinal control of the vehicle
     static float getRandomAccel(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
