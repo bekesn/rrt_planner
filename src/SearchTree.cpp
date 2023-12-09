@@ -78,12 +78,12 @@ template<class StateSpaceVector>
 shared_ptr<SearchTreeNode<StateSpaceVector>> SearchTree<StateSpaceVector>::getNearest(const shared_ptr<StateSpaceVector>& toState, float minCost) const
 {
     typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
-    double minDist;
-    double dist;
+    double minDist2;
+    double dist2;
     shared_ptr<SearchTreeNode<StateSpaceVector>> closest;
 
     // Initialize closest node and distance
-    minDist = tree->front()->getState()->getDistToTarget(*toState, param);
+    minDist2 = tree->front()->getState()->getDistToTarget2(*toState, param);
     closest = tree->front();
 
     // Iterate through tree
@@ -91,10 +91,10 @@ shared_ptr<SearchTreeNode<StateSpaceVector>> SearchTree<StateSpaceVector>::getNe
     {
         if(getAbsCost(*it) >= minCost)
         {
-            dist = (*it)->getState()->getDistToTarget(*toState, param);
-            if (dist < minDist)
+            dist2 = (*it)->getState()->getDistToTarget2(*toState, param);
+            if (dist2 < minDist2)
             {
-                minDist = dist;
+                minDist2 = dist2;
                 closest = (*it);
             }
         }
@@ -111,11 +111,13 @@ shared_ptr<std::vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> SearchTree
     typename vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     auto closeNodes = shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> (new vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>);
     shared_ptr<StateSpaceVector> state = node->getState();
+    float range2 = param->rewireTime * param->simulationTimeStep * state->vx();
+    range2 = range2 * range2;
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if ((state->getDistToTarget(*(*it)->getState(), param) < (param->rewireTime * param->simulationTimeStep * state->vx())) && ((*it) != node))
+        if ((state->getDistToTarget2(*(*it)->getState(), param) < range2) && ((*it) != node))
         {
             closeNodes->push_back((*it));
         }
@@ -130,16 +132,18 @@ bool SearchTree<StateSpaceVector>::alreadyInTree(const shared_ptr<StateSpaceVect
 {
     typename std::vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>::iterator it;
     bool isInTree = false;
+    float minDeviationDist2 = param->minDeviationDist * param->minDeviationDist;
+    float minDeviation2 = param->minDeviation * param->minDeviation;
 
     // Iterate through tree
     for (it = tree->begin(); it != tree->end(); it++)
     {
-        if(state->getDistEuclidean(*(*it)->getState()) < param->minDeviationDist)
+        if(state->getDistEuclidean2(*(*it)->getState()) < minDeviationDist2)
         {
            isInTree = true;
            break;
         }
-        else if(state->getDistOriented(*(*it)->getState(), param) < param->minDeviation)
+        else if(state->getDistOriented2(*(*it)->getState(), param) < minDeviation2)
         {
            isInTree = true;
            break;
@@ -309,7 +313,7 @@ void SearchTree<StateSpaceVector>::init(shared_ptr<Trajectory<StateSpaceVector>>
         {
             // Calculate cost
             segment.push_back(*it);
-            cost = segment.cost(param);
+            cost = segment.getTimeCost();
 
             // Add state to tree
             node = addChild(node, *it, cost);

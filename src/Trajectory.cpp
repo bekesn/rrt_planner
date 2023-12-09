@@ -12,26 +12,6 @@ Trajectory<StateSpaceVector>::~Trajectory()
 };
 
 template<class StateSpaceVector>
-float Trajectory<StateSpaceVector>::cost(const unique_ptr<RRT_PARAMETERS>& param) const
-{
-    float cost;
-    switch(param->costType)
-    {
-        case DISTANCE:
-            cost = this->getDistanceCost();
-            break;
-        case TIME:
-            cost = this->getTimeCost();
-            break;
-        default:
-            throw std::invalid_argument("Wrong cost calculation type");
-            break;
-    }
-
-    return cost;
-}
-
-template<class StateSpaceVector>
 float Trajectory<StateSpaceVector>::getDistanceCost(void) const
 {
     if(this->size() < 2) return 100;

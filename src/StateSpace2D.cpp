@@ -29,35 +29,48 @@ void StateSpace2D::initStateSpace(unique_ptr<CONTROL_PARAMETERS> controlParam)
 
 }
 
-float StateSpace2D::getDistToTarget(const StateSpace2D& target, const unique_ptr<RRT_PARAMETERS>& param) const
+float StateSpace2D::getDistToTarget2(const StateSpace2D& target, const unique_ptr<RRT_PARAMETERS>& param) const
 {
     float dx = target.x_ - x_;
     float dy = target.y_ - y_;
     float dtheta = getAngleToTarget(target);
-    return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->psiWeight);
+    return dx*dx + dy*dy + dtheta * dtheta * param->psiWeight;
 }
 
-float StateSpace2D::getDistOriented(const StateSpace2D& state1, const StateSpace2D& state2, const unique_ptr<RRT_PARAMETERS>& param)
+float StateSpace2D::getDistOriented2(const StateSpace2D& otherState, const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    float dx = state1.x_ - state2.x_;
-    float dy = state1.y_ - state2.y_;
-    float dtheta = state1.getAngleDiff(state2);
-    return sqrt(dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight);
-}
-
-float StateSpace2D::getDistOriented(const StateSpace2D& otherState, const unique_ptr<RRT_PARAMETERS>& param) const
-{
-    return StateSpace2D::getDistOriented(*this, otherState, param);
+    float dx = x_ - otherState.x_;
+    float dy = y_ - otherState.y_;
+    float dtheta = getAngleDiff(otherState);
+    return dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight;
 }
 
 float StateSpace2D::getDistEuclidean(const std::vector<float> otherState) const
 {
-    return getDistEuclidean({x_, y_}, otherState);
+    float dx = otherState[0] - x_;
+    float dy = otherState[1] - y_;
+    return sqrt(dx*dx + dy*dy);
+}
+
+float StateSpace2D::getDistEuclidean2(const std::vector<float> otherState) const
+{
+    float dx = otherState[0] - x_;
+    float dy = otherState[1] - y_;
+    return dx*dx + dy*dy;
 }
 
 float StateSpace2D::getDistEuclidean(const StateSpace2D& otherState) const
 {
-    return getDistEuclidean({x_, y_}, {otherState.x_,otherState.y_});
+    float dx = otherState.x_ - x_;
+    float dy = otherState.y_ - y_;
+    return sqrt(dx*dx + dy*dy);
+}
+
+float StateSpace2D::getDistEuclidean2(const StateSpace2D& otherState) const
+{
+    float dx = otherState.x_ - x_;
+    float dy = otherState.y_ - y_;
+    return dx*dx + dy*dy;
 }
 
 float StateSpace2D::getDistEuclidean(const std::vector<float> state1, const std::vector<float> state2)
@@ -65,6 +78,13 @@ float StateSpace2D::getDistEuclidean(const std::vector<float> state1, const std:
     float dx = state2[0] - state1[0];
     float dy = state2[1] - state1[1];
     return sqrt(dx*dx + dy*dy);
+}
+
+float StateSpace2D::getDistEuclidean2(const std::vector<float> state1, const std::vector<float> state2)
+{
+    float dx = state2[0] - state1[0];
+    float dy = state2[1] - state1[1];
+    return dx*dx + dy*dy;
 }
 
 float StateSpace2D::getAngleToTarget(const StateSpace2D& target) const

@@ -30,16 +30,18 @@ public:
     static void initStateSpace(unique_ptr<CONTROL_PARAMETERS> controlParam);
 
     // Calculate distance to target, taking into account the orientation
-    float getDistToTarget(const StateSpace2D& target, const unique_ptr<RRT_PARAMETERS>& param) const;
+    float getDistToTarget2(const StateSpace2D& target, const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Calculate distance between states, taking into account the orientation
-    static float getDistOriented(const StateSpace2D& state1, const StateSpace2D& state2, const unique_ptr<RRT_PARAMETERS>& param);
-    float getDistOriented(const StateSpace2D& otherState, const unique_ptr<RRT_PARAMETERS>& param) const;
+    float getDistOriented2(const StateSpace2D& otherState, const unique_ptr<RRT_PARAMETERS>& param) const;
 
-    // Euclidean distance
+    // Euclidean distance metric
     static float getDistEuclidean(const std::vector<float> state1, const std::vector<float> state2);
+    static float getDistEuclidean2(const std::vector<float> state1, const std::vector<float> state2);
     float getDistEuclidean(const std::vector<float> otherState) const;
+    float getDistEuclidean2(const std::vector<float> otherState) const;
     float getDistEuclidean(const StateSpace2D& otherState) const;
+    float getDistEuclidean2(const StateSpace2D& otherState) const;
 
     // Calculate angular difference in rad
     // Anticlockwise
