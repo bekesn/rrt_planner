@@ -1,4 +1,5 @@
 #include "StateSpace2D.h"
+#include "Trajectory.h"
 
 StateSpace2D::StateSpace2D()
 {
@@ -7,11 +8,12 @@ StateSpace2D::StateSpace2D()
     theta_ = 0;
 }
 
-StateSpace2D::StateSpace2D(float x, float y, float theta)
+StateSpace2D::StateSpace2D(float x, float y, float theta, float vx)
 {
     x_ = x;
     y_ = y;
     theta_ = theta;
+    vx_ = vx;
 }
 
 StateSpace2D::StateSpace2D(const StateSpace2D &original)
@@ -19,6 +21,12 @@ StateSpace2D::StateSpace2D(const StateSpace2D &original)
     x_ = original.x_;
     y_ = original.y_;
     theta_ = original.theta_;
+    vx_ = original.vx_;
+}
+
+void StateSpace2D::initStateSpace(unique_ptr<CONTROL_PARAMETERS> controlParam)
+{
+
 }
 
 float StateSpace2D::getDistToTarget(const StateSpace2D& target, const unique_ptr<RRT_PARAMETERS>& param) const
@@ -77,17 +85,17 @@ float StateSpace2D::getAngleDiff(const StateSpace2D& otherState) const
 
 StateSpace2D StateSpace2D::operator+ (const StateSpace2D & otherState) const
 {
-    return StateSpace2D(x_ + otherState.x_, y_ + otherState.y_, theta_ + otherState.theta_);
+    return StateSpace2D(x_ + otherState.x_, y_ + otherState.y_, theta_ + otherState.theta_, vx_ + otherState.vx_);
 }
 
 StateSpace2D StateSpace2D::operator- (const StateSpace2D & otherState) const
 {
-    return StateSpace2D(x_ - otherState.x_, y_ - otherState.y_, theta_ - otherState.theta_);
+    return StateSpace2D(x_ - otherState.x_, y_ - otherState.y_, theta_ - otherState.theta_,  vx_ - otherState.vx_);
 }
 
 StateSpace2D StateSpace2D::operator* (const float & multiplier) const
 {
-    return StateSpace2D(x_ * multiplier, y_ * multiplier, theta_ * multiplier);
+    return StateSpace2D(x_ * multiplier, y_ * multiplier, theta_ * multiplier, vx_ * multiplier);
 }
 
 float StateSpace2D::x(void) const
@@ -103,4 +111,52 @@ float StateSpace2D::y(void) const
 float StateSpace2D::theta(void) const
 {
     return theta_;
+}
+
+float StateSpace2D::vx(void) const
+{
+    return vx_;
+}
+
+shared_ptr<Trajectory<StateSpace2D>> StateSpace2D::simulate(const shared_ptr<StateSpace2D>& start, const shared_ptr<StateSpace2D>& goal,
+    const unique_ptr<RRT_PARAMETERS>& param,  const unique_ptr<VEHICLE_PARAMETERS>& vParam, const float& multiplier)
+{
+    float maxAngle = 0.5;
+
+    float distance, angleDiff, ratio, x, y, orientation, dx, dy;
+    int i, numOfStates;
+    shared_ptr<Trajectory<StateSpace2D>> path = shared_ptr<Trajectory<StateSpace2D>> (new Trajectory<StateSpace2D>);
+
+    float maxConndist = vParam->maxVelocity * param->simulationTimeStep;
+    distance = start->getDistEuclidean(*goal);
+    angleDiff = start->getAngleToTarget(*goal);
+    if ((-maxAngle <= angleDiff ) && (angleDiff < maxAngle))
+    {
+        orientation = atan2((goal->y() - start->y()), (goal->x() - start->x()));
+        
+    }
+    else if ((-M_PI <= angleDiff ) && (angleDiff < -maxAngle))
+    {
+        orientation = std::remainder(start->theta() - maxAngle, 2.0*M_PI);
+    }
+    else
+    {
+        orientation = std::remainder(start->theta() + maxAngle, 2.0*M_PI);
+    }
+
+
+    dx = cos(orientation) * distance;
+    dy = sin(orientation) * distance;
+
+    ratio = multiplier * maxConndist / distance;
+    if (ratio > 1) ratio = 1;
+    numOfStates = (int) (ratio*distance/param->resolution) + 1;
+
+    for(i = 0; i < numOfStates+1; i++)
+    {
+        x = start->x() + dx * ratio * i / (float) numOfStates;
+        y = start->y() + dy * ratio * i / (float) numOfStates;
+        path->push_back(make_shared<StateSpace2D> (StateSpace2D(x, y, orientation, vParam->maxVelocity)));
+    }
+    return path;
 }

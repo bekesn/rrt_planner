@@ -1,14 +1,15 @@
 #include <SearchTreeNode.h>
 
-SearchTreeNode::SearchTreeNode()
+template<class StateSpaceVector>
+SearchTreeNode<StateSpaceVector>::SearchTreeNode()
 {
-    parentNode = shared_ptr<SearchTreeNode> (new SearchTreeNode);
+    parentNode = shared_ptr<SearchTreeNode<StateSpaceVector>> (new SearchTreeNode<StateSpaceVector>);
     cost = 0;
-    childNodes = shared_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
+    childNodes = shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> (new vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>);
 }
 
-
-SearchTreeNode::SearchTreeNode(const SearchTreeNode &original)
+template<class StateSpaceVector>
+SearchTreeNode<StateSpaceVector>::SearchTreeNode(const SearchTreeNode<StateSpaceVector> &original)
 {
     parentNode = original.parentNode;
     childNodes = original.childNodes;
@@ -16,62 +17,72 @@ SearchTreeNode::SearchTreeNode(const SearchTreeNode &original)
     cost = original.cost;
 }
 
-SearchTreeNode::SearchTreeNode(shared_ptr<SearchTreeNode> parent, shared_ptr<SS_VECTOR> stateSpace, double nodeCost)
+template<class StateSpaceVector>
+SearchTreeNode<StateSpaceVector>::SearchTreeNode(shared_ptr<SearchTreeNode<StateSpaceVector>> parent, shared_ptr<StateSpaceVector>stateSpace, double nodeCost)
 {
     parentNode = parent;
     state = stateSpace;
     cost = nodeCost;
-    childNodes = shared_ptr<vector<shared_ptr<SearchTreeNode>>> (new vector<shared_ptr<SearchTreeNode>>);
+    childNodes = shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> (new vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>);
 }
 
-SearchTreeNode::~SearchTreeNode()
+template<class StateSpaceVector>
+SearchTreeNode<StateSpaceVector>::~SearchTreeNode()
 {
 
 }
 
-
-void SearchTreeNode::addChild(shared_ptr<SearchTreeNode> childNode)
+template<class StateSpaceVector>
+void SearchTreeNode<StateSpaceVector>::addChild(shared_ptr<SearchTreeNode<StateSpaceVector>> childNode)
 {
     childNodes->push_back(childNode);
 }
 
-void SearchTreeNode::removeChild(shared_ptr<SearchTreeNode> childNode)
+template<class StateSpaceVector>
+void SearchTreeNode<StateSpaceVector>::removeChild(shared_ptr<SearchTreeNode<StateSpaceVector>> childNode)
 {
     childNodes->erase(std::remove(childNodes->begin(), childNodes->end(), childNode),childNodes->end());
 }
 
-shared_ptr<SearchTreeNode> SearchTreeNode::getParent() const
+template<class StateSpaceVector>
+shared_ptr<SearchTreeNode<StateSpaceVector>> SearchTreeNode<StateSpaceVector>::getParent() const
 {
     return parentNode;
 }
 
-void SearchTreeNode::changeParent(shared_ptr<SearchTreeNode> newParent, shared_ptr<SearchTreeNode>& selfPtr)
+template<class StateSpaceVector>
+void SearchTreeNode<StateSpaceVector>::changeParent(shared_ptr<SearchTreeNode<StateSpaceVector>> newParent, shared_ptr<SearchTreeNode<StateSpaceVector>>& selfPtr)
 {
     parentNode = newParent;
     newParent->addChild(selfPtr);
 }
 
-shared_ptr<vector<shared_ptr<SearchTreeNode>>> SearchTreeNode::getChildren() const
+template<class StateSpaceVector>
+shared_ptr<vector<shared_ptr<SearchTreeNode<StateSpaceVector>>>> SearchTreeNode<StateSpaceVector>::getChildren() const
 {
     return childNodes;
 }
 
-shared_ptr<SS_VECTOR> SearchTreeNode::getState()
+template<class StateSpaceVector>
+shared_ptr<StateSpaceVector> SearchTreeNode<StateSpaceVector>::getState()
 {
     return state;
 }
 
-float SearchTreeNode::getSegmentCost(void) const
+template<class StateSpaceVector>
+float SearchTreeNode<StateSpaceVector>::getSegmentCost(void) const
 {
     return cost;
 }
 
-void SearchTreeNode::changeSegmentCost(float newCostValue)
+template<class StateSpaceVector>
+void SearchTreeNode<StateSpaceVector>::changeSegmentCost(float newCostValue)
 {
     cost = newCostValue;
 }
 
-void SearchTreeNode::addToAbsoluteCost(float* absCost) const
+template<class StateSpaceVector>
+void SearchTreeNode<StateSpaceVector>::addToAbsoluteCost(float* absCost) const
 {
     if (parentNode != NULL) 
     {
@@ -80,9 +91,15 @@ void SearchTreeNode::addToAbsoluteCost(float* absCost) const
     }
 }
 
-void SearchTreeNode::traceBackToRoot(shared_ptr<PATH_TYPE>& stateVector) const
+template<class StateSpaceVector>
+void SearchTreeNode<StateSpaceVector>::traceBackToRoot(shared_ptr<Trajectory<StateSpaceVector>>& stateVector) const
 {
     // TODO: inserting at the beginning might slow down the process
     stateVector->insert(stateVector->begin(), state);
     if (parentNode != NULL) parentNode->traceBackToRoot(stateVector);
 }
+
+// Define classes
+template class SearchTreeNode<StateSpace2D>;
+template class SearchTreeNode<KinematicBicycle>;
+template class SearchTreeNode<DynamicBicycle>;

@@ -45,7 +45,7 @@ rrt_planner:
     maxLatAccel:        16            # maximum lateral acceleration in [m/s2]
     maxLongAccel:       12            # maximum longitudinal acceleration in [m/s2]
     maxVelocity:        10            # in [m/s]
-    simType:            "HOLONOMIC_CONSTRAINED"   # can be "HOLONOMIC" , "HOLONOMIC_CONSTRAINED" , "BICYCLE_SIMPLE" , "BICYCLE"
+    simType:            "KINEMATIC"   # can be "HOLONOMIC", "KINEMATIC" or "DYNAMIC" vehiclemodel
     track:              1.2           # in [m]
     wheelBase:          1.54          # in [m]
 

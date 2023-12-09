@@ -1,24 +1,27 @@
 #include "MapHandler.h"
 
-MapHandler::MapHandler(void)
+template<class StateSpaceVector>
+MapHandler<StateSpaceVector>::MapHandler(void)
 {
     // Initialize values
-    vehicleModel = make_shared<VehicleModel>();
+    vehicle = make_shared<Vehicle<StateSpaceVector>>();
     mapReceived = false;
     blueTrackBoundaryReceived = false;
     yellowTrackBoundaryReceived = false;
-    goalState = make_shared<SS_VECTOR>();
+    goalState = make_shared<StateSpaceVector>();
     state = EMPTY;
 
 }
 
-MapHandler::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<VehicleModel> vm) : MapHandler()
+template<class StateSpaceVector>
+MapHandler<StateSpaceVector>::MapHandler(unique_ptr<MAP_PARAMETERS> param, const shared_ptr<Vehicle<StateSpaceVector>> vm) : MapHandler()
 {
     mapParam = move(param);
-    vehicleModel = vm;
+    vehicle = vm;
 }
 
-bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
+template<class StateSpaceVector>
+bool MapHandler<StateSpaceVector>::isOffCourse(const shared_ptr<Trajectory<StateSpaceVector>>& trajectory) const
 {
     if(mapKdTree->allnodes.size() < 2) return true;
 
@@ -37,7 +40,8 @@ bool MapHandler::isOffCourse(const shared_ptr<PATH_TYPE>& trajectory) const
     return offCourse;
 }
 
-void MapHandler::upSample(void)
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::upSample(void)
 {
     Kdtree::KdNodeVector nodes, knv;
     frt_custom_msgs::Landmark::_color_type* color1, *color2;
@@ -97,9 +101,10 @@ void MapHandler::upSample(void)
     mapKdTree = shared_ptr<Kdtree::KdTree>(new Kdtree::KdTree(&nodes));
 }
 
-shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& path, const unique_ptr<RRT_PARAMETERS>& param) const
+template<class StateSpaceVector>
+shared_ptr<StateSpaceVector> MapHandler<StateSpaceVector>::getRandomState(const shared_ptr<Trajectory<StateSpaceVector>>& path, const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    shared_ptr<SS_VECTOR> randState;
+    shared_ptr<StateSpaceVector> randState;
     double x, y, theta;
     int numOfCones = map.size();
 
@@ -113,7 +118,7 @@ shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& pa
         y = (*path)[nodeID]->y() + (rand()%((int) (200*range))) / 100.0 - range;
         theta = (rand() % ((int) (2000*M_PI))) / 1000.0 - M_PI;
 
-        randState = make_shared<SS_VECTOR> (SS_VECTOR(x, y, theta));
+        randState = make_shared<StateSpaceVector> (StateSpaceVector(x, y, theta, vehicle->getParameters()->maxVelocity));
     }
     else if ((((rand()%1000)/1000.0) > param->goalBias) && (numOfCones != 0)) 
     {
@@ -123,7 +128,7 @@ shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& pa
         y = map[coneID]->y + (rand()%((int) (200*param->sampleRange))) / 100.0 - param->sampleRange;
         theta = (rand() % ((int) (2000*M_PI))) / 1000.0;
 
-        randState = make_shared<SS_VECTOR> (SS_VECTOR(x, y, theta));
+        randState = make_shared<StateSpaceVector> (StateSpaceVector(x, y, theta, vehicle->getParameters()->maxVelocity));
     }
     else
     {
@@ -133,16 +138,18 @@ shared_ptr<SS_VECTOR> MapHandler::getRandomState(const shared_ptr<PATH_TYPE>& pa
     return randState;
 }
 
-unique_ptr<MAP_PARAMETERS>& MapHandler::getParameters(void)
+template<class StateSpaceVector>
+unique_ptr<MAP_PARAMETERS>& MapHandler<StateSpaceVector>::getParameters(void)
 {
     return mapParam;
 }
 
-void MapHandler::calculateGoalState()
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::calculateGoalState()
 {
     vector<shared_ptr<vector<shared_ptr<frt_custom_msgs::Landmark>>>> closestLandmarks;
     float maxDist = 0;
-    shared_ptr<StateSpace2D> currentState = vehicleModel->getCurrentPose();
+    shared_ptr<StateSpace2D> currentState = vehicle->getCurrentPose();
 
     // Create close blue-yellow pairs
     for (auto & landmark : map)
@@ -162,7 +169,7 @@ void MapHandler::calculateGoalState()
                 break;
         }
 
-        if((pair->size() > 0) && (StateSpace2D::getDistEuclidean({(float) landmark->x, (float) landmark->y}, {(float) (*pair)[1]->x, (float) (*pair)[1]->y}) < 8))
+        if((pair->size() > 0) && (StateSpace2D::getDistEuclidean({(float) landmark->x, (float) landmark->y}, {(float) (*pair)[1]->x, (float) (*pair)[1]->y}) < mapParam->maxConeDist))
         {
             closestLandmarks.push_back(pair);
         }
@@ -176,23 +183,25 @@ void MapHandler::calculateGoalState()
         dist += currentState->getDistEuclidean({(float) (*pair)[1]->x, (float) (*pair)[1]->y});
         dist = dist/2.0;
 
-        SS_VECTOR state = SS_VECTOR(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0);
+        StateSpaceVector state = StateSpaceVector(((*pair)[0]->x + (*pair)[1]->x) / 2, ((*pair)[0]->y + (*pair)[1]->y) / 2, 0,  vehicle->getParameters()->maxVelocity);
         double angleDiff = abs(currentState->getAngleToTarget(state));
         if ((dist > maxDist) && (angleDiff < 1) && (dist < mapParam->goalHorizon))
         {
             maxDist = dist;
-            goalState = make_shared<SS_VECTOR> (state);         
+            goalState = make_shared<StateSpaceVector> (state);         
         }
     }
 
 }
 
-shared_ptr<SS_VECTOR> MapHandler::getGoalState(void)
+template<class StateSpaceVector>
+shared_ptr<StateSpaceVector> MapHandler<StateSpaceVector>::getGoalState(void)
 {
     return goalState;
 }
 
-void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 {
     mapReceived = updateLandmarkVector(msg, map);
     upSample();
@@ -221,17 +230,20 @@ void MapHandler::mapCallback(const frt_custom_msgs::Map::ConstPtr &msg)
     }
 }
 
-void MapHandler::blueTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::blueTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 {
     blueTrackBoundaryReceived =  updateLandmarkVector(msg, blueTrackBoundary);
 }
 
-void MapHandler::yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::yellowTrackBoundaryCallback(const frt_custom_msgs::Map::ConstPtr &msg)
 {
     yellowTrackBoundaryReceived =  updateLandmarkVector(msg, yellowTrackBoundary);
 }
 
-bool MapHandler::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<shared_ptr<frt_custom_msgs::Landmark>> & vec)
+template<class StateSpaceVector>
+bool MapHandler<StateSpaceVector>::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg, vector<shared_ptr<frt_custom_msgs::Landmark>> & vec)
 {
     if (msg->map.empty())
     {
@@ -249,12 +261,14 @@ bool MapHandler::updateLandmarkVector(const frt_custom_msgs::Map::ConstPtr &msg,
     return true;
 }
 
-void MapHandler::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::SLAMStatusCallback(const frt_custom_msgs::SlamStatus &msg)
 {
     loopClosed = msg.loop_closed;
 }
 
-void MapHandler::visualize(visualization_msgs::MarkerArray* mArray) const
+template<class StateSpaceVector>
+void MapHandler<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* mArray) const
 {
     if(!mapReceived) return;
 
@@ -336,7 +350,8 @@ void MapHandler::visualize(visualization_msgs::MarkerArray* mArray) const
     mArray->markers.emplace_back(upsampled);
 }
 
-shared_ptr<frt_custom_msgs::Landmark> MapHandler::getClosestLandmark(const shared_ptr<frt_custom_msgs::Landmark>& selectedLandmark, const frt_custom_msgs::Landmark::_color_type& color) const
+template<class StateSpaceVector>
+shared_ptr<frt_custom_msgs::Landmark> MapHandler<StateSpaceVector>::getClosestLandmark(const shared_ptr<frt_custom_msgs::Landmark>& selectedLandmark, const frt_custom_msgs::Landmark::_color_type& color) const
 {
     float minDist = 1000.0;
     float dist;
@@ -369,12 +384,19 @@ shared_ptr<frt_custom_msgs::Landmark> MapHandler::getClosestLandmark(const share
     return closestLandmark;
 }
 
-MapHandlerState MapHandler::getState(void) const
+template<class StateSpaceVector>
+MapHandlerState MapHandler<StateSpaceVector>::getState(void) const
 {
     return state;
 }
 
-bool MapHandler::isLoopClosed(void) const
+template<class StateSpaceVector>
+bool MapHandler<StateSpaceVector>::isLoopClosed(void) const
 {
     return loopClosed;
 }
+
+// Define classes
+template class MapHandler<StateSpace2D>;
+template class MapHandler<KinematicBicycle>;
+template class MapHandler<DynamicBicycle>;

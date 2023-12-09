@@ -1,15 +1,18 @@
 #include "Trajectory.h"
 
 
-Trajectory::Trajectory(/* args */)
+template<class StateSpaceVector>
+Trajectory<StateSpaceVector>::Trajectory(/* args */)
 {
 }
 
-Trajectory::~Trajectory()
+template<class StateSpaceVector>
+Trajectory<StateSpaceVector>::~Trajectory()
 {
 }
 
-double Trajectory::cost(const unique_ptr<RRT_PARAMETERS>& param) const
+template<class StateSpaceVector>
+double Trajectory<StateSpaceVector>::cost(const unique_ptr<RRT_PARAMETERS>& param) const
 {
     double cost;
     switch(param->costType)
@@ -28,12 +31,13 @@ double Trajectory::cost(const unique_ptr<RRT_PARAMETERS>& param) const
     return cost;
 }
 
-double Trajectory::getDistanceCost(void) const
+template<class StateSpaceVector>
+double Trajectory<StateSpaceVector>::getDistanceCost(void) const
 {
     if(this->size() < 2) return 100;
     
-    shared_ptr<SS_VECTOR> prevState = (*this)[0];
-    shared_ptr<SS_VECTOR> currState;
+    shared_ptr<StateSpace2D> prevState = (*this)[0];
+    shared_ptr<StateSpace2D> currState;
     int size = this->size();
     double length = 0;
     for (int i = 1; i < size; i++)
@@ -45,20 +49,21 @@ double Trajectory::getDistanceCost(void) const
     return length;
 }
 
-double Trajectory::getTimeCost(void) const
+template<class StateSpaceVector>
+double Trajectory<StateSpaceVector>::getTimeCost(void) const
 {
     if(this->size() < 2) return 100;
     
-    shared_ptr<SS_VECTOR> prevState = (*this)[0];
-    shared_ptr<SS_VECTOR> currState;
+    shared_ptr<StateSpace2D> prevState = (*this)[0];
+    shared_ptr<StateSpace2D> currState;
     int size = this->size();
     double elapsed = 0;
     for (int i = 1; i < size; i++)
     {
         currState = (*this)[i];
-        if(prevState->v() > 0)
+        if(prevState->vx() > 0)
         {
-            elapsed += prevState->getDistEuclidean(*currState) / prevState->v();
+            elapsed += prevState->getDistEuclidean(*currState) / prevState->vx();
         }
         else
         {
@@ -68,3 +73,8 @@ double Trajectory::getTimeCost(void) const
     }
     return elapsed;
 }
+
+// Define classes
+template class Trajectory<StateSpace2D>;
+template class Trajectory<KinematicBicycle>;
+template class Trajectory<DynamicBicycle>;
