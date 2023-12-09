@@ -9,12 +9,12 @@ Trajectory<StateSpaceVector>::Trajectory(/* args */)
 template<class StateSpaceVector>
 Trajectory<StateSpaceVector>::~Trajectory()
 {
-}
+};
 
 template<class StateSpaceVector>
-double Trajectory<StateSpaceVector>::cost(const unique_ptr<RRT_PARAMETERS>& param) const
+float Trajectory<StateSpaceVector>::cost(const unique_ptr<RRT_PARAMETERS>& param) const
 {
-    double cost;
+    float cost;
     switch(param->costType)
     {
         case DISTANCE:
@@ -32,14 +32,14 @@ double Trajectory<StateSpaceVector>::cost(const unique_ptr<RRT_PARAMETERS>& para
 }
 
 template<class StateSpaceVector>
-double Trajectory<StateSpaceVector>::getDistanceCost(void) const
+float Trajectory<StateSpaceVector>::getDistanceCost(void) const
 {
     if(this->size() < 2) return 100;
     
     shared_ptr<StateSpace2D> prevState = (*this)[0];
     shared_ptr<StateSpace2D> currState;
     int size = this->size();
-    double length = 0;
+    float length = 0;
     for (int i = 1; i < size; i++)
     {
         currState = (*this)[i];
@@ -50,14 +50,14 @@ double Trajectory<StateSpaceVector>::getDistanceCost(void) const
 }
 
 template<class StateSpaceVector>
-double Trajectory<StateSpaceVector>::getTimeCost(void) const
+float Trajectory<StateSpaceVector>::getTimeCost(void) const
 {
     if(this->size() < 2) return 100;
     
     shared_ptr<StateSpace2D> prevState = (*this)[0];
     shared_ptr<StateSpace2D> currState;
     int size = this->size();
-    double elapsed = 0;
+    float elapsed = 0;
     for (int i = 1; i < size; i++)
     {
         currState = (*this)[i];
@@ -72,6 +72,31 @@ double Trajectory<StateSpaceVector>::getTimeCost(void) const
         prevState = currState;
     }
     return elapsed;
+}
+
+template<class StateSpaceVector>
+shared_ptr<Trajectory<StateSpaceVector>> Trajectory<StateSpaceVector>::getSimulated(const unique_ptr<RRT_PARAMETERS>& param, const unique_ptr<VEHICLE_PARAMETERS>& vParam)
+{
+    int size = this->size();
+    shared_ptr<Trajectory<StateSpaceVector>> simulated = shared_ptr<Trajectory<StateSpaceVector>> (new Trajectory<StateSpaceVector>);
+    shared_ptr<Trajectory<StateSpaceVector>> tmp;
+    for(int i = 1; i < size; i++)
+    {
+        tmp = StateSpaceVector::simulate((*this)[i-1], (*this)[i], param, vParam);
+        if(tmp->size() > 0) tmp->pop_back();
+        simulated->insert(simulated->end(), make_move_iterator(tmp->begin()), make_move_iterator(tmp->end()));
+    }
+    return simulated;
+}
+
+template<class StateSpaceVector>
+void Trajectory<StateSpaceVector>::visualize(visualization_msgs::Marker* marker)
+{
+    typename Trajectory<StateSpaceVector>::iterator pathIterator;
+    for (pathIterator = this->begin(); pathIterator != this->end(); pathIterator++)
+    {
+        marker->points.push_back(*(*pathIterator)->toPoint());
+    }
 }
 
 // Define classes

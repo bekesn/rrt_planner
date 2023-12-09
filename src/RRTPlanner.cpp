@@ -234,10 +234,14 @@ void RRTPlanner<StateSpaceVector>::planLocalRRT(void)
                 localRRT->pathFound = true;
             }
         }
-
         optimizeTriangles(localRRT);
 
         iteration++;
+    }
+
+    if(localRRT->pathFound)
+    {
+        localRRT->updatePath(localRRT->traceBackToRoot(localRRT->getNearest(goalState))->getSimulated(localRRT->param, vehicle->getParameters()));
     }
 
 }
@@ -264,7 +268,7 @@ void RRTPlanner<StateSpaceVector>::planGlobalRRT(void)
         iteration++;
     }
 
-    globalRRT->manageLoops();
+    globalRRT->manageLoops(vehicle->getParameters());
 }
 
 template<class StateSpaceVector>
@@ -287,7 +291,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
         if ((currentPose->getDistToTarget(**it, globalRRT->param) < distStep) &&
-            (cost < (fullCost - 3* distStep)))
+            (cost < (fullCost - 3 * globalRRT->param->rewireTime * globalRRT->param->simulationTimeStep)))
         {
             isLoop = true;
         }
@@ -306,6 +310,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 
     if(isLoop)
     {
+        actualPath = loop;
         globalRRT->init(loop);
     }
 
@@ -338,7 +343,7 @@ void RRTPlanner<StateSpaceVector>::visualize(void)
 
     commonMArray.markers.clear();
     mapHandler->visualize(&commonMArray);
-    vehicle->visualize(&commonMArray); //TODO
+    vehicle->visualize(&commonMArray);
     commonPublisher.publish(commonMArray);
 }
 
@@ -470,6 +475,7 @@ void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>
     loadParameter("/VEHICLE/maxDelta", vehicle->getParameters()->maxDelta, 0.38f);
     loadParameter("/VEHICLE/maxLatAccel", vehicle->getParameters()->maxLatAccel, 10.0f);
     loadParameter("/VEHICLE/maxLongAccel", vehicle->getParameters()->maxLongAccel, 5.0f);
+    loadParameter("/VEHICLE/maxVelocity", vehicle->getParameters()->maxVelocity, 5.0f);
     loadParameter("/VEHICLE/track", vehicle->getParameters()->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", vehicle->getParameters()->wheelBase, 1.54f); 
 

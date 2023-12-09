@@ -137,11 +137,11 @@ shared_ptr<Trajectory<StateSpace2D>> StateSpace2D::simulate(const shared_ptr<Sta
     }
     else if ((-M_PI <= angleDiff ) && (angleDiff < -maxAngle))
     {
-        orientation = std::remainder(start->theta() - maxAngle, 2.0*M_PI);
+        orientation = remainder(start->theta() - maxAngle, 2.0*M_PI);
     }
     else
     {
-        orientation = std::remainder(start->theta() + maxAngle, 2.0*M_PI);
+        orientation = remainder(start->theta() + maxAngle, 2.0*M_PI);
     }
 
 
@@ -159,4 +159,12 @@ shared_ptr<Trajectory<StateSpace2D>> StateSpace2D::simulate(const shared_ptr<Sta
         path->push_back(make_shared<StateSpace2D> (StateSpace2D(x, y, orientation, vParam->maxVelocity)));
     }
     return path;
+}
+
+shared_ptr<geometry_msgs::Point> StateSpace2D::toPoint(void)
+{
+    geometry_msgs::Point p;
+    p.x = x_;
+    p.y = y_;
+    return make_shared<geometry_msgs::Point>(p);
 }

@@ -1,9 +1,9 @@
 #ifndef TRAJECTORY_H
 #define TRAJECTORY_H
 
+#include <visualization_msgs/Marker.h>
 #include "Types.h"
 #include "DynamicBicycle.h"
-#include <vector>
 
 template<typename StateSpaceVector>
 class Trajectory : public vector<shared_ptr<StateSpaceVector>>
@@ -19,13 +19,19 @@ public:
 
     // COST FUNCTIONS
     // Cost function
-    double cost(const unique_ptr<RRT_PARAMETERS>& param) const;
+    float cost(const unique_ptr<RRT_PARAMETERS>& param) const;
 
     // Cost according to length of trajectory
-    double getDistanceCost(void) const;
+    float getDistanceCost(void) const;
 
     // Cost according to elapsed time
-    double getTimeCost(void) const;
+    float getTimeCost(void) const;
+
+    // Return refined trajectory by simulating steps
+    shared_ptr<Trajectory<StateSpaceVector>> getSimulated(const unique_ptr<RRT_PARAMETERS>& param, const unique_ptr<VEHICLE_PARAMETERS>& vParam);
+
+    // Visualize
+    void visualize(visualization_msgs::Marker* marker);
 
 };
 

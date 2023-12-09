@@ -3,7 +3,8 @@
 
 #include <memory>
 #include <math.h>
-#include <geometry_msgs/Pose2D.h>
+#include <stdlib.h>
+#include <geometry_msgs/Point.h>
 #include "Types.h"
 
 using namespace std;
@@ -58,6 +59,9 @@ public:
     // Simulation to given target
     static shared_ptr<Trajectory<StateSpace2D>> simulate(const shared_ptr<StateSpace2D>& start, const shared_ptr<StateSpace2D>& goal,
                 const unique_ptr<RRT_PARAMETERS>& param,  const unique_ptr<VEHICLE_PARAMETERS>& vParam, const float& multiplier = 1.0f);
+
+    // Convert to Point for visualization
+    shared_ptr<geometry_msgs::Point> toPoint(void);
 };
 
 #endif //STATESPACE2D_H
