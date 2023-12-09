@@ -50,10 +50,23 @@ void SearchTree<StateSpaceVector>::remove(shared_ptr<SearchTreeNode<StateSpaceVe
 {
     int numOfChildren = node->getChildren()->size();
     if(numOfChildren == 0)
-    {
-        node->getParent()->removeChild(node);
-        tree->erase(std::remove(tree->begin(), tree->end(), node),tree->end());
-        nodeCount--;
+    {   
+        // Do not delete from vEdges
+        bool isVEdge = false;
+        for(auto vEdge : vEdges)
+        {
+            if(vEdge->start == node)
+            {
+                isVEdge = true;
+                break;
+            }
+        }
+        if(!isVEdge)
+        {
+            node->getParent()->removeChild(node);
+            tree->erase(std::remove(tree->begin(), tree->end(), node),tree->end());
+            nodeCount--;
+        }
     }
     else
     {
