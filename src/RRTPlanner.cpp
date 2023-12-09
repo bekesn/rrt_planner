@@ -291,7 +291,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
         if ((currentPose->getDistToTarget(**it, globalRRT->param) < distStep) &&
-            (cost < (fullCost - 3* distStep)))
+            (cost < (fullCost - 3 * globalRRT->param->rewireTime * globalRRT->param->simulationTimeStep)))
         {
             isLoop = true;
         }
@@ -310,6 +310,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 
     if(isLoop)
     {
+        actualPath = loop;
         globalRRT->init(loop);
     }
 
