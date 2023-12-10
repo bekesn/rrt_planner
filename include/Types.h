@@ -37,7 +37,6 @@ enum MapHandlerState{
 };
 
 struct RRT_PARAMETERS{
-    COST_TYPE costType;
     float goalBias;
     float goalRadius;
     int iterations;
@@ -67,7 +66,7 @@ struct VEHICLE_PARAMETERS{
 };
 
 struct MAP_PARAMETERS{
-    float collisionRange;
+    float collisionRadius;
     float goalHorizon;
     float maxConeDist;
     float maxGap;

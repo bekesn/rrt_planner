@@ -72,7 +72,7 @@ void Control<StateSpaceVector>::limitValues(const StateSpaceVector& state, const
 
     float axLimit, axPred;
     axLimit = state.axLimit(vehicleParam);
-    axPred = (state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.vx()) / timeStep;
+    axPred = (0.9 * state.vxLimitNext(vehicleParam, ddelta, timeStep) - state.vx()) / timeStep;
 
     ax = min(max(ax, -axLimit), min(axLimit, axPred));
 }

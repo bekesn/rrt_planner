@@ -29,7 +29,7 @@ bool MapHandler<StateSpaceVector>::isOffCourse(const shared_ptr<Trajectory<State
     for(auto state : *trajectory)
     {
         Kdtree::KdNodeVector knv;
-        mapKdTree->range_nearest_neighbors({state->x(), state->y()}, 0.7, &knv);
+        mapKdTree->range_nearest_neighbors({state->x(), state->y()}, mapParam->collisionRadius, &knv);
         if(knv.size() > 0)
         {
             offCourse = true;
@@ -281,9 +281,9 @@ void MapHandler<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* mA
         goal.pose.orientation.w = 1.0;
         goal.id = 3;
         goal.type = visualization_msgs::Marker::CUBE_LIST;
-        goal.scale.x = 0.2f;
-        goal.scale.y = 0.2f;
-        goal.scale.z = 0.2f;
+        goal.scale.x = 0.5f;
+        goal.scale.y = 0.5f;
+        goal.scale.z = 0.5f;
         goal.color.r = 1.0f;
         goal.color.g = 0.0f;
         goal.color.b = 0.0f;
@@ -302,14 +302,14 @@ void MapHandler<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* mA
     visualization_msgs::Marker upsampled;
         upsampled.header.frame_id = "map";
         upsampled.header.stamp = ros::Time::now();
-        upsampled.ns = "rrt_map";
+        upsampled.ns = "rrt_map_extended";
         upsampled.action = visualization_msgs::Marker::ADD;
         upsampled.pose.orientation.w = 1.0;
         upsampled.id = 4;
-        upsampled.type = visualization_msgs::Marker::CUBE_LIST;
-        upsampled.scale.x = 0.4f;
-        upsampled.scale.y = 0.4f;
-        upsampled.scale.z = 0.4f;
+        upsampled.type = visualization_msgs::Marker::SPHERE_LIST;
+        upsampled.scale.x = 2*mapParam->collisionRadius;
+        upsampled.scale.y = 2*mapParam->collisionRadius;
+        upsampled.scale.z = 2*mapParam->collisionRadius;
 
     geometry_msgs::Point coord;
     for(auto node : mapKdTree->allnodes)

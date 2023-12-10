@@ -154,14 +154,14 @@ bool SearchTree<StateSpaceVector>::alreadyInTree(const shared_ptr<StateSpaceVect
 }
 
 template<class StateSpaceVector>
-void SearchTree<StateSpaceVector>::visualize(void)
+void SearchTree<StateSpaceVector>::visualize(unique_ptr<VEHICLE_PARAMETERS>& vParam)
 {
     if(tree->size() < 2) return;
 
     float relativeVelocity;
     std_msgs::ColorRGBA varColor;
     varColor.r = 0;
-    varColor.g = 1;
+    varColor.g = 0;
     varColor.b = 0;
     varColor.a = 1;
 
@@ -186,7 +186,7 @@ void SearchTree<StateSpaceVector>::visualize(void)
     {
         treeNodes.points.push_back(*(*it)->getState()->toPoint());
 
-        relativeVelocity = (*it)->getState()->vx() / 10;
+        relativeVelocity = (*it)->getState()->vx() / vParam->maxVelocity;
         if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
         varColor.r = relativeVelocity;
         varColor.g = 1 - relativeVelocity;
@@ -230,18 +230,22 @@ void SearchTree<StateSpaceVector>::visualize(void)
             pathLine.pose.orientation.w = 1.0;
             pathLine.id = 2;
             pathLine.type = visualization_msgs::Marker::LINE_STRIP;
-            pathLine.scale.x = 0.15f;
+            pathLine.scale.x = 0.4f;
+            pathLine.color.r = 0.0f;
+            pathLine.color.g = 0.5f;
+            pathLine.color.b = 1.0f;
+            pathLine.color.a = 1.0f;
 
         bestPath->visualize(&pathLine);
         // Heat map
         typename Trajectory<StateSpaceVector>::iterator itT;
         for (itT = bestPath->begin(); itT != bestPath->end(); itT++)
         {
-            relativeVelocity = (*itT)->vx() / 10;
+            relativeVelocity = (*itT)->vx() / vParam->maxVelocity;
             if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
-            varColor.r = relativeVelocity;
-            varColor.g = 1 - relativeVelocity;
-            pathLine.colors.push_back(varColor);
+            //varColor.r = relativeVelocity;
+            //varColor.g = 1 - relativeVelocity;
+            //pathLine.colors.push_back(varColor);
         }
         markerArray.markers.emplace_back(pathLine);
     }
@@ -257,9 +261,9 @@ void SearchTree<StateSpaceVector>::visualize(void)
     textInfo.scale.x = 1.5,
     textInfo.scale.y = 1.5,
     textInfo.scale.z = 1.5;
-    textInfo.color.r = 1,
-    textInfo.color.g = 1,
-    textInfo.color.b = 1,
+    textInfo.color.r = 0,
+    textInfo.color.g = 0.3,
+    textInfo.color.b = 0,
     textInfo.color.a = 1;
     //textInfo.pose = {};
     textInfo.pose.position.x = tree->front()->getState()->x();

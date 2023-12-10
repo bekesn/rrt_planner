@@ -130,7 +130,7 @@ bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector
         {
             float distError2 = trajectory->back()->getDistOriented2(*(*it)->getState(), rrt->param);
             // Check if new path leads close to new state
-            if ( distError2 < rrt->param->minDeviation * rrt->param->minDeviation)
+            if (distError2 < rrt->param->minDeviation * rrt->param->minDeviation)
             {
                 float segmentCost = trajectory->getTimeCost();
                 float childCost = rrt->getAbsCost(*it);
@@ -139,8 +139,15 @@ bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector
                 if ((newNodeCost + segmentCost + timeError) < childCost)
                 {
                     //Rewire if it reduces cost
+                    shared_ptr<SearchTreeNode<StateSpaceVector>> parent = (*it)->getParent();
                     rrt->rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
+
+                    // Remove parent if possible
+                    if(parent->getChildren()->size() == 0)
+                    {
+                        rrt->remove(parent);
+                    }
                 }
                 else if ((newNodeCost - globalRRT->param->minCost) > childCost)
                 {
@@ -152,8 +159,15 @@ bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector
                     // If a loop is not created, rewire 
                     if(!isLoop)
                     {
+                        shared_ptr<SearchTreeNode<StateSpaceVector>> parent = (*it)->getParent();
                         rrt->rewire(*it,newNode);
                         (*it)->changeSegmentCost(segmentCost);
+
+                        // Remove parent if possible
+                        if(parent->getChildren()->size() == 0)
+                        {
+                            rrt->remove(parent);
+                        }
                     }
                 }
             }
@@ -288,7 +302,7 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
     for(it = actualPath->begin()+1; it != actualPath->end(); it++)
     {
         if ((currentPose->getDistToTarget2(**it, globalRRT->param) < distStep*distStep) &&
-            (cost < (fullCost - 3 * globalRRT->param->rewireTime * globalRRT->param->simulationTimeStep)))
+            (cost < (fullCost - 2 * globalRRT->param->rewireTime * globalRRT->param->simulationTimeStep)))
         {
             isLoop = true;
         }
@@ -331,11 +345,11 @@ template<class StateSpaceVector>
 void RRTPlanner<StateSpaceVector>::visualize(void)
 {
     localRRT->markerArray.markers.clear();
-    localRRT->visualize();
+    localRRT->visualize(vehicle->getParameters());
     localRRT->markerPublisher.publish(localRRT->markerArray);
 
     globalRRT->markerArray.markers.clear();
-    globalRRT->visualize();
+    globalRRT->visualize(vehicle->getParameters());
     globalRRT->markerPublisher.publish(globalRRT->markerArray);
 
     commonMArray.markers.clear();
@@ -413,16 +427,6 @@ void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>
     ROS_INFO_STREAM(nodeName << " LOADING PARAMETERS");
     loadParameter("/GENERAL/timerPeriod", genParam->timerPeriod, 0.1f);
 
-    // Choose distance calculation type
-    std::string costType;
-    loadParameter("/LOCAL/costType", costType, "DISTANCE");
-    if (costType == "DISTANCE") localRRT->param->costType = DISTANCE;
-    else if (costType == "TIME") localRRT->param->costType = TIME;
-
-    loadParameter("/GLOBAL/costType", costType, "DISTANCE");
-    if (costType == "DISTANCE") globalRRT->param->costType = DISTANCE;
-    else if (costType == "TIME") globalRRT->param->costType = TIME;
-
     loadParameter("/LOCAL/goalBias", localRRT->param->goalBias, 0.2f);
     loadParameter("/GLOBAL/goalBias", globalRRT->param->goalBias, 0.2f);
 
@@ -476,7 +480,7 @@ void RRTPlanner<StateSpaceVector>::loadParameters(unique_ptr<CONTROL_PARAMETERS>
     loadParameter("/VEHICLE/track", vehicle->getParameters()->track, 1.2f);
     loadParameter("/VEHICLE/wheelBase", vehicle->getParameters()->wheelBase, 1.54f); 
 
-    loadParameter("/MAP/collisionRange", mapHandler->getParameters()->collisionRange, 6.0f);
+    loadParameter("/MAP/collisionRadius", mapHandler->getParameters()->collisionRadius, 1.0f);
     loadParameter("/MAP/goalHorizon", mapHandler->getParameters()->goalHorizon, 15.0f);
     loadParameter("/MAP/maxConeDist", mapHandler->getParameters()->maxConeDist, 6.0f);
     loadParameter("/MAP/maxGap", mapHandler->getParameters()->maxGap, 1.5f);

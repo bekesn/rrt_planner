@@ -60,7 +60,7 @@ public:
     bool alreadyInTree(const shared_ptr<StateSpaceVector>& state) const;
 
     // Draw tree as lines
-    void visualize(void);
+    void visualize(unique_ptr<VEHICLE_PARAMETERS>& vParam);
 
     // Delete tree and create new
     void init(const shared_ptr<StateSpaceVector>& startState);

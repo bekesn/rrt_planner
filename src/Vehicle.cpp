@@ -62,7 +62,7 @@ void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* marke
     float relativeVelocity;
     std_msgs::ColorRGBA varColor;
     varColor.r = 0;
-    varColor.g = 1;
+    varColor.g = 0;
     varColor.b = 0;
     varColor.a = 1;
 
@@ -74,7 +74,7 @@ void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* marke
         actualPathLine.pose.orientation.w = 1.0;
         actualPathLine.id = 2;
         actualPathLine.type = visualization_msgs::Marker::LINE_STRIP;
-        actualPathLine.scale.x = 0.05f;
+        actualPathLine.scale.x = 0.4f;
         actualPathLine.color.r = 0.5f;
         actualPathLine.color.g = 0.0f;
         actualPathLine.color.b = 0.5f;
@@ -86,9 +86,9 @@ void Vehicle<StateSpaceVector>::visualize(visualization_msgs::MarkerArray* marke
     {
         relativeVelocity = (*itT)->vx() / vehicleParam->maxVelocity;
         if(relativeVelocity > 1.0f) relativeVelocity = 1.0f;
-        varColor.r = relativeVelocity;
-        varColor.g = 1 - relativeVelocity;
-        actualPathLine.colors.push_back(varColor);
+        //varColor.r = relativeVelocity;
+        //varColor.g = 1 - relativeVelocity;
+        //actualPathLine.colors.push_back(varColor);
     } 
     markerArray->markers.emplace_back(actualPathLine);
 }
