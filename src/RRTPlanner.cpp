@@ -142,12 +142,13 @@ bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector
                     shared_ptr<SearchTreeNode<StateSpaceVector>> parent = (*it)->getParent();
                     rrt->rewire(*it,newNode);
                     (*it)->changeSegmentCost(segmentCost);
-
+                    
+                    /*
                     // Remove parent if possible
                     if(parent->getChildren()->size() == 0)
                     {
                         rrt->remove(parent);
-                    }
+                    }*/
                 }
                 else if ((newNodeCost - globalRRT->param->minCost) > childCost)
                 {
@@ -163,11 +164,12 @@ bool RRTPlanner<StateSpaceVector>::rewire(unique_ptr<SearchTree<StateSpaceVector
                         rrt->rewire(*it,newNode);
                         (*it)->changeSegmentCost(segmentCost);
 
+                        /*
                         // Remove parent if possible
                         if(parent->getChildren()->size() == 0)
                         {
                             rrt->remove(parent);
-                        }
+                        }*/
                     }
                 }
             }
@@ -331,10 +333,12 @@ bool RRTPlanner<StateSpaceVector>::handleActualPath(void)
 template<class StateSpaceVector>
 void RRTPlanner<StateSpaceVector>::timerCallback(const ros::WallTimerEvent &event)
 {
+    static float avgRunTime = 0;
     ros::Time startTime = ros::Time::now();
     stateMachine();
     visualize();
     ros::Duration runTime = ros::Time::now() - startTime;
+    avgRunTime = 0.9*avgRunTime + 0.1*runTime.toSec();
     if(runTime.toSec() > genParam->timerPeriod)
     {
          ROS_WARN_STREAM("[" << ros::this_node::getName() << "] Runtime high: " << ((int) (runTime.toSec()*1000)) << " ms");

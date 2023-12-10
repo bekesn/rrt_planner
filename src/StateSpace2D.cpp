@@ -41,8 +41,7 @@ float StateSpace2D::getDistOriented2(const StateSpace2D& otherState, const uniqu
 {
     float dx = x_ - otherState.x_;
     float dy = y_ - otherState.y_;
-    float dtheta = getAngleDiff(otherState);
-    return dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight;
+    return dx*dx + dy*dy;
 }
 
 float StateSpace2D::getDistEuclidean(const std::vector<float> otherState) const

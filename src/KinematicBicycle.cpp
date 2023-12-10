@@ -63,6 +63,14 @@ bool KinematicBicycle::isGettingCloser(const shared_ptr<StateSpace2D> goalState,
     return numerator < 0;
 }
 
+float KinematicBicycle::getDistOriented2(const StateSpace2D& otherState, const unique_ptr<RRT_PARAMETERS>& param) const
+{
+    float dx = x_ - otherState.x();
+    float dy = y_ - otherState.y();
+    float dtheta = getAngleDiff(otherState);
+    return dx*dx + dy*dy + dtheta * dtheta * param->thetaWeight;
+}
+
 void KinematicBicycle::limitVariables(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam)
 {
     // Limit vx

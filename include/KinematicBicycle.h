@@ -23,6 +23,9 @@ public:
     // Return whether state is getting closer to goal state
     bool isGettingCloser(const shared_ptr<StateSpace2D> goalState, const unique_ptr<RRT_PARAMETERS>& rrtParam, const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam) const;
 
+    // Calculate distance between states, taking into account the orientation
+    float getDistOriented2(const StateSpace2D& otherState, const unique_ptr<RRT_PARAMETERS>& param) const;
+
     // Limit constrained state variables
     void limitVariables(const unique_ptr<VEHICLE_PARAMETERS>& vehicleParam);
 
